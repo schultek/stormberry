@@ -1,0 +1,18 @@
+include: package:lint/analysis_options.yaml
+
+analyzer:
+  strong-mode:
+    implicit-casts: false
+    implicit-dynamic: true
+
+linter:
+  rules:
+    sort_pub_dependencies: true
+    prefer_relative_imports: true
+    prefer_single_quotes: true
+    avoid_escaping_inner_quotes: false
+    prefer_initializing_formals: false
+
+    prefer_final_locals: false
+    prefer_final_in_for_each: false
+    avoid_print: false

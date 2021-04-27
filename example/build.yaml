@@ -1,0 +1,6 @@
+targets:
+  $default:
+    builders:
+      dartabase:
+        generate_for:
+          - lib/main.dart
