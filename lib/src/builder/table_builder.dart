@@ -300,7 +300,7 @@ class TableBuilder {
   String generateViews() {
     var viewClasses = <String>[];
 
-    for (var view in views) {
+    for (var view in [...views]) {
       viewClasses.add(view.generateClass());
     }
 
@@ -310,7 +310,7 @@ class TableBuilder {
   String generateActions() {
     var actionClasses = <String>[];
 
-    for (var action in actions) {
+    for (var action in [...actions]) {
       var actionCode = action.generateClasses();
       if (actionCode != null) {
         actionClasses.add(actionCode);
@@ -323,7 +323,7 @@ class TableBuilder {
   String generateQueries() {
     var queryClasses = <String>[];
 
-    for (var query in queries) {
+    for (var query in [...queries]) {
       var queryCode = query.generateClasses();
       if (queryCode != null) {
         queryClasses.add(queryCode);
