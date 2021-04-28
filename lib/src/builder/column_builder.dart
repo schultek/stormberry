@@ -89,7 +89,7 @@ class ColumnBuilder {
     }
   }
 
-  bool get isUnique => !(referencedColumn?.isList ?? false);
+  bool get isUnique => !(referencedColumn?.isList ?? true);
 
   String getSqlType(DartType type) {
     if (type.isDartCoreString) {
