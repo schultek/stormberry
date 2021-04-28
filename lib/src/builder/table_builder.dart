@@ -158,7 +158,7 @@ class TableBuilder {
             otherColumn.referencedColumn = selfColumn;
 
             otherBuilder.columns.add(otherColumn);
-          } else {
+          } else if (selfHasKey) {
             // foreign column
             var otherColumn =
                 ColumnBuilder(null, otherBuilder, state, link: this);
