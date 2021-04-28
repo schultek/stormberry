@@ -3,5 +3,5 @@ builders:
     import: "package:dartabase/builder.dart"
     builder_factories: [ "buildDatabase" ]
     build_extensions: { ".dart": [ ".schema.g.dart" ] }
-    auto_apply: root_package
+    auto_apply: none
     build_to: source
