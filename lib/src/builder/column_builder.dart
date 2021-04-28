@@ -25,11 +25,12 @@ class ColumnBuilder {
   bool get isReferenceColumn =>
       joinBuilder == null &&
       linkBuilder != null &&
-      linkBuilder!.primaryKeyParameter == null;
+      (linkBuilder!.primaryKeyParameter == null || isList);
   bool get isForeignColumn =>
       joinBuilder == null &&
       linkBuilder != null &&
-      linkBuilder!.primaryKeyParameter != null;
+      linkBuilder!.primaryKeyParameter != null &&
+      !isList;
 
   bool get isList => parameter?.type.isDartCoreList ?? false;
 
@@ -81,8 +82,10 @@ class ColumnBuilder {
   bool get isNullable {
     if (parameter != null) {
       return parameter!.type.nullabilitySuffix != NullabilitySuffix.none;
-    } else {
+    } else if (parentBuilder.primaryKeyColumn == null) {
       return parentBuilder.columns.where((c) => c.parameter == null).length > 1;
+    } else {
+      return true;
     }
   }
 

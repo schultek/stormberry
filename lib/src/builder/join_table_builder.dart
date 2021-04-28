@@ -41,7 +41,7 @@ class JoinTableBuilder {
       var keyName = t.primaryKeyColumn!.columnName;
 
       cons.add(
-          "ForeignKeyConstraint(null, '$columnName', '$tableName', '$keyName', ForeignKeyAction.Cascade, ForeignKeyAction.Cascade)");
+          "ForeignKeyConstraint(null, '$columnName', '$tableName', '$keyName', ForeignKeyAction.cascade, ForeignKeyAction.cascade)");
     }
 
     for (var t in [first, second]) {

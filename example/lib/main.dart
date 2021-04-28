@@ -5,10 +5,14 @@ import 'package:dartabase/dartabase.dart';
     Field.hidden('customerId'),
     Field.view('company', as: 'member'),
     Field.view('chargeLocks', as: 'user'),
+    Field.view('parties', as: 'guest'),
+    Field.view('invoices', as: 'owner'),
   ]),
   View('Admin', [
     Field.view('company', as: 'member'),
     Field.view('chargeLocks', as: 'user'),
+    Field.view('parties', as: 'guest'),
+    Field.view('invoices', as: 'owner'),
   ]),
   View('Company', [
     Field.hidden('customerId'),
@@ -16,12 +20,12 @@ import 'package:dartabase/dartabase.dart';
     Field.hidden('billingAddress'),
     Field.hidden('invoices'),
     Field.hidden('company'),
+    Field.hidden('parties'),
     Field.filtered('chargeLocations', by: 'is_private = false')
   ])
 ], actions: [
   SingleInsertAction(),
   SingleUpdateAction(),
-  ToggleEmailNotification(),
 ], queries: [
   SingleQuery.forView('User'),
   MultiQuery.forView('Admin'),
@@ -32,39 +36,27 @@ class Account {
 
   // Fields
   String firstName, lastName;
-  int age;
-  String gender;
-  List<String> vehicles;
-  bool sendInvoicesViaEmail;
-  String customerId;
-  List<ChargeCard> cards;
 
+  // Custom Type
   LatLng location;
 
-  // Secondary objects
+  // Foreign Object
   BillingAddress? billingAddress;
-  // List<ChargeTariffUidLock> chargeLocks;
 
-  // // Reference objects
-  // List<Invoice> invoices;
+  List<Invoice> invoices;
   Company? company;
-  //
-  // // Custom objects
+
+  List<Party> parties;
 
   Account(
     this.id,
     this.firstName,
     this.lastName,
-    this.age,
-    this.gender,
-    this.vehicles,
-    this.sendInvoicesViaEmail,
     this.location,
-    this.cards,
-    this.customerId,
     this.billingAddress,
     this.company,
-    /* this.invoices, this.chargeLocks*/
+    this.invoices,
+    this.parties,
   );
 }
 
@@ -91,20 +83,6 @@ class LatLngConverter extends TypeConverter<LatLng> {
   }
 }
 
-class ChargeCard {
-  String type, uid, name;
-  ChargeCard(this.name, this.uid, this.type);
-}
-
-class ToggleEmailNotification extends Action<bool> {
-  const ToggleEmailNotification();
-
-  @override
-  Future<void> apply(Database db, bool request) async {
-    print('TOGGLING EMAIL TO $request');
-  }
-}
-
 @Table()
 class BillingAddress {
   String name, street, city;
@@ -112,12 +90,65 @@ class BillingAddress {
   BillingAddress(this.name, this.street, this.city);
 }
 
-@Table(views: [View('member')])
+@Table(views: [
+  View('Admin', [
+    Field.view('invoices', as: 'owner'),
+    Field.view('members', as: 'company'),
+  ]),
+  View('member', [
+    Field.hidden('members'),
+    Field.hidden('invoices'),
+  ])
+])
 class Company {
   @PrimaryKey()
   String id;
 
   List<BillingAddress> addresses;
+  List<Account> members;
+  List<Invoice> invoices;
 
-  Company(this.id, this.addresses);
+  Company(this.id, this.addresses, this.members, this.invoices);
+}
+
+@Table(views: [
+  View('Owner', [
+    Field.hidden('account'),
+    Field.hidden('company'),
+  ])
+])
+class Invoice {
+  @PrimaryKey()
+  String id;
+  String title, invoiceId;
+
+  Account? account;
+  Company? company;
+
+  Invoice(
+    this.id,
+    this.title,
+    this.invoiceId,
+    this.account,
+    this.company,
+  );
+}
+
+@Table(views: [
+  View('Guest', [
+    Field.hidden('guests'),
+    Field.view('sponsor', as: 'member'),
+  ])
+])
+class Party {
+  @PrimaryKey()
+  String id;
+
+  String name;
+
+  List<Account> guests;
+
+  Company? sponsor;
+
+  Party(this.id, this.name, this.guests, this.sponsor);
 }

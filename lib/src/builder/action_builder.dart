@@ -69,29 +69,52 @@ class ActionBuilder {
     var deepInserts = <String>[];
     var additionalClasses = <String>[];
 
-    for (var column in table.columns.where((c) => c.isReferenceColumn)) {
+    for (var column in table.columns.where((c) =>
+        c.isReferenceColumn && c.linkBuilder!.primaryKeyColumn == null)) {
       var isNullable = column.isNullable;
-
-      var requestParams = column.linkBuilder!.columns
-          .where((c) => !column.isJoinColumn)
-          .map((c) {
-        if (c.isForeignColumn) {
-          if (c.linkBuilder == table) {
-            return 'r.${table.primaryKeyColumn!.paramName}';
+      if (!column.isList) {
+        var requestParams = column.linkBuilder!.columns
+            .where((c) => !column.isJoinColumn)
+            .map((c) {
+          if (c.isForeignColumn) {
+            if (c.linkBuilder == table) {
+              return 'r.${table.primaryKeyColumn!.paramName}';
+            } else {
+              return 'null';
+            }
           } else {
-            return 'null';
+            return 'r.${column.paramName}${isNullable ? '!' : ''}.${c.paramName}';
           }
-        } else {
-          return 'r.${column.paramName}${isNullable ? '!' : ''}.${c.paramName}';
-        }
-      });
+        });
 
-      var deepInsert = ''
-          'await ${column.linkBuilder!.element.name}InsertAction().apply(db, requests${isNullable ? '.where((r) => r.${column.paramName} != null)' : ''}.map((r) {\n'
-          '  return ${column.linkBuilder!.element.name}InsertRequest(${requestParams.join(', ')});\n'
-          '}).toList());';
+        var deepInsert = ''
+            'await ${column.linkBuilder!.element.name}InsertAction().apply(db, requests${isNullable ? '.where((r) => r.${column.paramName} != null)' : ''}.map((r) {\n'
+            '  return ${column.linkBuilder!.element.name}InsertRequest(${requestParams.join(', ')});\n'
+            '}).toList());';
 
-      deepInserts.add(deepInsert);
+        deepInserts.add(deepInsert);
+      } else {
+        var requestParams = column.linkBuilder!.columns
+            .where((c) => !column.isJoinColumn)
+            .map((c) {
+          if (c.isForeignColumn) {
+            if (c.linkBuilder == table) {
+              return 'r.${table.primaryKeyColumn!.paramName}';
+            } else {
+              return 'null';
+            }
+          } else {
+            return 'rr.${c.paramName}';
+          }
+        });
+
+        var deepInsert = ''
+            'await ${column.linkBuilder!.element.name}InsertAction().apply(db, requests${isNullable ? '.where((r) => r.${column.paramName} != null)' : ''}.expand((r) {\n'
+            '  return r.${column.paramName}${isNullable ? '!' : ''}.map((rr) => ${column.linkBuilder!.element.name}InsertRequest(${requestParams.join(', ')}));\n'
+            '}).toList());';
+
+        deepInserts.add(deepInsert);
+      }
 
       if (!column.linkBuilder!.hasDefaultInsertAction) {
         var deepActionBuilder =
@@ -170,7 +193,9 @@ class ActionBuilder {
     var requestFields = <MapEntry<String, String>>[];
 
     for (var column in table.columns) {
-      if (column.isFieldColumn || column.isReferenceColumn) {
+      if (column.isFieldColumn ||
+          (column.isReferenceColumn &&
+              column.linkBuilder!.primaryKeyColumn == null)) {
         requestFields.add(MapEntry(
           column.parameter!.type.getDisplayString(withNullability: true),
           column.paramName!,
@@ -212,7 +237,8 @@ class ActionBuilder {
     var deepUpdates = <String>[];
     var additionalClasses = <String>[];
 
-    for (var column in table.columns.where((c) => c.isReferenceColumn)) {
+    for (var column in table.columns.where((c) =>
+        c.isReferenceColumn && c.linkBuilder!.primaryKeyColumn == null)) {
       var requestParams = column.linkBuilder!.columns
           .where((c) => !column.isJoinColumn)
           .map((c) {
@@ -250,7 +276,7 @@ class ActionBuilder {
         '    await db.query("""\n'
         '      UPDATE "${table.tableName}"\n'
         '      SET ${table.columns.where((c) => hasPrimaryKey ? c != table.primaryKeyColumn && (c.isFieldColumn || c.isForeignColumn) : c.isFieldColumn).map((c) => '"${c.columnName}" = COALESCE(UPDATED."${c.columnName}", "${table.tableName}"."${c.columnName}")').join(',\n          ')}\n'
-        '      FROM ( VALUES \${requests.map((r) => \'( ${table.columns.where((c) => c.isFieldColumn || c.isForeignColumn).map((c) => '\${db.enc(r.${c.paramName})}').join(', ')} )\').join(\', \')} )\n'
+        '      FROM ( VALUES \${requests.map((r) => \'( ${table.columns.where((c) => c.isFieldColumn || c.isForeignColumn).map((c) => '\${_encode(r.${c.paramName})}').join(', ')} )\').join(\', \')} )\n'
         '      AS UPDATED(${table.columns.where((c) => c.isFieldColumn || c.isForeignColumn).map((c) => '"${c.columnName}"').join(', ')})\n'
         '      WHERE ${hasPrimaryKey ? '"${table.primaryKeyColumn!.columnName}" = UPDATED."${table.primaryKeyColumn!.columnName}"' : table.columns.where((c) => c.isForeignColumn).map((c) => '"${c.columnName}" = UPDATED."${c.columnName}"').join(' AND ')}\n'
         '    """);\n'
@@ -282,7 +308,9 @@ class ActionBuilder {
     var requestFields = <MapEntry<String, String>>[];
 
     for (var column in table.columns) {
-      if (column.isFieldColumn || column.isReferenceColumn) {
+      if (column.isFieldColumn ||
+          (column.isReferenceColumn &&
+              column.linkBuilder!.primaryKeyColumn == null)) {
         requestFields.add(MapEntry(
           column.parameter!.type.getDisplayString(withNullability: false) +
               (column == table.primaryKeyColumn ? '' : '?'),

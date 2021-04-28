@@ -21,8 +21,8 @@ class QueryBuilder {
       fakeView ?? table.views.where((v) => v.name == viewName).firstOrNull;
 
   bool isDefaultForView(ViewBuilder? view) {
-    return view == this.view && className == 'SingleQuery' ||
-        className == 'MultiQuery';
+    return view == this.view &&
+        (className == 'SingleQuery' || className == 'MultiQuery');
   }
 
   String get className =>
@@ -151,31 +151,19 @@ class QueryBuilder {
       } else if (column.column.isJoinColumn) {
         var columnTable = column.column.linkBuilder!;
         var joinTable = column.column.joinBuilder!;
-        if (column.column.isList) {
-          joins.add(MapEntry(
-            column.paramName,
-            'LEFT JOIN (\n'
-            '  SELECT "${joinTable.tableName}"."${column.column.parentBuilder.getForeignKeyName()}",\n'
-            '    array_to_json(array_agg(row_to_json("${columnTable.tableName}"))) as data\n'
-            '  FROM "${joinTable.tableName}"\n'
-            '  LEFT JOIN ( \${${column.queryClassName}._getQueryStatement()} ) "${columnTable.tableName}"\n'
-            '  ON "${columnTable.tableName}"."${columnTable.primaryKeyColumn!.columnName}" = "${joinTable.tableName}"."${column.column.parentBuilder.getForeignKeyName()}"\n'
-            '  GROUP BY "${joinTable.tableName}"."${column.column.parentBuilder.getForeignKeyName()}"\n'
-            ') "${column.paramName}"\n'
-            'ON "${table.tableName}"."${table.primaryKeyColumn!.columnName}" = "${column.paramName}"."${column.column.parentBuilder.getForeignKeyName()}"',
-          ));
-        } else {
-          joins.add(MapEntry(
-            column.paramName,
-            'LEFT JOIN (\n'
-            '  SELECT "${joinTable.tableName}"."${column.column.parentBuilder.getForeignKeyName()}", "${columnTable.tableName}".*\n'
-            '  FROM "${joinTable.tableName}"\n'
-            '  LEFT JOIN ( \${${column.queryClassName}._getQueryStatement()} ) "${columnTable.tableName}"\n'
-            '  ON "${columnTable.tableName}"."${columnTable.primaryKeyColumn!.columnName}" = "${joinTable.tableName}"."${column.column.parentBuilder.getForeignKeyName()}"\n'
-            ') "${column.paramName}"\n'
-            'ON "${table.tableName}"."${table.primaryKeyColumn!.columnName}" = "${column.paramName}"."${column.column.parentBuilder.getForeignKeyName()}"',
-          ));
-        }
+
+        joins.add(MapEntry(
+          column.paramName,
+          'LEFT JOIN (\n'
+          '  SELECT "${joinTable.tableName}"."${column.column.parentBuilder.getForeignKeyName()}",\n'
+          '    array_to_json(array_agg(row_to_json("${columnTable.tableName}"))) as data\n'
+          '  FROM "${joinTable.tableName}"\n'
+          '  LEFT JOIN ( \${${column.queryClassName}._getQueryStatement()} ) "${columnTable.tableName}"\n'
+          '  ON "${columnTable.tableName}"."${columnTable.primaryKeyColumn!.columnName}" = "${joinTable.tableName}"."${column.column.parentBuilder.getForeignKeyName()}"\n'
+          '  GROUP BY "${joinTable.tableName}"."${column.column.parentBuilder.getForeignKeyName()}"\n'
+          ') "${column.paramName}"\n'
+          'ON "${table.tableName}"."${table.primaryKeyColumn!.columnName}" = "${column.paramName}"."${column.column.parentBuilder.getForeignKeyName()}"',
+        ));
 
         if (!column.column.linkBuilder!.hasQueryForView(column.view)) {
           var deepQueryBuilder =

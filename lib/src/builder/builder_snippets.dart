@@ -51,8 +51,13 @@ extension on Map<String, dynamic> {
     if (this[key] == null) {
       throw ConverterException('Parameter $key is required.');
     } else if (this[key] is! List) {
-      throw ConverterException(
-          'Parameter ${this[key]} with key $key is not a List');
+      var v = this[key];
+      if (v is Map<String, dynamic> && v['data'] is List) {
+        return v.getList<T>('data');
+      } else {
+        throw ConverterException(
+            'Parameter $v with key $key is not a List');
+      }
     }
     List value = this[key] as List<dynamic>;
     return value.map((dynamic item) => _decode<T>(item)).toList();

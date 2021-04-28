@@ -25,9 +25,12 @@ class ViewColumn {
 
   String get dartType {
     if (field?.viewAs != null) {
+      var isList = column.isList;
       var nullSuffix = column.parameter!.type.nullabilitySuffix;
       var typeSuffix = nullSuffix == NullabilitySuffix.question ? '?' : '';
-      return view!.className + typeSuffix;
+      return isList
+          ? 'List<${view!.className}>$typeSuffix'
+          : '${view!.className}$typeSuffix';
     } else {
       return column.parameter!.type.getDisplayString(withNullability: true);
     }

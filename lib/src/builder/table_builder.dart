@@ -102,6 +102,10 @@ class TableBuilder {
 
   void prepareColumns() {
     for (var param in constructor.parameters) {
+      if (columns.any((c) => c.parameter == param)) {
+        continue;
+      }
+
       var isList = param.type.isDartCoreList;
       var dataType =
           isList ? (param.type as InterfaceType).typeArguments[0] : param.type;
@@ -115,13 +119,13 @@ class TableBuilder {
         var otherHasKey = otherBuilder.primaryKeyParameter != null;
 
         var otherParam = otherBuilder.findMatchingParam(param);
-        var isEitherList = param.type.isDartCoreList ||
+        var isBothList = param.type.isDartCoreList &&
             (otherParam?.type.isDartCoreList ?? false);
 
         if (!selfHasKey && !otherHasKey) {
           // Json column
           columns.add(ColumnBuilder(param, this, state));
-        } else if (selfHasKey && otherHasKey && isEitherList) {
+        } else if (selfHasKey && otherHasKey && isBothList) {
           // Many to Many / One to Many / Many to One
 
           var joinBuilder = JoinTableBuilder(this, otherBuilder, state);
@@ -154,7 +158,7 @@ class TableBuilder {
             otherColumn.referencedColumn = selfColumn;
 
             otherBuilder.columns.add(otherColumn);
-          } else if (!otherHasKey) {
+          } else {
             // foreign column
             var otherColumn =
                 ColumnBuilder(null, otherBuilder, state, link: this);
@@ -245,10 +249,12 @@ class TableBuilder {
 
   ParameterElement? findMatchingParam(ParameterElement param) {
     // TODO add binding
-    return constructor.parameters
-        .where(
-            (p) => p.type.element == param.enclosingElement?.enclosingElement)
-        .firstOrNull;
+    return constructor.parameters.where((p) {
+      var pType = p.type.isDartCoreList
+          ? (p.type as InterfaceType).typeArguments[0]
+          : p.type;
+      return pType.element == param.enclosingElement?.enclosingElement;
+    }).firstOrNull;
   }
 
   String getForeignKeyName({bool plural = false, String? base}) {
