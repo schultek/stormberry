@@ -60,7 +60,13 @@ class ActionBuilder {
     }
   }
 
-  String _generateInsertAction() {
+  bool _didGenerateInsertAction = false;
+  String? _generateInsertAction() {
+    if (_didGenerateInsertAction) {
+      return null;
+    }
+    _didGenerateInsertAction = true;
+
     var requestClassName = '${table.element.name}InsertRequest';
     var requestClass = _generateInsertRequest();
 
@@ -120,7 +126,7 @@ class ActionBuilder {
         var deepActionBuilder =
             ActionBuilder(column.linkBuilder!, null, 'SingleInsertAction');
         column.linkBuilder!.actions.add(deepActionBuilder);
-        additionalClasses.add(deepActionBuilder._generateInsertAction());
+        additionalClasses.add(deepActionBuilder._generateInsertAction()!);
       }
     }
 
@@ -167,9 +173,7 @@ class ActionBuilder {
 
     var output = StringBuffer();
 
-    if (requestClass != null) {
-      output.write('$requestClass\n\n');
-    }
+    output.write('$requestClass\n\n');
 
     if (extensionClass != null) {
       output.write('$extensionClass\n\n');
@@ -181,13 +185,7 @@ class ActionBuilder {
     return output.toString();
   }
 
-  bool _didGenerateInsertRequest = false;
-  String? _generateInsertRequest() {
-    if (_didGenerateInsertRequest) {
-      return null;
-    }
-    _didGenerateInsertRequest = true;
-
+  String _generateInsertRequest() {
     var requestClassName = '${table.element.name}InsertRequest';
 
     var requestFields = <MapEntry<String, String>>[];
@@ -226,7 +224,13 @@ class ActionBuilder {
         '}';
   }
 
-  String _generateUpdateAction() {
+  bool _didGenerateUpdateAction = false;
+  String? _generateUpdateAction() {
+    if (_didGenerateUpdateAction) {
+      return null;
+    }
+    _didGenerateUpdateAction = true;
+
     var requestClassName = '${table.element.name}UpdateRequest';
     var requestClass = _generateUpdateRequest();
 
@@ -264,7 +268,7 @@ class ActionBuilder {
         var deepActionBuilder =
             ActionBuilder(column.linkBuilder!, null, 'SingleUpdateAction');
         column.linkBuilder!.actions.add(deepActionBuilder);
-        additionalClasses.add(deepActionBuilder._generateUpdateAction());
+        additionalClasses.add(deepActionBuilder._generateUpdateAction()!);
       }
     }
 
@@ -286,9 +290,7 @@ class ActionBuilder {
 
     var output = StringBuffer();
 
-    if (requestClass != null) {
-      output.write('$requestClass\n\n');
-    }
+    output.write('$requestClass\n\n');
 
     output.write(actionClass);
     output.writeAll(additionalClasses.map((c) => '\n\n$c'));
@@ -296,13 +298,7 @@ class ActionBuilder {
     return output.toString();
   }
 
-  bool _didGenerateUpdateRequest = false;
-  String? _generateUpdateRequest() {
-    if (_didGenerateUpdateRequest) {
-      return null;
-    }
-    _didGenerateUpdateRequest = true;
-
+  String _generateUpdateRequest() {
     var requestClassName = '${table.element.name}UpdateRequest';
 
     var requestFields = <MapEntry<String, String>>[];

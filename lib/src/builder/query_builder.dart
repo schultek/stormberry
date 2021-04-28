@@ -93,7 +93,13 @@ class QueryBuilder {
     }
   }
 
-  String _generateQueryClass() {
+  bool _didGenerateQueryClass = false;
+  String? _generateQueryClass() {
+    if (_didGenerateQueryClass) {
+      return null;
+    }
+    _didGenerateQueryClass = true;
+
     var joinColumns = view != null
         ? view!.columns
         : table.columns
@@ -117,7 +123,7 @@ class QueryBuilder {
           var deepQueryBuilder =
               QueryBuilder(column.column.linkBuilder!, null, column.view);
           column.column.linkBuilder!.queries.add(deepQueryBuilder);
-          additionalClasses.add(deepQueryBuilder._generateQueryClass());
+          additionalClasses.add(deepQueryBuilder._generateQueryClass()!);
         }
       } else if (column.column.isReferenceColumn) {
         var columnTable = column.column.linkBuilder!;
@@ -146,7 +152,7 @@ class QueryBuilder {
           var deepQueryBuilder =
               QueryBuilder(column.column.linkBuilder!, null, column.view);
           column.column.linkBuilder!.queries.add(deepQueryBuilder);
-          additionalClasses.add(deepQueryBuilder._generateQueryClass());
+          additionalClasses.add(deepQueryBuilder._generateQueryClass()!);
         }
       } else if (column.column.isJoinColumn) {
         var columnTable = column.column.linkBuilder!;
@@ -169,7 +175,7 @@ class QueryBuilder {
           var deepQueryBuilder =
               QueryBuilder(column.column.linkBuilder!, null, column.view);
           column.column.linkBuilder!.queries.add(deepQueryBuilder);
-          additionalClasses.add(deepQueryBuilder._generateQueryClass());
+          additionalClasses.add(deepQueryBuilder._generateQueryClass()!);
         }
       }
     }
