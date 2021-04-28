@@ -243,19 +243,19 @@ class ActionBuilder {
 
     for (var column in table.columns.where((c) =>
         c.isReferenceColumn && c.linkBuilder!.primaryKeyColumn == null)) {
-      var requestParams = column.linkBuilder!.columns
-          .where((c) => !column.isJoinColumn)
-          .map((c) {
+      var requestParams = <String>[];
+      for (var c
+          in column.linkBuilder!.columns.where((c) => !column.isJoinColumn)) {
         if (c.isForeignColumn) {
           if (c.linkBuilder == table) {
-            return 'r.${table.primaryKeyColumn!.paramName}';
-          } else {
-            return 'null';
+            requestParams
+                .add('${c.paramName}: r.${table.primaryKeyColumn!.paramName}');
           }
         } else {
-          return 'r.${column.paramName}!.${c.paramName}';
+          requestParams
+              .add('${c.paramName}: r.${column.paramName}!.${c.paramName}');
         }
-      });
+      }
 
       var deepInsert = ''
           'await ${column.linkBuilder!.element.name}UpdateAction().apply(db, requests.where((r) => r.${column.paramName} != null).map((r) {\n'
@@ -333,7 +333,7 @@ class ActionBuilder {
         'class $requestClassName {\n'
         '  ${requestFields.map((f) => '${f.key} ${f.value};').join('\n  ')}\n'
         '  \n'
-        '  $requestClassName(${requestFields.map((f) => 'this.${f.value}').join(', ')});\n'
+        '  $requestClassName({${requestFields.map((f) => '${f.key.endsWith('?') ? '' : 'required '}this.${f.value}').join(', ')}});\n'
         '}';
   }
 }

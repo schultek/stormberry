@@ -1,9 +1,7 @@
 // ignore_for_file: unnecessary_cast, prefer_relative_imports, unused_element, prefer_single_quotes
 import 'dart:convert';
-
 import 'package:dartabase/dartabase.dart';
 import 'package:dartabase_example/main.dart';
-
 const databaseSchema = DatabaseSchema({
   'accounts': TableSchema(
     'accounts',
@@ -16,8 +14,7 @@ const databaseSchema = DatabaseSchema({
     },
     constraints: [
       PrimaryKeyConstraint(null, 'id'),
-      ForeignKeyConstraint(null, 'company_id', 'companies', 'id',
-          ForeignKeyAction.setNull, ForeignKeyAction.cascade),
+      ForeignKeyConstraint(null, 'company_id', 'companies', 'id', ForeignKeyAction.setNull, ForeignKeyAction.cascade),
     ],
   ),
   'billing_addresses': TableSchema(
@@ -30,10 +27,8 @@ const databaseSchema = DatabaseSchema({
       'city': ColumnSchema('city', type: 'text'),
     },
     constraints: [
-      ForeignKeyConstraint(null, 'account_id', 'accounts', 'id',
-          ForeignKeyAction.cascade, ForeignKeyAction.cascade),
-      ForeignKeyConstraint(null, 'company_id', 'companies', 'id',
-          ForeignKeyAction.cascade, ForeignKeyAction.cascade),
+      ForeignKeyConstraint(null, 'account_id', 'accounts', 'id', ForeignKeyAction.cascade, ForeignKeyAction.cascade),
+      ForeignKeyConstraint(null, 'company_id', 'companies', 'id', ForeignKeyAction.cascade, ForeignKeyAction.cascade),
       UniqueConstraint(null, 'account_id'),
     ],
   ),
@@ -45,8 +40,7 @@ const databaseSchema = DatabaseSchema({
     },
     constraints: [
       PrimaryKeyConstraint(null, 'id'),
-      ForeignKeyConstraint(null, 'party_id', 'parties', 'id',
-          ForeignKeyAction.setNull, ForeignKeyAction.cascade),
+      ForeignKeyConstraint(null, 'party_id', 'parties', 'id', ForeignKeyAction.setNull, ForeignKeyAction.cascade),
       UniqueConstraint(null, 'party_id'),
     ],
   ),
@@ -61,10 +55,8 @@ const databaseSchema = DatabaseSchema({
     },
     constraints: [
       PrimaryKeyConstraint(null, 'id'),
-      ForeignKeyConstraint(null, 'account_id', 'accounts', 'id',
-          ForeignKeyAction.setNull, ForeignKeyAction.cascade),
-      ForeignKeyConstraint(null, 'company_id', 'companies', 'id',
-          ForeignKeyAction.setNull, ForeignKeyAction.cascade),
+      ForeignKeyConstraint(null, 'account_id', 'accounts', 'id', ForeignKeyAction.setNull, ForeignKeyAction.cascade),
+      ForeignKeyConstraint(null, 'company_id', 'companies', 'id', ForeignKeyAction.setNull, ForeignKeyAction.cascade),
     ],
   ),
   'parties': TableSchema(
@@ -76,11 +68,11 @@ const databaseSchema = DatabaseSchema({
     },
     constraints: [
       PrimaryKeyConstraint(null, 'id'),
-      ForeignKeyConstraint(null, 'sponsor_id', 'companies', 'id',
-          ForeignKeyAction.setNull, ForeignKeyAction.cascade),
+      ForeignKeyConstraint(null, 'sponsor_id', 'companies', 'id', ForeignKeyAction.setNull, ForeignKeyAction.cascade),
       UniqueConstraint(null, 'sponsor_id'),
     ],
   ),
+  
   'accounts_parties': TableSchema(
     'accounts_parties',
     columns: {
@@ -89,18 +81,16 @@ const databaseSchema = DatabaseSchema({
     },
     constraints: [
       PrimaryKeyConstraint(null, 'account_id", "party_id'),
-      ForeignKeyConstraint(null, 'account_id', 'accounts', 'id',
-          ForeignKeyAction.cascade, ForeignKeyAction.cascade),
-      ForeignKeyConstraint(null, 'party_id', 'parties', 'id',
-          ForeignKeyAction.cascade, ForeignKeyAction.cascade),
+      ForeignKeyConstraint(null, 'account_id', 'accounts', 'id', ForeignKeyAction.cascade, ForeignKeyAction.cascade),
+      ForeignKeyConstraint(null, 'party_id', 'parties', 'id', ForeignKeyAction.cascade, ForeignKeyAction.cascade),
     ],
   ),
+  
 });
 
 extension DatabaseTables on Database {
   AccountTable get accounts => AccountTable._instanceFor(this);
-  BillingAddressTable get billingAddresses =>
-      BillingAddressTable._instanceFor(this);
+  BillingAddressTable get billingAddresses => BillingAddressTable._instanceFor(this);
   CompanyTable get companies => CompanyTable._instanceFor(this);
   InvoiceTable get invoices => InvoiceTable._instanceFor(this);
   PartyTable get parties => PartyTable._instanceFor(this);
@@ -118,27 +108,22 @@ class AccountTable {
   }
 
   Future<UserAccountView?> queryUserView(String id) async {
-    return (await UserAccountViewQuery().apply(
-            _db,
-            QueryParams(
-              where: '"id" = \'$id\'',
-              limit: 1,
-            )))
-        .firstOrNull;
+    return (await UserAccountViewQuery().apply(_db, QueryParams(
+      where: '"id" = \'$id\'',
+      limit: 1,
+    ))).firstOrNull;
   }
-
+  
   Future<List<AdminAccountView>> queryAdminViews([QueryParams? params]) {
     return AdminAccountViewQuery().apply(_db, params ?? QueryParams());
   }
-
+  
   Future<void> insertOne(AccountInsertRequest request) {
-    return _db
-        .runTransaction(() => AccountInsertAction().apply(_db, [request]));
+    return _db.runTransaction(() => AccountInsertAction().apply(_db, [request]));
   }
-
+  
   Future<void> updateOne(AccountUpdateRequest request) {
-    return _db
-        .runTransaction(() => AccountUpdateAction().apply(_db, [request]));
+    return _db.runTransaction(() => AccountUpdateAction().apply(_db, [request]));
   }
 }
 
@@ -152,6 +137,8 @@ class BillingAddressTable {
     }
     return _instance!;
   }
+
+  
 }
 
 class CompanyTable {
@@ -164,6 +151,8 @@ class CompanyTable {
     }
     return _instance!;
   }
+
+  
 }
 
 class InvoiceTable {
@@ -176,6 +165,8 @@ class InvoiceTable {
     }
     return _instance!;
   }
+
+  
 }
 
 class PartyTable {
@@ -188,21 +179,22 @@ class PartyTable {
     }
     return _instance!;
   }
+
+  
 }
 
 class UserAccountView {
-  UserAccountView(this.id, this.firstName, this.lastName, this.location,
-      this.billingAddress, this.company, this.invoices, this.parties);
+  UserAccountView(this.id, this.firstName, this.lastName, this.location, this.billingAddress, this.company, this.invoices, this.parties);
   UserAccountView.fromMap(Map<String, dynamic> map)
-      : id = map.get('id'),
-        firstName = map.get('first_name'),
-        lastName = map.get('last_name'),
-        location = map.get('location'),
-        billingAddress = map.getOpt('billingAddress'),
-        company = map.getOpt('company'),
-        invoices = map.getList('invoices'),
-        parties = map.getList('parties');
-
+    : id = map.get('id'),
+      firstName = map.get('first_name'),
+      lastName = map.get('last_name'),
+      location = map.get('location'),
+      billingAddress = map.getOpt('billingAddress'),
+      company = map.getOpt('company'),
+      invoices = map.getList('invoices'),
+      parties = map.getList('parties');
+  
   String id;
   String firstName;
   String lastName;
@@ -214,18 +206,17 @@ class UserAccountView {
 }
 
 class AdminAccountView {
-  AdminAccountView(this.id, this.firstName, this.lastName, this.location,
-      this.billingAddress, this.company, this.invoices, this.parties);
+  AdminAccountView(this.id, this.firstName, this.lastName, this.location, this.billingAddress, this.company, this.invoices, this.parties);
   AdminAccountView.fromMap(Map<String, dynamic> map)
-      : id = map.get('id'),
-        firstName = map.get('first_name'),
-        lastName = map.get('last_name'),
-        location = map.get('location'),
-        billingAddress = map.getOpt('billingAddress'),
-        company = map.getOpt('company'),
-        invoices = map.getList('invoices'),
-        parties = map.getList('parties');
-
+    : id = map.get('id'),
+      firstName = map.get('first_name'),
+      lastName = map.get('last_name'),
+      location = map.get('location'),
+      billingAddress = map.getOpt('billingAddress'),
+      company = map.getOpt('company'),
+      invoices = map.getList('invoices'),
+      parties = map.getList('parties');
+  
   String id;
   String firstName;
   String lastName;
@@ -239,11 +230,11 @@ class AdminAccountView {
 class CompanyAccountView {
   CompanyAccountView(this.id, this.firstName, this.lastName, this.location);
   CompanyAccountView.fromMap(Map<String, dynamic> map)
-      : id = map.get('id'),
-        firstName = map.get('first_name'),
-        lastName = map.get('last_name'),
-        location = map.get('location');
-
+    : id = map.get('id'),
+      firstName = map.get('first_name'),
+      lastName = map.get('last_name'),
+      location = map.get('location');
+  
   String id;
   String firstName;
   String lastName;
@@ -253,11 +244,11 @@ class CompanyAccountView {
 class AdminCompanyView {
   AdminCompanyView(this.members, this.id, this.addresses, this.invoices);
   AdminCompanyView.fromMap(Map<String, dynamic> map)
-      : members = map.getList('members'),
-        id = map.get('id'),
-        addresses = map.getList('addresses'),
-        invoices = map.getList('invoices');
-
+    : members = map.getList('members'),
+      id = map.get('id'),
+      addresses = map.getList('addresses'),
+      invoices = map.getList('invoices');
+  
   List<CompanyAccountView> members;
   String id;
   List<BillingAddress> addresses;
@@ -267,32 +258,30 @@ class AdminCompanyView {
 class MemberCompanyView {
   MemberCompanyView(this.id, this.addresses);
   MemberCompanyView.fromMap(Map<String, dynamic> map)
-      : id = map.get('id'),
-        addresses = map.getList('addresses');
-
+    : id = map.get('id'),
+      addresses = map.getList('addresses');
+  
   String id;
   List<BillingAddress> addresses;
 }
-
 class OwnerInvoiceView {
   OwnerInvoiceView(this.id, this.title, this.invoiceId);
   OwnerInvoiceView.fromMap(Map<String, dynamic> map)
-      : id = map.get('id'),
-        title = map.get('title'),
-        invoiceId = map.get('invoice_id');
-
+    : id = map.get('id'),
+      title = map.get('title'),
+      invoiceId = map.get('invoice_id');
+  
   String id;
   String title;
   String invoiceId;
 }
-
 class GuestPartyView {
   GuestPartyView(this.id, this.name, this.sponsor);
   GuestPartyView.fromMap(Map<String, dynamic> map)
-      : id = map.get('id'),
-        name = map.get('name'),
-        sponsor = map.getOpt('sponsor');
-
+    : id = map.get('id'),
+      name = map.get('name'),
+      sponsor = map.getOpt('sponsor');
+  
   String id;
   String name;
   MemberCompanyView? sponsor;
@@ -306,8 +295,7 @@ class QueryParams {
   QueryParams({this.where, this.orderBy, this.limit, this.offset});
 }
 
-class UserAccountViewQuery
-    implements Query<List<UserAccountView>, QueryParams> {
+class UserAccountViewQuery implements Query<List<UserAccountView>, QueryParams> {
   @override
   Future<List<UserAccountView>> apply(Database db, QueryParams params) async {
     var time = DateTime.now();
@@ -318,14 +306,12 @@ class UserAccountViewQuery
       ${params.limit != null ? "LIMIT ${params.limit}" : ""}
       ${params.offset != null ? "OFFSET ${params.offset}" : ""}
     """);
-
-    var results =
-        res.map((row) => _decode<UserAccountView>(row.toColumnMap())).toList();
-    print(
-        'Queried ${results.length} rows in ${DateTime.now().difference(time)}');
+    
+    var results = res.map((row) => _decode<UserAccountView>(row.toColumnMap())).toList();
+    print('Queried ${results.length} rows in ${DateTime.now().difference(time)}');
     return results;
   }
-
+  
   static String _getQueryStatement() {
     return """
       SELECT "accounts".* , row_to_json("billingAddress".*) as "billingAddress", row_to_json("company".*) as "company", row_to_json("invoices".*) as "invoices", row_to_json("parties".*) as "parties"
@@ -369,14 +355,12 @@ class BillingAddressQuery implements Query<List<BillingAddress>, QueryParams> {
       ${params.limit != null ? "LIMIT ${params.limit}" : ""}
       ${params.offset != null ? "OFFSET ${params.offset}" : ""}
     """);
-
-    var results =
-        res.map((row) => _decode<BillingAddress>(row.toColumnMap())).toList();
-    print(
-        'Queried ${results.length} rows in ${DateTime.now().difference(time)}');
+    
+    var results = res.map((row) => _decode<BillingAddress>(row.toColumnMap())).toList();
+    print('Queried ${results.length} rows in ${DateTime.now().difference(time)}');
     return results;
   }
-
+  
   static String _getQueryStatement() {
     return """
       SELECT "billing_addresses".* 
@@ -392,8 +376,7 @@ extension BillingAddressDecoder on BillingAddress {
   }
 }
 
-class MemberCompanyViewQuery
-    implements Query<List<MemberCompanyView>, QueryParams> {
+class MemberCompanyViewQuery implements Query<List<MemberCompanyView>, QueryParams> {
   @override
   Future<List<MemberCompanyView>> apply(Database db, QueryParams params) async {
     var time = DateTime.now();
@@ -404,15 +387,12 @@ class MemberCompanyViewQuery
       ${params.limit != null ? "LIMIT ${params.limit}" : ""}
       ${params.offset != null ? "OFFSET ${params.offset}" : ""}
     """);
-
-    var results = res
-        .map((row) => _decode<MemberCompanyView>(row.toColumnMap()))
-        .toList();
-    print(
-        'Queried ${results.length} rows in ${DateTime.now().difference(time)}');
+    
+    var results = res.map((row) => _decode<MemberCompanyView>(row.toColumnMap())).toList();
+    print('Queried ${results.length} rows in ${DateTime.now().difference(time)}');
     return results;
   }
-
+  
   static String _getQueryStatement() {
     return """
       SELECT "companies".* , row_to_json("addresses".*) as "addresses"
@@ -428,8 +408,7 @@ class MemberCompanyViewQuery
   }
 }
 
-class OwnerInvoiceViewQuery
-    implements Query<List<OwnerInvoiceView>, QueryParams> {
+class OwnerInvoiceViewQuery implements Query<List<OwnerInvoiceView>, QueryParams> {
   @override
   Future<List<OwnerInvoiceView>> apply(Database db, QueryParams params) async {
     var time = DateTime.now();
@@ -440,14 +419,12 @@ class OwnerInvoiceViewQuery
       ${params.limit != null ? "LIMIT ${params.limit}" : ""}
       ${params.offset != null ? "OFFSET ${params.offset}" : ""}
     """);
-
-    var results =
-        res.map((row) => _decode<OwnerInvoiceView>(row.toColumnMap())).toList();
-    print(
-        'Queried ${results.length} rows in ${DateTime.now().difference(time)}');
+    
+    var results = res.map((row) => _decode<OwnerInvoiceView>(row.toColumnMap())).toList();
+    print('Queried ${results.length} rows in ${DateTime.now().difference(time)}');
     return results;
   }
-
+  
   static String _getQueryStatement() {
     return """
       SELECT "invoices".* 
@@ -468,14 +445,12 @@ class GuestPartyViewQuery implements Query<List<GuestPartyView>, QueryParams> {
       ${params.limit != null ? "LIMIT ${params.limit}" : ""}
       ${params.offset != null ? "OFFSET ${params.offset}" : ""}
     """);
-
-    var results =
-        res.map((row) => _decode<GuestPartyView>(row.toColumnMap())).toList();
-    print(
-        'Queried ${results.length} rows in ${DateTime.now().difference(time)}');
+    
+    var results = res.map((row) => _decode<GuestPartyView>(row.toColumnMap())).toList();
+    print('Queried ${results.length} rows in ${DateTime.now().difference(time)}');
     return results;
   }
-
+  
   static String _getQueryStatement() {
     return """
       SELECT "parties".* , row_to_json("sponsor".*) as "sponsor"
@@ -488,8 +463,7 @@ class GuestPartyViewQuery implements Query<List<GuestPartyView>, QueryParams> {
   }
 }
 
-class AdminAccountViewQuery
-    implements Query<List<AdminAccountView>, QueryParams> {
+class AdminAccountViewQuery implements Query<List<AdminAccountView>, QueryParams> {
   @override
   Future<List<AdminAccountView>> apply(Database db, QueryParams params) async {
     var time = DateTime.now();
@@ -500,14 +474,12 @@ class AdminAccountViewQuery
       ${params.limit != null ? "LIMIT ${params.limit}" : ""}
       ${params.offset != null ? "OFFSET ${params.offset}" : ""}
     """);
-
-    var results =
-        res.map((row) => _decode<AdminAccountView>(row.toColumnMap())).toList();
-    print(
-        'Queried ${results.length} rows in ${DateTime.now().difference(time)}');
+    
+    var results = res.map((row) => _decode<AdminAccountView>(row.toColumnMap())).toList();
+    print('Queried ${results.length} rows in ${DateTime.now().difference(time)}');
     return results;
   }
-
+  
   static String _getQueryStatement() {
     return """
       SELECT "accounts".* , row_to_json("billingAddress".*) as "billingAddress", row_to_json("company".*) as "company", row_to_json("invoices".*) as "invoices", row_to_json("parties".*) as "parties"
@@ -540,6 +512,10 @@ class AdminAccountViewQuery
   }
 }
 
+
+
+
+
 class AccountInsertRequest {
   String id;
   String firstName;
@@ -547,9 +523,8 @@ class AccountInsertRequest {
   LatLng location;
   BillingAddress? billingAddress;
   String? companyId;
-
-  AccountInsertRequest(this.id, this.firstName, this.lastName, this.location,
-      this.billingAddress, this.companyId);
+  
+  AccountInsertRequest(this.id, this.firstName, this.lastName, this.location, this.billingAddress, this.companyId);
 }
 
 class AccountInsertAction implements Action<List<AccountInsertRequest>> {
@@ -562,12 +537,9 @@ class AccountInsertAction implements Action<List<AccountInsertRequest>> {
       ON CONFLICT ( "id" ) DO UPDATE SET "first_name" = EXCLUDED."first_name", "last_name" = EXCLUDED."last_name", "location" = EXCLUDED."location", "company_id" = EXCLUDED."company_id"
     """);
 
-    await BillingAddressInsertAction().apply(
-        db,
-        requests.where((r) => r.billingAddress != null).map((r) {
-          return BillingAddressInsertRequest(r.id, null, r.billingAddress!.name,
-              r.billingAddress!.street, r.billingAddress!.city);
-        }).toList());
+    await BillingAddressInsertAction().apply(db, requests.where((r) => r.billingAddress != null).map((r) {
+      return BillingAddressInsertRequest(r.id, null, r.billingAddress!.name, r.billingAddress!.street, r.billingAddress!.city);
+    }).toList());
   }
 }
 
@@ -577,16 +549,13 @@ class BillingAddressInsertRequest {
   String name;
   String street;
   String city;
-
-  BillingAddressInsertRequest(
-      this.accountId, this.companyId, this.name, this.street, this.city);
+  
+  BillingAddressInsertRequest(this.accountId, this.companyId, this.name, this.street, this.city);
 }
 
-class BillingAddressInsertAction
-    implements Action<List<BillingAddressInsertRequest>> {
+class BillingAddressInsertAction implements Action<List<BillingAddressInsertRequest>> {
   @override
-  Future<void> apply(
-      Database db, List<BillingAddressInsertRequest> requests) async {
+  Future<void> apply(Database db, List<BillingAddressInsertRequest> requests) async {
     if (requests.isEmpty) return;
     await db.query("""
       INSERT INTO "billing_addresses" ( "account_id", "company_id", "name", "street", "city" )
@@ -603,9 +572,8 @@ class AccountUpdateRequest {
   LatLng? location;
   BillingAddress? billingAddress;
   String? companyId;
-
-  AccountUpdateRequest(this.id, this.firstName, this.lastName, this.location,
-      this.billingAddress, this.companyId);
+  
+  AccountUpdateRequest({required this.id, this.firstName, this.lastName, this.location, this.billingAddress, this.companyId});
 }
 
 class AccountUpdateAction implements Action<List<AccountUpdateRequest>> {
@@ -623,12 +591,9 @@ class AccountUpdateAction implements Action<List<AccountUpdateRequest>> {
       WHERE "id" = UPDATED."id"
     """);
 
-    await BillingAddressUpdateAction().apply(
-        db,
-        requests.where((r) => r.billingAddress != null).map((r) {
-          return BillingAddressUpdateRequest(r.id, null, r.billingAddress!.name,
-              r.billingAddress!.street, r.billingAddress!.city);
-        }).toList());
+    await BillingAddressUpdateAction().apply(db, requests.where((r) => r.billingAddress != null).map((r) {
+      return BillingAddressUpdateRequest(accountId: r.id, name: r.billingAddress!.name, street: r.billingAddress!.street, city: r.billingAddress!.city);
+    }).toList());
   }
 }
 
@@ -638,16 +603,13 @@ class BillingAddressUpdateRequest {
   String? name;
   String? street;
   String? city;
-
-  BillingAddressUpdateRequest(
-      this.accountId, this.companyId, this.name, this.street, this.city);
+  
+  BillingAddressUpdateRequest({this.accountId, this.companyId, this.name, this.street, this.city});
 }
 
-class BillingAddressUpdateAction
-    implements Action<List<BillingAddressUpdateRequest>> {
+class BillingAddressUpdateAction implements Action<List<BillingAddressUpdateRequest>> {
   @override
-  Future<void> apply(
-      Database db, List<BillingAddressUpdateRequest> requests) async {
+  Future<void> apply(Database db, List<BillingAddressUpdateRequest> requests) async {
     if (requests.isEmpty) return;
     await db.query("""
       UPDATE "billing_addresses"
@@ -661,27 +623,24 @@ class BillingAddressUpdateAction
   }
 }
 
+
+
+
+
 var _typeConverters = <Type, TypeConverter>{
   _typeOf<LatLng>(): LatLngConverter(),
 };
 var _decoders = <Type, Function>{
-  _typeOf<UserAccountView>(): (Map<String, dynamic> v) =>
-      UserAccountView.fromMap(v),
-  _typeOf<AdminAccountView>(): (Map<String, dynamic> v) =>
-      AdminAccountView.fromMap(v),
-  _typeOf<CompanyAccountView>(): (Map<String, dynamic> v) =>
-      CompanyAccountView.fromMap(v),
-  _typeOf<AdminCompanyView>(): (Map<String, dynamic> v) =>
-      AdminCompanyView.fromMap(v),
-  _typeOf<MemberCompanyView>(): (Map<String, dynamic> v) =>
-      MemberCompanyView.fromMap(v),
-  _typeOf<OwnerInvoiceView>(): (Map<String, dynamic> v) =>
-      OwnerInvoiceView.fromMap(v),
-  _typeOf<GuestPartyView>(): (Map<String, dynamic> v) =>
-      GuestPartyView.fromMap(v),
-  _typeOf<BillingAddress>(): (Map<String, dynamic> v) =>
-      BillingAddressDecoder.fromMap(v),
+  _typeOf<UserAccountView>(): (Map<String, dynamic> v) => UserAccountView.fromMap(v),
+  _typeOf<AdminAccountView>(): (Map<String, dynamic> v) => AdminAccountView.fromMap(v),
+  _typeOf<CompanyAccountView>(): (Map<String, dynamic> v) => CompanyAccountView.fromMap(v),
+  _typeOf<AdminCompanyView>(): (Map<String, dynamic> v) => AdminCompanyView.fromMap(v),
+  _typeOf<MemberCompanyView>(): (Map<String, dynamic> v) => MemberCompanyView.fromMap(v),
+  _typeOf<OwnerInvoiceView>(): (Map<String, dynamic> v) => OwnerInvoiceView.fromMap(v),
+  _typeOf<GuestPartyView>(): (Map<String, dynamic> v) => GuestPartyView.fromMap(v),
+  _typeOf<BillingAddress>(): (Map<String, dynamic> v) => BillingAddressDecoder.fromMap(v),
 };
+
 
 Type _typeOf<T>() => T;
 
@@ -696,8 +655,7 @@ T _decode<T>(dynamic value) {
     } else if (_typeConverters[T] != null) {
       return _typeConverters[T]!.decode(value) as T;
     } else {
-      throw ConverterException(
-          'Cannot decode value $value of type ${value.runtimeType} to type $T. Unknown type. Did you forgot to include the class or register a custom type converter?');
+      throw ConverterException('Cannot decode value $value of type ${value.runtimeType} to type $T. Unknown type. Did you forgot to include the class or register a custom type converter?');
     }
   }
 }
@@ -711,8 +669,7 @@ dynamic _encode(dynamic value) {
       var encoded = _typeConverters[value.runtimeType]!.encode(value);
       return PostgresTextEncoder().convert(encoded);
     } else {
-      throw ConverterException(
-          'Cannot encode value $value of type ${value.runtimeType}. Unknown type. Did you forgot to include the class or register a custom type converter?');
+      throw ConverterException('Cannot encode value $value of type ${value.runtimeType}. Unknown type. Did you forgot to include the class or register a custom type converter?');
     }
   }
 }
@@ -740,7 +697,8 @@ extension on Map<String, dynamic> {
       if (v is Map<String, dynamic> && v['data'] is List) {
         return v.getList<T>('data');
       } else {
-        throw ConverterException('Parameter $v with key $key is not a List');
+        throw ConverterException(
+            'Parameter $v with key $key is not a List');
       }
     }
     List value = this[key] as List<dynamic>;
