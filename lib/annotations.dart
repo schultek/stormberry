@@ -93,6 +93,7 @@ class MultiUpdateAction implements Action {
 }
 
 abstract class Query<T, U> {
+  const Query();
   Future<T> apply(Database db, U params);
 }
 
