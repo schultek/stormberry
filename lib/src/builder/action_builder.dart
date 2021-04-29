@@ -259,26 +259,48 @@ class ActionBuilder {
 
     for (var column in table.columns.where((c) =>
         c.isReferenceColumn && c.linkBuilder!.primaryKeyColumn == null)) {
-      var requestParams = <String>[];
-      for (var c
-          in column.linkBuilder!.columns.where((c) => !column.isJoinColumn)) {
-        if (c.isForeignColumn) {
-          if (c.linkBuilder == table) {
+      if (!column.isList) {
+        var requestParams = <String>[];
+        for (var c
+            in column.linkBuilder!.columns.where((c) => !column.isJoinColumn)) {
+          if (c.isForeignColumn) {
+            if (c.linkBuilder == table) {
+              requestParams.add(
+                  '${c.paramName}: r.${table.primaryKeyColumn!.paramName}');
+            }
+          } else {
             requestParams
-                .add('${c.paramName}: r.${table.primaryKeyColumn!.paramName}');
+                .add('${c.paramName}: r.${column.paramName}!.${c.paramName}');
           }
-        } else {
-          requestParams
-              .add('${c.paramName}: r.${column.paramName}!.${c.paramName}');
         }
+
+        var deepInsert = ''
+            'await ${column.linkBuilder!.element.name}UpdateAction().apply(db, requests.where((r) => r.${column.paramName} != null).map((r) {\n'
+            '  return ${column.linkBuilder!.element.name}UpdateRequest(${requestParams.join(', ')});\n'
+            '}).toList());';
+
+        deepUpdates.add(deepInsert);
+      } else {
+        var requestParams = <String>[];
+        for (var c
+            in column.linkBuilder!.columns.where((c) => !column.isJoinColumn)) {
+          if (c.isForeignColumn) {
+            if (c.linkBuilder == table) {
+              requestParams.add(
+                  '${c.paramName}: r.${table.primaryKeyColumn!.paramName}');
+            }
+          } else {
+            requestParams.add('${c.paramName}: rr.${c.paramName}');
+          }
+        }
+
+        var deepInsert = ''
+            'await ${column.linkBuilder!.element.name}UpdateAction().apply(db, requests.where((r) => r.${column.paramName} != null).expand((r) {\n'
+            '  return r.${column.paramName}!.map((rr) => ${column.linkBuilder!.element.name}UpdateRequest(${requestParams.join(', ')}));\n'
+            '}).toList());';
+
+        deepUpdates.add(deepInsert);
       }
-
-      var deepInsert = ''
-          'await ${column.linkBuilder!.element.name}UpdateAction().apply(db, requests.where((r) => r.${column.paramName} != null).map((r) {\n'
-          '  return ${column.linkBuilder!.element.name}UpdateRequest(${requestParams.join(', ')});\n'
-          '}).toList());';
-
-      deepUpdates.add(deepInsert);
 
       if (!column.linkBuilder!.hasDefaultUpdateAction) {
         var deepActionBuilder =
