@@ -77,6 +77,13 @@ class ActionBuilder {
 
     for (var column in table.columns.where((c) =>
         c.isReferenceColumn && c.linkBuilder!.primaryKeyColumn == null)) {
+      if (column.linkBuilder!.columns
+          .where((c) =>
+              c.isForeignColumn && c.linkBuilder != table && !c.isNullable)
+          .isNotEmpty) {
+        continue;
+      }
+
       var isNullable = column.isNullable;
       if (!column.isList) {
         var requestParams = column.linkBuilder!.columns
@@ -194,6 +201,15 @@ class ActionBuilder {
       if (column.isFieldColumn ||
           (column.isReferenceColumn &&
               column.linkBuilder!.primaryKeyColumn == null)) {
+        if (column.linkBuilder != null &&
+            column.linkBuilder!.columns
+                .where((c) =>
+                    c.isForeignColumn &&
+                    c.linkBuilder != table &&
+                    !c.isNullable)
+                .isNotEmpty) {
+          continue;
+        }
         requestFields.add(MapEntry(
           column.parameter!.type.getDisplayString(withNullability: true),
           column.paramName!,

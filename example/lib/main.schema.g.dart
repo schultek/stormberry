@@ -316,13 +316,9 @@ class UserAccountViewQuery implements Query<List<UserAccountView>, QueryParams> 
     return """
       SELECT "accounts".* , row_to_json("billingAddress".*) as "billingAddress", row_to_json("company".*) as "company", row_to_json("invoices".*) as "invoices", row_to_json("parties".*) as "parties"
       FROM "accounts"
-      LEFT JOIN (
-        ${BillingAddressQuery._getQueryStatement()}
-      ) "billingAddress"
+      LEFT JOIN ( ${BillingAddressQuery._getQueryStatement()} ) "billingAddress"
       ON "accounts"."id" = "billingAddress"."account_id"
-      LEFT JOIN (
-        ${MemberCompanyViewQuery._getQueryStatement()}
-      ) "company"
+      LEFT JOIN ( ${MemberCompanyViewQuery._getQueryStatement()} ) "company"
       ON "accounts"."company_id" = "company"."id"
       LEFT JOIN (
         SELECT "invoices"."account_id",
@@ -455,9 +451,7 @@ class GuestPartyViewQuery implements Query<List<GuestPartyView>, QueryParams> {
     return """
       SELECT "parties".* , row_to_json("sponsor".*) as "sponsor"
       FROM "parties"
-      LEFT JOIN (
-        ${MemberCompanyViewQuery._getQueryStatement()}
-      ) "sponsor"
+      LEFT JOIN ( ${MemberCompanyViewQuery._getQueryStatement()} ) "sponsor"
       ON "parties"."sponsor_id" = "sponsor"."id"
     """;
   }
@@ -484,13 +478,9 @@ class AdminAccountViewQuery implements Query<List<AdminAccountView>, QueryParams
     return """
       SELECT "accounts".* , row_to_json("billingAddress".*) as "billingAddress", row_to_json("company".*) as "company", row_to_json("invoices".*) as "invoices", row_to_json("parties".*) as "parties"
       FROM "accounts"
-      LEFT JOIN (
-        ${BillingAddressQuery._getQueryStatement()}
-      ) "billingAddress"
+      LEFT JOIN ( ${BillingAddressQuery._getQueryStatement()} ) "billingAddress"
       ON "accounts"."id" = "billingAddress"."account_id"
-      LEFT JOIN (
-        ${MemberCompanyViewQuery._getQueryStatement()}
-      ) "company"
+      LEFT JOIN ( ${MemberCompanyViewQuery._getQueryStatement()} ) "company"
       ON "accounts"."company_id" = "company"."id"
       LEFT JOIN (
         SELECT "invoices"."account_id",

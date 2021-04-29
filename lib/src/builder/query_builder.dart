@@ -224,8 +224,8 @@ class QueryBuilder {
 
     var params = <String>[];
 
-    for (var column in table.columns.where((c) => c.parameter != null)) {
-      var param = column.parameter!;
+    for (var param in table.constructor.parameters) {
+      var column = table.columns.firstWhere((c) => c.parameter == param);
 
       var str = '';
 
