@@ -1,6 +1,10 @@
 class DatabaseSchema {
   final Map<String, TableSchema> tables;
   const DatabaseSchema([this.tables = const {}]);
+
+  DatabaseSchema copy() => DatabaseSchema(tables.map(
+        (key, value) => MapEntry(key, value.copy()),
+      ));
 }
 
 class TableSchema {
@@ -15,6 +19,12 @@ class TableSchema {
       this.constraints = const [],
       this.triggers = const [],
       this.indexes = const []});
+
+  TableSchema copy() => TableSchema(name,
+      columns: {...columns},
+      constraints: [...constraints],
+      triggers: [...triggers],
+      indexes: [...indexes]);
 }
 
 class ColumnSchema {

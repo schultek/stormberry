@@ -3,8 +3,10 @@ import '../schema.dart';
 import '../utils.dart';
 import 'inspector.dart';
 
-Future<DatabaseSchemaDiff> getSchemaDiff(Database db, DatabaseSchema newSchema) async {
+Future<DatabaseSchemaDiff> getSchemaDiff(
+    Database db, DatabaseSchema dbSchema) async {
   var existingSchema = await inspectDatabaseSchema(db);
+  var newSchema = dbSchema.copy();
 
   var diff = DatabaseSchemaDiff();
 
@@ -15,10 +17,13 @@ Future<DatabaseSchemaDiff> getSchemaDiff(Database db, DatabaseSchema newSchema) 
       diff.tables.modified.add(tableDiff);
 
       for (var extColumn in extTable.columns.values) {
-        var newColumn = newTable.columns.values.where((c) => c.name == extColumn.name).firstOrNull;
+        var newColumn = newTable.columns.values
+            .where((c) => c.name == extColumn.name)
+            .firstOrNull;
         if (newColumn != null) {
           newTable.columns.removeWhere((_, c) => c == newColumn);
-          if (newColumn.type != extColumn.type || newColumn.isNullable != extColumn.isNullable) {
+          if (newColumn.type != extColumn.type ||
+              newColumn.isNullable != extColumn.isNullable) {
             tableDiff.columns.modified.add(Change(extColumn, newColumn));
           }
         } else {
@@ -31,7 +36,8 @@ Future<DatabaseSchemaDiff> getSchemaDiff(Database db, DatabaseSchema newSchema) 
       }
 
       for (var extConstraint in extTable.constraints) {
-        var newConstraint = newTable.constraints.where((c) => c == extConstraint).firstOrNull;
+        var newConstraint =
+            newTable.constraints.where((c) => c == extConstraint).firstOrNull;
 
         if (newConstraint != null) {
           newTable.constraints.remove(newConstraint);
@@ -45,7 +51,8 @@ Future<DatabaseSchemaDiff> getSchemaDiff(Database db, DatabaseSchema newSchema) 
       }
 
       for (var extTrigger in extTable.triggers) {
-        var newTrigger = newTable.triggers.where((t) => t == extTrigger).firstOrNull;
+        var newTrigger =
+            newTable.triggers.where((t) => t == extTrigger).firstOrNull;
 
         if (newTrigger != null) {
           newTable.triggers.remove(newTrigger);
@@ -100,8 +107,10 @@ class DatabaseSchemaDiff {
 
       for (var column in table.columns.modified) {
         var prev = column.prev, newly = column.newly;
-        print("-  COLUMN ${table.name}.${prev.name} ${prev.type} ${prev.isNullable ? 'NULL' : 'NOT NULL'}");
-        print("+  COLUMN ${table.name}.${newly.name} ${newly.type} ${newly.isNullable ? 'NULL' : 'NOT NULL'}");
+        print(
+            "-  COLUMN ${table.name}.${prev.name} ${prev.type} ${prev.isNullable ? 'NULL' : 'NOT NULL'}");
+        print(
+            "+  COLUMN ${table.name}.${newly.name} ${newly.type} ${newly.isNullable ? 'NULL' : 'NOT NULL'}");
       }
 
       for (var column in table.columns.removed) {
@@ -109,11 +118,13 @@ class DatabaseSchemaDiff {
       }
 
       for (var constr in table.constraints.added) {
-        print("++ CONSTRAINT ON ${table.name} ${constr.toString().replaceAll(RegExp("[\n\\s]+"), " ")}");
+        print(
+            "++ CONSTRAINT ON ${table.name} ${constr.toString().replaceAll(RegExp("[\n\\s]+"), " ")}");
       }
 
       for (var constr in table.constraints.removed) {
-        print("-- CONSTRAINT ON ${table.name} ${constr.toString().replaceAll(RegExp("[\n\\s]+"), " ")}");
+        print(
+            "-- CONSTRAINT ON ${table.name} ${constr.toString().replaceAll(RegExp("[\n\\s]+"), " ")}");
       }
 
       for (var trigger in table.triggers.added) {
@@ -127,11 +138,13 @@ class DatabaseSchemaDiff {
       }
 
       for (var index in table.indexes.added) {
-        print("++ ${index.statement(table.name).replaceAll(RegExp("[\n\\s]+"), " ")}");
+        print(
+            "++ ${index.statement(table.name).replaceAll(RegExp("[\n\\s]+"), " ")}");
       }
 
       for (var index in table.indexes.removed) {
-        print("-- ${index.statement(table.name).replaceAll(RegExp("[\n\\s]+"), " ")}");
+        print(
+            "-- ${index.statement(table.name).replaceAll(RegExp("[\n\\s]+"), " ")}");
       }
     }
 
@@ -151,7 +164,10 @@ class TableSchemaDiff {
   TableSchemaDiff(this.name);
 
   bool get hasChanges =>
-      columns.hasChanges() || constraints.hasChanges() || triggers.hasChanges() || indexes.hasChanges();
+      columns.hasChanges() ||
+      constraints.hasChanges() ||
+      triggers.hasChanges() ||
+      indexes.hasChanges();
 }
 
 class Diff<T, U> {
@@ -160,7 +176,9 @@ class Diff<T, U> {
   List<T> removed = [];
 
   bool hasChanges([bool Function(U modified)? fn]) {
-    return added.isNotEmpty || removed.isNotEmpty || (fn != null ? modified.any(fn) : modified.isNotEmpty);
+    return added.isNotEmpty ||
+        removed.isNotEmpty ||
+        (fn != null ? modified.any(fn) : modified.isNotEmpty);
   }
 }
 
