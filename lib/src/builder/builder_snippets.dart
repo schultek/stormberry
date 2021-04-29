@@ -1,3 +1,15 @@
+/// A set of TypeConverters for primitive types
+const defaultConverters = '''
+  // primitive converters
+  _typeOf<dynamic>():  _PrimitiveTypeConverter((dynamic v) => v),
+  _typeOf<String>():   _PrimitiveTypeConverter<String>((dynamic v) => v.toString()),
+  _typeOf<int>():      _PrimitiveTypeConverter<int>((dynamic v) => num.parse(v.toString()).round()),
+  _typeOf<double>():   _PrimitiveTypeConverter<double>((dynamic v) => double.parse(v.toString())),
+  _typeOf<num>():      _PrimitiveTypeConverter<num>((dynamic v) => num.parse(v.toString())),
+  _typeOf<bool>():     _PrimitiveTypeConverter<bool>((dynamic v) => v is num ? v != 0 : v.toString() == 'true'),
+  _typeOf<DateTime>(): _DateTimeConverter(),
+  // generated converters''';
+
 const staticCode = r'''
 
 Type _typeOf<T>() => T;
@@ -30,6 +42,34 @@ dynamic _encode(dynamic value) {
       throw ConverterException('Cannot encode value $value of type ${value.runtimeType}. Unknown type. Did you forgot to include the class or register a custom type converter?');
     }
   }
+}
+
+class _PrimitiveTypeConverter<T> implements TypeConverter<T> {
+  const _PrimitiveTypeConverter(this.decoder);
+  final T Function(dynamic value) decoder;
+  
+  @override dynamic encode(T value) => value;
+  @override T decode(dynamic value) => decoder(value);
+  @override String? get type => throw UnimplementedError();
+}
+
+class _DateTimeConverter implements TypeConverter<DateTime> {
+ 
+  @override
+  DateTime decode(dynamic d) {
+    if (d is String) {
+      return DateTime.parse(d);
+    } else if (d is num) {
+      return DateTime.fromMillisecondsSinceEpoch(d.round());
+    } else {
+      throw ConverterException('Cannot decode value of type ${d.runtimeType} to type DateTime, because a value of type String or num is expected.');
+    }
+  }
+
+  @override String encode(DateTime self) => self.toUtc().toIso8601String();
+
+  @override
+  String? get type => throw UnimplementedError();
 }
 
 extension on Map<String, dynamic> {

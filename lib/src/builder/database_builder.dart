@@ -123,6 +123,7 @@ class DatabaseBuilder implements Builder {
       state.builders.values.map((b) => b.generateActions()).join('\n'),
       '',
       'var _typeConverters = <Type, TypeConverter>{',
+      defaultConverters,
       state.typeConverters.entries
           .map((e) => '  _typeOf<${e.key}>(): ${e.value.key}(),')
           .join('\n'),
