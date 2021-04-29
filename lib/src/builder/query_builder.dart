@@ -60,7 +60,7 @@ class QueryBuilder {
       return ''
           'Future<$resultClassName?> $methodName(${table.primaryKeyColumn!.dartType} ${table.primaryKeyColumn!.paramName}) async {\n'
           '  return (await $queryClassName().apply(_db, QueryParams(\n'
-          '    where: \'"${table.primaryKeyColumn!.paramName}" = \\\'\$${table.primaryKeyColumn!.paramName}\\\'\',\n'
+          '    where: \'"${table.tableName}"."${table.primaryKeyColumn!.paramName}" = \\\'\$${table.primaryKeyColumn!.paramName}\\\'\',\n'
           '    limit: 1,\n'
           '  ))).firstOrNull;\n'
           '}';
