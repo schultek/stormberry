@@ -88,7 +88,11 @@ class QueryBuilder {
   String? generateClasses() {
     if (annotation == null) {
       return null;
-    } else if (className == 'SingleQuery' || className == 'MultiQuery') {
+    } else if (className == 'SingleQuery') {
+      return _generateQueryClass();
+    } else if (className == 'MultiQuery' &&
+        !table.queries
+            .any((q) => q.className == 'SingleQuery' && q.view == view)) {
       return _generateQueryClass();
     }
   }
@@ -113,9 +117,7 @@ class QueryBuilder {
       if (column.column.isForeignColumn) {
         joins.add(MapEntry(
           column.paramName,
-          'LEFT JOIN (\n'
-          '  \${${column.queryClassName}._getQueryStatement()}\n'
-          ') "${column.paramName}"\n'
+          'LEFT JOIN ( \${${column.queryClassName}._getQueryStatement()} ) "${column.paramName}"\n'
           'ON "${table.tableName}"."${column.column.columnName}" = "${column.paramName}"."${column.column.linkBuilder!.primaryKeyColumn!.columnName}"',
         ));
 
@@ -141,9 +143,7 @@ class QueryBuilder {
         } else {
           joins.add(MapEntry(
             column.paramName,
-            'LEFT JOIN (\n'
-            '  \${${column.queryClassName}._getQueryStatement()}\n'
-            ') "${column.paramName}"\n'
+            'LEFT JOIN ( \${${column.queryClassName}._getQueryStatement()} ) "${column.paramName}"\n'
             'ON "${table.tableName}"."${table.primaryKeyColumn!.columnName}" = "${column.paramName}"."${column.column.referencedColumn!.columnName}"',
           ));
         }
