@@ -109,7 +109,7 @@ class AccountTable {
 
   Future<UserAccountView?> queryUserView(String id) async {
     return (await UserAccountViewQuery().apply(_db, QueryParams(
-      where: '"id" = \'$id\'',
+      where: '"accounts"."id" = \'$id\'',
       limit: 1,
     ))).firstOrNull;
   }
@@ -523,7 +523,7 @@ class AccountInsertAction implements Action<List<AccountInsertRequest>> {
     if (requests.isEmpty) return;
     await db.query("""
       INSERT INTO "accounts" ( "id", "first_name", "last_name", "location", "company_id" )
-      VALUES ${requests.map((r) => '( ${_encode(r.id)}, ${_encode(r.firstName)}, ${_encode(r.lastName)}, ${_encode(r.location)}, ${_encode(r.companyId)} )')}
+      VALUES ${requests.map((r) => '( ${_encode(r.id)}, ${_encode(r.firstName)}, ${_encode(r.lastName)}, ${_encode(r.location)}, ${_encode(r.companyId)} )').join(', ')}
       ON CONFLICT ( "id" ) DO UPDATE SET "first_name" = EXCLUDED."first_name", "last_name" = EXCLUDED."last_name", "location" = EXCLUDED."location", "company_id" = EXCLUDED."company_id"
     """);
 
@@ -549,7 +549,7 @@ class BillingAddressInsertAction implements Action<List<BillingAddressInsertRequ
     if (requests.isEmpty) return;
     await db.query("""
       INSERT INTO "billing_addresses" ( "account_id", "company_id", "name", "street", "city" )
-      VALUES ${requests.map((r) => '( ${_encode(r.accountId)}, ${_encode(r.companyId)}, ${_encode(r.name)}, ${_encode(r.street)}, ${_encode(r.city)} )')}
+      VALUES ${requests.map((r) => '( ${_encode(r.accountId)}, ${_encode(r.companyId)}, ${_encode(r.name)}, ${_encode(r.street)}, ${_encode(r.city)} )').join(', ')}
       ON CONFLICT ( "account_id" ) DO UPDATE SET "name" = EXCLUDED."name", "street" = EXCLUDED."street", "city" = EXCLUDED."city"
     """);
   }
@@ -662,7 +662,12 @@ T _decode<T>(dynamic value) {
 dynamic _encode(dynamic value) {
   if (value == null) return null;
   try {
-    return PostgresTextEncoder().convert(value);
+    var encoded = PostgresTextEncoder().convert(value);
+    if (value is List) {
+      return "'$encoded'";
+    } else {
+      return encoded;
+    }
   } catch (_) {
     if (_typeConverters[value.runtimeType] != null) {
       var encoded = _typeConverters[value.runtimeType]!.encode(value);

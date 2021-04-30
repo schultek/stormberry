@@ -171,7 +171,7 @@ class ActionBuilder {
         '    if (requests.isEmpty) return;\n'
         '    await db.query("""\n'
         '      INSERT INTO "${table.tableName}" ( ${table.columns.where((c) => c.isFieldColumn || c.isForeignColumn).map((c) => '"${c.columnName}"').join(', ')} )\n'
-        '      VALUES \${requests.map((r) => \'( ${table.columns.where((c) => c.isFieldColumn || c.isForeignColumn).map((c) => '\${_encode(r.${c.paramName})}').join(', ')} )\')}\n'
+        '      VALUES \${requests.map((r) => \'( ${table.columns.where((c) => c.isFieldColumn || c.isForeignColumn).map((c) => '\${_encode(r.${c.paramName})}').join(', ')} )\').join(\', \')}\n'
         '${onConflictClause != null ? '      $onConflictClause\n' : ''}'
         '    """);\n'
         '${deepInserts.isNotEmpty ? '\n${deepInserts.join('\n\n').indent('    ')}\n' : ''}'
