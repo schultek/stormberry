@@ -7,7 +7,7 @@ issue_tracker: https://github.com/schultek/dartabase/issues
 dependencies:
   analyzer: ^1.4.0
   build: ^2.0.0
-  postgres: ^2.3.1
+  postgres: ^2.3.2
   source_gen: ^1.0.0
 
 dev_dependencies:
