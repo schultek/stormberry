@@ -33,7 +33,12 @@ T _decode<T>(dynamic value) {
 dynamic _encode(dynamic value) {
   if (value == null) return null;
   try {
-    return PostgresTextEncoder().convert(value);
+    var encoded = PostgresTextEncoder().convert(value);
+    if (value is List) {
+      return "'$encoded'";
+    } else {
+      return encoded;
+    }
   } catch (_) {
     if (_typeConverters[value.runtimeType] != null) {
       var encoded = _typeConverters[value.runtimeType]!.encode(value);
