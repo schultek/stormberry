@@ -165,7 +165,7 @@ class QueryBuilder {
           '    array_to_json(array_agg(row_to_json("${columnTable.tableName}"))) as data\n'
           '  FROM "${joinTable.tableName}"\n'
           '  LEFT JOIN ( \${${column.queryClassName}._getQueryStatement()} ) "${columnTable.tableName}"\n'
-          '  ON "${columnTable.tableName}"."${columnTable.primaryKeyColumn!.columnName}" = "${joinTable.tableName}"."${column.column.parentBuilder.getForeignKeyName()}"\n'
+          '  ON "${columnTable.tableName}"."${columnTable.primaryKeyColumn!.columnName}" = "${joinTable.tableName}"."${columnTable.getForeignKeyName()}"\n'
           '  GROUP BY "${joinTable.tableName}"."${column.column.parentBuilder.getForeignKeyName()}"\n'
           ') "${column.paramName}"\n'
           'ON "${table.tableName}"."${table.primaryKeyColumn!.columnName}" = "${column.paramName}"."${column.column.parentBuilder.getForeignKeyName()}"',

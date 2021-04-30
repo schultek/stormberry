@@ -332,7 +332,7 @@ class UserAccountViewQuery implements Query<List<UserAccountView>, QueryParams> 
           array_to_json(array_agg(row_to_json("parties"))) as data
         FROM "accounts_parties"
         LEFT JOIN ( ${GuestPartyViewQuery._getQueryStatement()} ) "parties"
-        ON "parties"."id" = "accounts_parties"."account_id"
+        ON "parties"."id" = "accounts_parties"."party_id"
         GROUP BY "accounts_parties"."account_id"
       ) "parties"
       ON "accounts"."id" = "parties"."account_id"
@@ -494,7 +494,7 @@ class AdminAccountViewQuery implements Query<List<AdminAccountView>, QueryParams
           array_to_json(array_agg(row_to_json("parties"))) as data
         FROM "accounts_parties"
         LEFT JOIN ( ${GuestPartyViewQuery._getQueryStatement()} ) "parties"
-        ON "parties"."id" = "accounts_parties"."account_id"
+        ON "parties"."id" = "accounts_parties"."party_id"
         GROUP BY "accounts_parties"."account_id"
       ) "parties"
       ON "accounts"."id" = "parties"."account_id"
