@@ -322,14 +322,14 @@ class UserAccountViewQuery implements Query<List<UserAccountView>, QueryParams> 
       ON "accounts"."company_id" = "company"."id"
       LEFT JOIN (
         SELECT "invoices"."account_id",
-          array_to_json(array_agg(row_to_json("invoices"))) as data
+          array_to_json(array_agg(row_to_json("invoices".*))) as data
         FROM ( ${OwnerInvoiceViewQuery._getQueryStatement()} ) "invoices"
         GROUP BY "invoices"."account_id"
       ) "invoices"
       ON "accounts"."id" = "invoices"."account_id"
       LEFT JOIN (
         SELECT "accounts_parties"."account_id",
-          array_to_json(array_agg(row_to_json("parties"))) as data
+          array_to_json(array_agg(row_to_json("parties".*))) as data
         FROM "accounts_parties"
         LEFT JOIN ( ${GuestPartyViewQuery._getQueryStatement()} ) "parties"
         ON "parties"."id" = "accounts_parties"."party_id"
@@ -395,7 +395,7 @@ class MemberCompanyViewQuery implements Query<List<MemberCompanyView>, QueryPara
       FROM "companies"
       LEFT JOIN (
         SELECT "billing_addresses"."company_id",
-          array_to_json(array_agg(row_to_json("billing_addresses"))) as data
+          array_to_json(array_agg(row_to_json("billing_addresses".*))) as data
         FROM ( ${BillingAddressQuery._getQueryStatement()} ) "billing_addresses"
         GROUP BY "billing_addresses"."company_id"
       ) "addresses"
@@ -484,14 +484,14 @@ class AdminAccountViewQuery implements Query<List<AdminAccountView>, QueryParams
       ON "accounts"."company_id" = "company"."id"
       LEFT JOIN (
         SELECT "invoices"."account_id",
-          array_to_json(array_agg(row_to_json("invoices"))) as data
+          array_to_json(array_agg(row_to_json("invoices".*))) as data
         FROM ( ${OwnerInvoiceViewQuery._getQueryStatement()} ) "invoices"
         GROUP BY "invoices"."account_id"
       ) "invoices"
       ON "accounts"."id" = "invoices"."account_id"
       LEFT JOIN (
         SELECT "accounts_parties"."account_id",
-          array_to_json(array_agg(row_to_json("parties"))) as data
+          array_to_json(array_agg(row_to_json("parties".*))) as data
         FROM "accounts_parties"
         LEFT JOIN ( ${GuestPartyViewQuery._getQueryStatement()} ) "parties"
         ON "parties"."id" = "accounts_parties"."party_id"
@@ -669,10 +669,17 @@ dynamic _encode(dynamic value) {
       return encoded;
     }
   } catch (_) {
-    if (_typeConverters[value.runtimeType] != null) {
-      var encoded = _typeConverters[value.runtimeType]!.encode(value);
+    try {
+      dynamic encoded;
+      if (_typeConverters[value.runtimeType] != null) {
+        encoded = _typeConverters[value.runtimeType]!.encode(value);
+      } else if (value is List) {
+        encoded = value.map((v) => _encode(v)).toList();
+      } else {
+        throw ConverterException('');
+      }
       return PostgresTextEncoder().convert(encoded);
-    } else {
+    } catch (_) {
       throw ConverterException('Cannot encode value $value of type ${value.runtimeType}. Unknown type. Did you forgot to include the class or register a custom type converter?');
     }
   }

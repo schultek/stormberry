@@ -134,7 +134,7 @@ class QueryBuilder {
             column.paramName,
             'LEFT JOIN (\n'
             '  SELECT "${columnTable.tableName}"."${column.column.referencedColumn!.columnName}",\n'
-            '    array_to_json(array_agg(row_to_json("${columnTable.tableName}"))) as data\n'
+            '    array_to_json(array_agg(row_to_json("${columnTable.tableName}".*))) as data\n'
             '  FROM ( \${${column.queryClassName}._getQueryStatement()} ) "${columnTable.tableName}"\n'
             '  GROUP BY "${columnTable.tableName}"."${column.column.referencedColumn!.columnName}"\n'
             ') "${column.paramName}"\n'
@@ -162,7 +162,7 @@ class QueryBuilder {
           column.paramName,
           'LEFT JOIN (\n'
           '  SELECT "${joinTable.tableName}"."${column.column.parentBuilder.getForeignKeyName()}",\n'
-          '    array_to_json(array_agg(row_to_json("${columnTable.tableName}"))) as data\n'
+          '    array_to_json(array_agg(row_to_json("${columnTable.tableName}".*))) as data\n'
           '  FROM "${joinTable.tableName}"\n'
           '  LEFT JOIN ( \${${column.queryClassName}._getQueryStatement()} ) "${columnTable.tableName}"\n'
           '  ON "${columnTable.tableName}"."${columnTable.primaryKeyColumn!.columnName}" = "${joinTable.tableName}"."${columnTable.getForeignKeyName()}"\n'

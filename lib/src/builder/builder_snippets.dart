@@ -40,10 +40,17 @@ dynamic _encode(dynamic value) {
       return encoded;
     }
   } catch (_) {
-    if (_typeConverters[value.runtimeType] != null) {
-      var encoded = _typeConverters[value.runtimeType]!.encode(value);
+    try {
+      dynamic encoded;
+      if (_typeConverters[value.runtimeType] != null) {
+        encoded = _typeConverters[value.runtimeType]!.encode(value);
+      } else if (value is List) {
+        encoded = value.map((v) => _encode(v)).toList();
+      } else {
+        throw ConverterException('');
+      }
       return PostgresTextEncoder().convert(encoded);
-    } else {
+    } catch (_) {
       throw ConverterException('Cannot encode value $value of type ${value.runtimeType}. Unknown type. Did you forgot to include the class or register a custom type converter?');
     }
   }
