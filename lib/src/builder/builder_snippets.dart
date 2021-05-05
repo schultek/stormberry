@@ -34,7 +34,8 @@ dynamic _encode(dynamic value) {
   if (value == null) return null;
   try {
     var encoded = PostgresTextEncoder().convert(value);
-    return value is List ? "'$encoded'" : encoded;
+    if (value is Map) return "'${encoded.replaceAll("'", "''")}'";
+    return value is List || value is PgPoint ? "'$encoded'" : encoded;
   } catch (_) {
     try {
       if (_typeConverters[value.runtimeType] != null) {
