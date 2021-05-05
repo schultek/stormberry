@@ -34,22 +34,16 @@ dynamic _encode(dynamic value) {
   if (value == null) return null;
   try {
     var encoded = PostgresTextEncoder().convert(value);
-    if (value is List) {
-      return "'$encoded'";
-    } else {
-      return encoded;
-    }
+    return value is List ? "'$encoded'" : encoded;
   } catch (_) {
     try {
-      dynamic encoded;
       if (_typeConverters[value.runtimeType] != null) {
-        encoded = _typeConverters[value.runtimeType]!.encode(value);
+        return _encode(_typeConverters[value.runtimeType]!.encode(value));
       } else if (value is List) {
-        encoded = value.map((v) => _encode(v)).toList();
+        return _encode(value.map((v) => _encode(v)).toList());
       } else {
         throw ConverterException('');
       }
-      return PostgresTextEncoder().convert(encoded);
     } catch (_) {
       throw ConverterException('Cannot encode value $value of type ${value.runtimeType}. Unknown type. Did you forgot to include the class or register a custom type converter?');
     }
