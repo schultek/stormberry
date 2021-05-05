@@ -103,7 +103,6 @@ class ColumnBuilder {
     } else if (type.element?.name == 'DateTime') {
       return 'timestamp';
     } else if (type.element?.name == 'PgPoint') {
-      // TODO support LatLng
       return 'point';
     } else {
       return 'jsonb';
