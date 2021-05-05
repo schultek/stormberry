@@ -320,7 +320,7 @@ class ActionBuilder {
         '      SET ${table.columns.where((c) => hasPrimaryKey ? c != table.primaryKeyColumn && (c.isFieldColumn || c.isForeignColumn) : c.isFieldColumn).map((c) => '"${c.columnName}" = COALESCE(UPDATED."${c.columnName}", "${table.tableName}"."${c.columnName}")').join(',\n          ')}\n'
         '      FROM ( VALUES \${requests.map((r) => \'( ${table.columns.where((c) => c.isFieldColumn || c.isForeignColumn).map((c) => '\${_encode(r.${c.paramName})}').join(', ')} )\').join(\', \')} )\n'
         '      AS UPDATED(${table.columns.where((c) => c.isFieldColumn || c.isForeignColumn).map((c) => '"${c.columnName}"').join(', ')})\n'
-        '      WHERE ${hasPrimaryKey ? '"${table.primaryKeyColumn!.columnName}" = UPDATED."${table.primaryKeyColumn!.columnName}"' : table.columns.where((c) => c.isForeignColumn).map((c) => '"${c.columnName}" = UPDATED."${c.columnName}"').join(' AND ')}\n'
+        '      WHERE ${hasPrimaryKey ? '"${table.tableName}"."${table.primaryKeyColumn!.columnName}" = UPDATED."${table.primaryKeyColumn!.columnName}"' : table.columns.where((c) => c.isForeignColumn).map((c) => '"${table.tableName}"."${c.columnName}" = UPDATED."${c.columnName}"').join(' AND ')}\n'
         '    """);\n'
         '${deepUpdates.isNotEmpty ? '\n${deepUpdates.join('\n\n').indent('    ')}\n' : ''}'
         '  }\n'
