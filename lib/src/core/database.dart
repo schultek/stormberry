@@ -93,6 +93,9 @@ class Database {
 
   Future<void> startTransaction() async {
     await _tryOpen();
+    if (transactionContext != null) {
+      return;
+    }
     transactionCompleter = Completer();
     var transactionStarted = Completer();
     transactionFuture = _cachedConnection!.transaction((context) async {

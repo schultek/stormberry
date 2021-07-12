@@ -15,6 +15,22 @@ It supports all kinds of relations without any complex configuration.
     - [Indexes](#indexes)
 - [Database migration tool](#database-migration-tool)
 
+> This package is still in active development. If you have any feedback or feature requests, write me and issue on github.
+
+### Roadmap
+
+- Features
+    - Action constructor parameters
+    - Query constructor parameters
+- Documentation
+    - Improve Readme
+    - Improve example
+- Testing & Maintenance
+    - Improve code structure
+    - Write tests
+- Long Term
+    - Be database agnostic (sub-packages)
+
 # Get Started
 
 To get started import `stormberry` and run the code-generation.

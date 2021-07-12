@@ -4,11 +4,12 @@ import 'tables.dart';
 
 Future<void> main() async {
   var db = Database(
-      port: 5433,
-      database: 'dart_test',
-      user: 'dart',
-      password: 'dart',
-      useSSL: false);
+    port: 5433,
+    database: 'dart_test',
+    user: 'dart',
+    password: 'dart',
+    useSSL: false,
+  );
 
   await db.accounts.insertOne(AccountInsertRequest(
     '123',
