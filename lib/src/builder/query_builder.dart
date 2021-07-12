@@ -3,7 +3,7 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 
 import '../utils.dart';
-import 'case_style.dart';
+import '../core/case_style.dart';
 import 'table_builder.dart';
 import 'view_builder.dart';
 

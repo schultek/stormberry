@@ -2,9 +2,9 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 
-import 'case_style.dart';
-import 'database_builder.dart';
+import '../core/case_style.dart';
 import 'join_table_builder.dart';
+import 'stormberry_builder.dart';
 import 'table_builder.dart';
 
 class ColumnBuilder {

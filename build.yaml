@@ -1,7 +1,7 @@
 builders:
-  dartabase:
-    import: "package:dartabase/builder.dart"
-    builder_factories: [ "buildDatabase" ]
-    build_extensions: { ".dart": [ ".schema.g.dart" ] }
+  stormberry:
+    import: "package:stormberry/builder.dart"
+    builder_factories: [ "buildSchema" ]
+    build_extensions: { ".dart": [ ".schema.g.dart", ".schema.g.json" ] }
     auto_apply: none
     build_to: source

@@ -5,6 +5,25 @@ class DatabaseSchema {
   DatabaseSchema copy() => DatabaseSchema(tables.map(
         (key, value) => MapEntry(key, value.copy()),
       ));
+
+  factory DatabaseSchema.fromMap(Map<String, dynamic> map) {
+    var tables = <String, TableSchema>{};
+    for (var key in map.keys) {
+      var table = map[key];
+      tables[key] = TableSchema(
+        key,
+        columns: (table['columns'] as Map<String, dynamic>).map((k, v) =>
+            MapEntry(k, ColumnSchema.fromMap(k, v as Map<String, dynamic>))),
+        constraints: (table['constraints'] as List)
+            .map((c) => TableConstraint.fromMap(c as Map<String, dynamic>))
+            .toList(),
+        indexes: (table['indexes'] as List)
+            .map((i) => TableIndex.fromMap(i as Map<String, dynamic>))
+            .toList(),
+      );
+    }
+    return DatabaseSchema(tables);
+  }
 }
 
 class TableSchema {
@@ -33,11 +52,43 @@ class ColumnSchema {
   final bool isNullable;
 
   const ColumnSchema(this.name, {required this.type, this.isNullable = false});
+
+  factory ColumnSchema.fromMap(String name, Map<String, dynamic> map) {
+    return ColumnSchema(
+      name,
+      type: map['type']! as String,
+      isNullable: (map['isNullable'] as bool?) ?? false,
+    );
+  }
 }
 
 abstract class TableConstraint {
   final String? name;
   const TableConstraint(this.name);
+
+  factory TableConstraint.fromMap(Map<String, dynamic> map) {
+    switch (map['type']) {
+      case 'primary_key':
+        return PrimaryKeyConstraint(null, map['column']! as String);
+      case 'foreign_key':
+        return ForeignKeyConstraint(
+          null,
+          map['column']! as String,
+          (map['target']! as String).split('.')[0],
+          (map['target']! as String).split('.')[1],
+          map['on_delete'] == 'cascade'
+              ? ForeignKeyAction.cascade
+              : ForeignKeyAction.setNull,
+          map['on_update'] == 'cascade'
+              ? ForeignKeyAction.cascade
+              : ForeignKeyAction.setNull,
+        );
+      case 'unique':
+        return UniqueConstraint(null, map['column']! as String);
+      default:
+        throw Exception("No table constraint for type ${map["type"]}");
+    }
+  }
 }
 
 class PrimaryKeyConstraint extends TableConstraint {
@@ -197,10 +248,30 @@ class TableIndex {
       ${condition != null ? 'WHERE $condition' : ''}
     """;
   }
+
+  factory TableIndex.fromMap(Map<String, dynamic> map) {
+    return TableIndex(
+      name: map['name']! as String,
+      columns: (map['columns'] as List?)?.cast<String>() ?? [],
+      unique: (map['unique'] as bool?) ?? false,
+      algorithm: IndexAlgorithmParser.parse(map['algorithm'] as String?) ??
+          IndexAlgorithm.BTREE,
+      condition: map['condition'] as String?,
+    );
+  }
 }
 
 // ignore: constant_identifier_names
 enum IndexAlgorithm { BTREE, GIST, HASH, GIN, BRIN, SPGIST }
+
+extension IndexAlgorithmParser on IndexAlgorithm {
+  static IndexAlgorithm? parse(String? str) {
+    switch (str) {
+      case 'BTREE':
+        return IndexAlgorithm.BTREE;
+    }
+  }
+}
 
 class Join {
   String table, statement;

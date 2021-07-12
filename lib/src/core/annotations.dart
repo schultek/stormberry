@@ -1,5 +1,5 @@
-import 'src/database.dart';
-import 'src/schema.dart';
+import 'database.dart';
+import 'schema.dart';
 
 class Table {
   final List<View> views;

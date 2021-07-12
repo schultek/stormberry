@@ -1,4 +1,4 @@
-import 'package:dartabase/dartabase.dart';
+import 'package:stormberry/stormberry.dart';
 
 @Table(views: [
   View('User', [

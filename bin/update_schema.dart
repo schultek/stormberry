@@ -1,16 +1,32 @@
 import 'dart:convert';
 import 'dart:io';
 
-import '../database.dart';
-import '../schema.dart';
-import '../utils.dart';
-import 'differentiator.dart';
-import 'patcher.dart';
+import 'package:stormberry/stormberry.dart';
 
-Future<void> runUpdateTool(List<String> args, DatabaseSchema schema) async {
+import 'src/differentiator.dart';
+import 'src/patcher.dart';
+
+Future<void> main(List<String> args) async {
   bool dryRun = args.contains('--dry-run');
-  String? dbName = args.where((a) => a.startsWith('-db=')).map((a) => a.split('=')[1]).firstOrNull;
+  String? dbName = args
+      .where((a) => a.startsWith('-db='))
+      .map((a) => a.split('=')[1])
+      .firstOrNull;
   bool applyChanges = args.contains('--apply-changes');
+
+  var schemaFile = args
+      .where((a) => a.startsWith('-schema='))
+      .map((a) => a.split('=')[1])
+      .firstOrNull;
+
+  if (schemaFile == null) {
+    stdout
+        .write('Missing database schema. Specify using "-schema=<file-path>"');
+    exit(1);
+  }
+
+  var schemaMap = jsonDecode(await File(schemaFile).readAsString());
+  var schema = DatabaseSchema.fromMap(schemaMap as Map<String, dynamic>);
 
   if (dbName == null) {
     stdout.write('Select a database to update: ');
@@ -39,7 +55,8 @@ Future<void> runUpdateTool(List<String> args, DatabaseSchema schema) async {
       String? answerApplyChanges;
       if (!applyChanges) {
         stdout.write('Do you want to apply these changes? (yes/no): ');
-        answerApplyChanges = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
+        answerApplyChanges =
+            stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
       }
 
       if (applyChanges || answerApplyChanges == 'yes') {
@@ -49,7 +66,8 @@ Future<void> runUpdateTool(List<String> args, DatabaseSchema schema) async {
           db.debugPrint = true;
           await patchSchema(db, diff);
 
-          if (diff.tables.removed.isNotEmpty || diff.tables.modified.any((t) => t.columns.removed.isNotEmpty)) {
+          if (diff.tables.removed.isNotEmpty ||
+              diff.tables.modified.any((t) => t.columns.removed.isNotEmpty)) {
             print('=========================');
             print('The following changes would lead to data loss:');
 
@@ -64,7 +82,8 @@ Future<void> runUpdateTool(List<String> args, DatabaseSchema schema) async {
 
             if (!applyChanges) {
               stdout.write('Do you want to continue anyways? (yes/no): ');
-              var choose = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
+              var choose =
+                  stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
 
               if (choose == 'yes') {
                 await removeUnused(db, diff);

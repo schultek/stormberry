@@ -2,15 +2,15 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:source_gen/source_gen.dart';
 
-import '../../annotations.dart';
-import '../schema.dart';
+import '../core/annotations.dart';
+import '../core/schema.dart';
 import '../utils.dart';
 import 'action_builder.dart';
-import 'case_style.dart';
+import '../core/case_style.dart';
 import 'column_builder.dart';
-import 'database_builder.dart';
 import 'join_table_builder.dart';
 import 'query_builder.dart';
+import 'stormberry_builder.dart';
 import 'view_builder.dart';
 
 const primaryKeyChecker = TypeChecker.fromRuntime(PrimaryKey);
@@ -177,37 +177,36 @@ class TableBuilder {
     }
   }
 
-  String generateSchema() {
+  String generateJsonSchema() {
     var args = <String>[];
 
-    args.add("'$tableName'");
-
     var cols = columns.where((c) => c.columnName != null).map((c) =>
-        "'${c.columnName}': ColumnSchema('${c.columnName}', type: '${c.sqlType}'${c.isNullable ? ', isNullable: true' : ''})");
+        '"${c.columnName}": {"type": "${c.sqlType}"${c.isNullable ? ', "isNullable": true' : ''}}');
 
-    args.add("columns: {\n${cols.join(',\n').indent()},\n}");
+    args.add('"columns": {\n${cols.join(',\n').indent()}\n}');
 
     var cons = [];
 
     if (primaryKeyColumn != null) {
-      cons.add("PrimaryKeyConstraint(null, '${primaryKeyColumn!.columnName}')");
+      cons.add(
+          '{"type": "primary_key", "column": "${primaryKeyColumn!.columnName}"}');
     }
 
     for (var column in columns.where((c) => c.isForeignColumn)) {
       var columnName = column.columnName;
       var tableName = column.linkBuilder!.tableName;
       var keyName = column.linkBuilder!.primaryKeyColumn!.columnName;
-      var action = primaryKeyColumn != null ? 'setNull' : 'cascade';
+      var action = primaryKeyColumn != null ? 'set_null' : 'cascade';
       cons.add(
-          "ForeignKeyConstraint(null, '$columnName', '$tableName', '$keyName', ForeignKeyAction.$action, ForeignKeyAction.cascade)");
+          '{"type": "foreign_key", "column": "$columnName", "target": "$tableName.$keyName", "on_delete": "$action", "on_update": "cascade"}');
     }
 
     for (var column in columns.where((c) => c.isUnique && c.isForeignColumn)) {
-      cons.add("UniqueConstraint(null, '${column.columnName}')");
+      cons.add('{"type": "unique", "column": "${column.columnName}"}');
     }
 
     if (cons.isNotEmpty) {
-      args.add("constraints: [\n${cons.join(',\n').indent()},\n]");
+      args.add('"constraints": [\n${cons.join(',\n').indent()}\n]');
     }
 
     // TODO remove outdated triggers
@@ -219,32 +218,32 @@ class TableBuilder {
       var columns = o
           .getField('columns')!
           .toListValue()!
-          .map((o) => "'${o.toStringValue()}'")
+          .map((o) => '"${o.toStringValue()}"')
           .toList();
-      inp.add('columns: $columns');
+      inp.add('"columns": [${columns.join(', ')}]');
       var name = o.getField('name')!.toStringValue()!;
-      inp.add("name: '$name'");
+      inp.add('"name": "$name"');
       var unique = o.getField('unique')!.toBoolValue()!;
       if (unique) {
-        inp.add('unique: true');
+        inp.add('"unique": true');
       }
       var aIndex = o.getField('algorithm')!.getField('index')!.toIntValue()!;
       var algorithm = IndexAlgorithm.values[aIndex];
       if (algorithm != IndexAlgorithm.BTREE) {
-        inp.add('algorithm: $algorithm');
+        inp.add('"algorithm": "$algorithm"');
       }
       var condition = o.getField('condition')?.toStringValue();
       if (condition != null) {
-        inp.add("condition: '$condition'");
+        inp.add('"condition": "$condition"');
       }
-      ind.add('TableIndex(${inp.join(', ')})');
+      ind.add('{${inp.join(', ')}}');
     }
 
     if (ind.isNotEmpty) {
-      args.add("indexes: [\n${ind.join(',\n').indent()},\n]");
+      args.add('"indexes": [\n${ind.join(',\n').indent()},\n]');
     }
 
-    return "'$tableName': TableSchema(\n${args.join(',\n').indent()},\n),\n";
+    return '"$tableName": {\n${args.join(',\n').indent()}\n}';
   }
 
   ParameterElement? findMatchingParam(ParameterElement param) {

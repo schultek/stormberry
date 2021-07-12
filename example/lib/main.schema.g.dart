@@ -1,92 +1,7 @@
 // ignore_for_file: unnecessary_cast, prefer_relative_imports, unused_element, prefer_single_quotes
 import 'dart:convert';
-import 'package:dartabase/dartabase.dart';
-import 'package:dartabase_example/main.dart';
-const databaseSchema = DatabaseSchema({
-  'accounts': TableSchema(
-    'accounts',
-    columns: {
-      'id': ColumnSchema('id', type: 'text'),
-      'first_name': ColumnSchema('first_name', type: 'text'),
-      'last_name': ColumnSchema('last_name', type: 'text'),
-      'location': ColumnSchema('location', type: 'point'),
-      'company_id': ColumnSchema('company_id', type: 'text', isNullable: true),
-    },
-    constraints: [
-      PrimaryKeyConstraint(null, 'id'),
-      ForeignKeyConstraint(null, 'company_id', 'companies', 'id', ForeignKeyAction.setNull, ForeignKeyAction.cascade),
-    ],
-  ),
-  'billing_addresses': TableSchema(
-    'billing_addresses',
-    columns: {
-      'account_id': ColumnSchema('account_id', type: 'text', isNullable: true),
-      'company_id': ColumnSchema('company_id', type: 'text', isNullable: true),
-      'name': ColumnSchema('name', type: 'text'),
-      'street': ColumnSchema('street', type: 'text'),
-      'city': ColumnSchema('city', type: 'text'),
-    },
-    constraints: [
-      ForeignKeyConstraint(null, 'account_id', 'accounts', 'id', ForeignKeyAction.cascade, ForeignKeyAction.cascade),
-      ForeignKeyConstraint(null, 'company_id', 'companies', 'id', ForeignKeyAction.cascade, ForeignKeyAction.cascade),
-      UniqueConstraint(null, 'account_id'),
-    ],
-  ),
-  'companies': TableSchema(
-    'companies',
-    columns: {
-      'party_id': ColumnSchema('party_id', type: 'text', isNullable: true),
-      'id': ColumnSchema('id', type: 'text'),
-    },
-    constraints: [
-      PrimaryKeyConstraint(null, 'id'),
-      ForeignKeyConstraint(null, 'party_id', 'parties', 'id', ForeignKeyAction.setNull, ForeignKeyAction.cascade),
-      UniqueConstraint(null, 'party_id'),
-    ],
-  ),
-  'invoices': TableSchema(
-    'invoices',
-    columns: {
-      'account_id': ColumnSchema('account_id', type: 'text', isNullable: true),
-      'company_id': ColumnSchema('company_id', type: 'text', isNullable: true),
-      'id': ColumnSchema('id', type: 'text'),
-      'title': ColumnSchema('title', type: 'text'),
-      'invoice_id': ColumnSchema('invoice_id', type: 'text'),
-    },
-    constraints: [
-      PrimaryKeyConstraint(null, 'id'),
-      ForeignKeyConstraint(null, 'account_id', 'accounts', 'id', ForeignKeyAction.setNull, ForeignKeyAction.cascade),
-      ForeignKeyConstraint(null, 'company_id', 'companies', 'id', ForeignKeyAction.setNull, ForeignKeyAction.cascade),
-    ],
-  ),
-  'parties': TableSchema(
-    'parties',
-    columns: {
-      'id': ColumnSchema('id', type: 'text'),
-      'name': ColumnSchema('name', type: 'text'),
-      'sponsor_id': ColumnSchema('sponsor_id', type: 'text', isNullable: true),
-    },
-    constraints: [
-      PrimaryKeyConstraint(null, 'id'),
-      ForeignKeyConstraint(null, 'sponsor_id', 'companies', 'id', ForeignKeyAction.setNull, ForeignKeyAction.cascade),
-      UniqueConstraint(null, 'sponsor_id'),
-    ],
-  ),
-  
-  'accounts_parties': TableSchema(
-    'accounts_parties',
-    columns: {
-      'account_id': ColumnSchema('account_id', type: 'text'),
-      'party_id': ColumnSchema('party_id', type: 'text'),
-    },
-    constraints: [
-      PrimaryKeyConstraint(null, 'account_id", "party_id'),
-      ForeignKeyConstraint(null, 'account_id', 'accounts', 'id', ForeignKeyAction.cascade, ForeignKeyAction.cascade),
-      ForeignKeyConstraint(null, 'party_id', 'parties', 'id', ForeignKeyAction.cascade, ForeignKeyAction.cascade),
-    ],
-  ),
-  
-});
+import 'package:stormberry/stormberry.dart';
+import 'package:stormberry_example/main.dart';
 
 extension DatabaseTables on Database {
   AccountTable get accounts => AccountTable._instanceFor(this);
@@ -572,13 +487,13 @@ class AccountUpdateAction implements Action<List<AccountUpdateRequest>> {
     if (requests.isEmpty) return;
     await db.query("""
       UPDATE "accounts"
-      SET "first_name" = COALESCE(UPDATED."first_name", "accounts"."first_name"),
-          "last_name" = COALESCE(UPDATED."last_name", "accounts"."last_name"),
-          "location" = COALESCE(UPDATED."location", "accounts"."location"),
-          "company_id" = COALESCE(UPDATED."company_id", "accounts"."company_id")
+      SET "first_name" = COALESCE(UPDATED."first_name"::text, "accounts"."first_name"),
+          "last_name" = COALESCE(UPDATED."last_name"::text, "accounts"."last_name"),
+          "location" = COALESCE(UPDATED."location"::point, "accounts"."location"),
+          "company_id" = COALESCE(UPDATED."company_id"::text, "accounts"."company_id")
       FROM ( VALUES ${requests.map((r) => '( ${_encode(r.id)}, ${_encode(r.firstName)}, ${_encode(r.lastName)}, ${_encode(r.location)}, ${_encode(r.companyId)} )').join(', ')} )
       AS UPDATED("id", "first_name", "last_name", "location", "company_id")
-      WHERE "id" = UPDATED."id"
+      WHERE "accounts"."id" = UPDATED."id"
     """);
 
     await BillingAddressUpdateAction().apply(db, requests.where((r) => r.billingAddress != null).map((r) {
@@ -603,12 +518,12 @@ class BillingAddressUpdateAction implements Action<List<BillingAddressUpdateRequ
     if (requests.isEmpty) return;
     await db.query("""
       UPDATE "billing_addresses"
-      SET "name" = COALESCE(UPDATED."name", "billing_addresses"."name"),
-          "street" = COALESCE(UPDATED."street", "billing_addresses"."street"),
-          "city" = COALESCE(UPDATED."city", "billing_addresses"."city")
+      SET "name" = COALESCE(UPDATED."name"::text, "billing_addresses"."name"),
+          "street" = COALESCE(UPDATED."street"::text, "billing_addresses"."street"),
+          "city" = COALESCE(UPDATED."city"::text, "billing_addresses"."city")
       FROM ( VALUES ${requests.map((r) => '( ${_encode(r.accountId)}, ${_encode(r.companyId)}, ${_encode(r.name)}, ${_encode(r.street)}, ${_encode(r.city)} )').join(', ')} )
       AS UPDATED("account_id", "company_id", "name", "street", "city")
-      WHERE "account_id" = UPDATED."account_id" AND "company_id" = UPDATED."company_id"
+      WHERE "billing_addresses"."account_id" = UPDATED."account_id" AND "billing_addresses"."company_id" = UPDATED."company_id"
     """);
   }
 }
@@ -663,22 +578,17 @@ dynamic _encode(dynamic value) {
   if (value == null) return null;
   try {
     var encoded = PostgresTextEncoder().convert(value);
-    if (value is List) {
-      return "'$encoded'";
-    } else {
-      return encoded;
-    }
+    if (value is Map) return "'${encoded.replaceAll("'", "''")}'";
+    return value is List || value is PgPoint ? "'$encoded'" : encoded;
   } catch (_) {
     try {
-      dynamic encoded;
       if (_typeConverters[value.runtimeType] != null) {
-        encoded = _typeConverters[value.runtimeType]!.encode(value);
+        return _encode(_typeConverters[value.runtimeType]!.encode(value));
       } else if (value is List) {
-        encoded = value.map((v) => _encode(v)).toList();
+        return _encode(value.map((v) => _encode(v)).toList());
       } else {
         throw ConverterException('');
       }
-      return PostgresTextEncoder().convert(encoded);
     } catch (_) {
       throw ConverterException('Cannot encode value $value of type ${value.runtimeType}. Unknown type. Did you forgot to include the class or register a custom type converter?');
     }

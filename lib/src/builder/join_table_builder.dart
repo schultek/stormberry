@@ -1,6 +1,6 @@
 import '../utils.dart';
-import 'case_style.dart';
-import 'database_builder.dart';
+import '../core/case_style.dart';
+import 'stormberry_builder.dart';
 import 'table_builder.dart';
 
 class JoinTableBuilder {
@@ -18,22 +18,20 @@ class JoinTableBuilder {
   String get tableName => _tableName ??= toCaseStyle(
       '${first.tableName}-${second.tableName}', state.options.tableCaseStyle);
 
-  String generateSchema() {
+  String generateJsonSchema() {
     var args = <String>[];
-
-    args.add("'$tableName'");
 
     var cols = [first, second].map((t) {
       var columnName = t.getForeignKeyName();
-      return "'$columnName': ColumnSchema('$columnName', type: '${t.primaryKeyColumn!.sqlType}')";
+      return '"$columnName": {"type": "${t.primaryKeyColumn!.sqlType}"}';
     });
-    args.add("columns: {\n${cols.join(',\n').indent()},\n}");
+    args.add('"columns": {\n${cols.join(',\n').indent()}\n}');
 
     var cons = [];
 
     var compositeKey =
         [first, second].map((t) => t.getForeignKeyName()).join('", "');
-    cons.add("PrimaryKeyConstraint(null, '$compositeKey')");
+    cons.add('{"type": "primary_key", "column": ["$compositeKey"]}');
 
     for (var t in [first, second]) {
       var columnName = t.getForeignKeyName();
@@ -41,18 +39,18 @@ class JoinTableBuilder {
       var keyName = t.primaryKeyColumn!.columnName;
 
       cons.add(
-          "ForeignKeyConstraint(null, '$columnName', '$tableName', '$keyName', ForeignKeyAction.cascade, ForeignKeyAction.cascade)");
+          '{"type": "foreign_key", "column": "$columnName", "target": "$tableName.$keyName", "on_delete": "cascade", "on_update": "cascade"}');
     }
 
     for (var t in [first, second]) {
       var isNotUnique = t.columns.any((c) => c.joinBuilder == this && c.isList);
       if (!isNotUnique) {
-        cons.add("UniqueConstraint(null, '${t.getForeignKeyName()}')");
+        cons.add('{"type": "unique", "column": "${t.getForeignKeyName()}"}');
       }
     }
 
-    args.add("constraints: [\n${cons.join(',\n').indent()},\n]");
+    args.add('"constraints": [\n${cons.join(',\n').indent()}\n]');
 
-    return "'$tableName': TableSchema(\n${args.join(',\n').indent()},\n),\n";
+    return '"$tableName": {\n${args.join(',\n').indent()}\n}';
   }
 }

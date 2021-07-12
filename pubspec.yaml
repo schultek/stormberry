@@ -1,4 +1,4 @@
-name: dartabase
+name: stormberry
 description: Manage your database schema from dart code.
 version: 0.1.1
 repository: https://github.com/schultek/dartabase

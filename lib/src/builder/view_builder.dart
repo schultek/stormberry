@@ -1,8 +1,8 @@
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 
-import '../../annotations.dart';
-import 'case_style.dart';
+import '../core/annotations.dart';
+import '../core/case_style.dart';
 import 'column_builder.dart';
 import 'table_builder.dart';
 

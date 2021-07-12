@@ -1,6 +1,5 @@
-import '../database.dart';
-import '../schema.dart';
-import '../utils.dart';
+import 'package:stormberry/stormberry.dart';
+
 import 'inspector.dart';
 
 Future<DatabaseSchemaDiff> getSchemaDiff(
