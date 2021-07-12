@@ -69,7 +69,7 @@
       "party_id": {"type": "text"}
     },
     "constraints": [
-      {"type": "primary_key", "column": ["account_id", "party_id"]},
+      {"type": "primary_key", "column": "account_id\", \"party_id"},
       {"type": "foreign_key", "column": "account_id", "target": "accounts.id", "on_delete": "cascade", "on_update": "cascade"},
       {"type": "foreign_key", "column": "party_id", "target": "parties.id", "on_delete": "cascade", "on_update": "cascade"}
     ]

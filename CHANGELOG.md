@@ -1,3 +1,8 @@
+# 0.2.0
+
+- Refactor and cleanup, first published version
+- Added first README draft
+
 # 0.1.1
 
 - Use joins only for many-to-many

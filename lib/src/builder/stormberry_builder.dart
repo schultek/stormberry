@@ -5,11 +5,16 @@ import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
 import '../core/annotations.dart';
-import '../utils.dart';
-import 'builder_snippets.dart';
 import '../core/case_style.dart';
+import '../helpers/builder_snippets.dart';
+import '../helpers/utils.dart';
 import 'join_table_builder.dart';
+import 'json_builder.dart';
 import 'table_builder.dart';
+
+const tableChecker = TypeChecker.fromRuntime(Table);
+const typeConverterChecker = TypeChecker.fromRuntime(TypeConverter);
+const primaryKeyChecker = TypeChecker.fromRuntime(PrimaryKey);
 
 class BuilderState {
   Set<Uri> imports = {};
@@ -61,9 +66,6 @@ class StormberryBuilder implements Builder {
       List<LibraryElement> libraries, BuildStep buildStep) {
     BuilderState state = BuilderState(options);
 
-    var checker = const TypeChecker.fromRuntime(Table);
-    var typeConverterChecker = const TypeChecker.fromRuntime(TypeConverter);
-
     for (var library in libraries) {
       if (library.isInSdk) {
         continue;
@@ -72,7 +74,7 @@ class StormberryBuilder implements Builder {
       var reader = LibraryReader(library);
 
       var typeConverters = reader.annotatedWith(typeConverterChecker);
-      var elements = reader.annotatedWith(checker);
+      var elements = reader.annotatedWith(tableChecker);
 
       if (elements.isNotEmpty || typeConverters.isNotEmpty) {
         state.imports.add(library.source.uri);
@@ -158,7 +160,7 @@ class StormberryBuilder implements Builder {
   String generateDatabaseExtension(BuilderState state) {
     return ''
         'extension DatabaseTables on Database {\n'
-        '  ${state.builders.values.map((b) => '${b.element.name}Table get ${toCaseStyle(b.tableName, CaseStyle.fromString(CaseStyle.camelCase))} => ${b.element.name}Table._instanceFor(this);').join('\n  ')}\n'
+        '  ${state.builders.values.map((b) => '${b.element.name}Table get ${CaseStyle.camelCase.transform(b.tableName)} => ${b.element.name}Table._instanceFor(this);').join('\n  ')}\n'
         '}';
   }
 

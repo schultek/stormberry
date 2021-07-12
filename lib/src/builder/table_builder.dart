@@ -2,36 +2,49 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:source_gen/source_gen.dart';
 
-import '../core/annotations.dart';
-import '../core/schema.dart';
-import '../utils.dart';
-import 'action_builder.dart';
 import '../core/case_style.dart';
+import '../helpers/utils.dart';
+import 'action_builder.dart';
 import 'column_builder.dart';
 import 'join_table_builder.dart';
 import 'query_builder.dart';
 import 'stormberry_builder.dart';
 import 'view_builder.dart';
 
-const primaryKeyChecker = TypeChecker.fromRuntime(PrimaryKey);
-
 class TableBuilder {
   ClassElement element;
   ConstantReader annotation;
   BuilderState state;
 
-  TableBuilder(this.element, this.annotation, this.state);
+  late ConstructorElement constructor;
+  late String tableName;
+  late ParameterElement? primaryKeyParameter;
+  late List<ViewBuilder> views;
+  late List<ActionBuilder> actions;
+  late List<QueryBuilder> queries;
 
-  ConstructorElement? _constructor;
-  ConstructorElement get constructor => _constructor ??= _getConstructor();
-
-  ConstructorElement _getConstructor() {
+  TableBuilder(this.element, this.annotation, this.state) {
     // TODO add constructor annotation
-    return element.constructors.firstWhere((c) => !c.isPrivate);
+    constructor = element.constructors.firstWhere((c) => !c.isPrivate);
+
+    tableName = _getTableName();
+
+    primaryKeyParameter = constructor.parameters
+        .whereType<FieldFormalParameterElement>()
+        .where((p) => primaryKeyChecker.hasAnnotationOf(p.field!))
+        .firstOrNull;
+
+    views = annotation.read('views').listValue.map((o) {
+      return ViewBuilder(this, o);
+    }).toList();
+    actions = annotation.read('actions').listValue.map((o) {
+      return ActionBuilder(this, o);
+    }).toList();
+    queries = annotation.read('queries').listValue.map((o) {
+      return QueryBuilder(this, o);
+    }).toList();
   }
 
-  String? _tableName;
-  String get tableName => _tableName ??= _getTableName();
   String _getTableName({bool singular = false}) {
     var name = element.name;
     if (!singular) {
@@ -43,40 +56,14 @@ class TableBuilder {
         name += 's';
       }
     }
-    return toCaseStyle(name, state.options.tableCaseStyle);
+    return state.options.tableCaseStyle.transform(name);
   }
 
-  Optional<ParameterElement?>? _primaryKeyParameter;
-  ParameterElement? get primaryKeyParameter =>
-      (_primaryKeyParameter ??= Optional(_getPrimaryKey())).get();
-  ParameterElement? _getPrimaryKey() {
-    return constructor.parameters
-        .whereType<FieldFormalParameterElement>()
-        .where((p) => primaryKeyChecker.hasAnnotationOf(p.field!))
-        .firstOrNull;
-  }
+  List<ColumnBuilder> columns = [];
 
   ColumnBuilder? get primaryKeyColumn => primaryKeyParameter != null
       ? columns.where((c) => c.parameter == primaryKeyParameter).firstOrNull
       : null;
-
-  List<ColumnBuilder> columns = [];
-
-  List<ViewBuilder>? _views;
-  List<ViewBuilder> get views => _views ??= _getTableViews();
-  List<ViewBuilder> _getTableViews() {
-    return annotation.read('views').listValue.map((o) {
-      return ViewBuilder(this, o);
-    }).toList();
-  }
-
-  List<ActionBuilder>? _actions;
-  List<ActionBuilder> get actions => _actions ??= _getTableActions();
-  List<ActionBuilder> _getTableActions() {
-    return annotation.read('actions').listValue.map((o) {
-      return ActionBuilder(this, o);
-    }).toList();
-  }
 
   bool get hasDefaultInsertAction => actions.any((a) =>
       a.className == 'SingleInsertAction' ||
@@ -84,14 +71,6 @@ class TableBuilder {
   bool get hasDefaultUpdateAction => actions.any((a) =>
       a.className == 'SingleUpdateAction' ||
       a.className == 'MultiUpdateAction');
-
-  List<QueryBuilder>? _queries;
-  List<QueryBuilder> get queries => _queries ??= _getTableQueries();
-  List<QueryBuilder> _getTableQueries() {
-    return annotation.read('queries').listValue.map((o) {
-      return QueryBuilder(this, o);
-    }).toList();
-  }
 
   bool hasQueryForView(ViewBuilder? view) {
     return queries.any((q) => q.isDefaultForView(view));
@@ -177,75 +156,6 @@ class TableBuilder {
     }
   }
 
-  String generateJsonSchema() {
-    var args = <String>[];
-
-    var cols = columns.where((c) => c.columnName != null).map((c) =>
-        '"${c.columnName}": {"type": "${c.sqlType}"${c.isNullable ? ', "isNullable": true' : ''}}');
-
-    args.add('"columns": {\n${cols.join(',\n').indent()}\n}');
-
-    var cons = [];
-
-    if (primaryKeyColumn != null) {
-      cons.add(
-          '{"type": "primary_key", "column": "${primaryKeyColumn!.columnName}"}');
-    }
-
-    for (var column in columns.where((c) => c.isForeignColumn)) {
-      var columnName = column.columnName;
-      var tableName = column.linkBuilder!.tableName;
-      var keyName = column.linkBuilder!.primaryKeyColumn!.columnName;
-      var action = primaryKeyColumn != null ? 'set_null' : 'cascade';
-      cons.add(
-          '{"type": "foreign_key", "column": "$columnName", "target": "$tableName.$keyName", "on_delete": "$action", "on_update": "cascade"}');
-    }
-
-    for (var column in columns.where((c) => c.isUnique && c.isForeignColumn)) {
-      cons.add('{"type": "unique", "column": "${column.columnName}"}');
-    }
-
-    if (cons.isNotEmpty) {
-      args.add('"constraints": [\n${cons.join(',\n').indent()}\n]');
-    }
-
-    // TODO remove outdated triggers
-
-    var ind = [];
-
-    for (var o in annotation.read('indexes').listValue) {
-      var inp = [];
-      var columns = o
-          .getField('columns')!
-          .toListValue()!
-          .map((o) => '"${o.toStringValue()}"')
-          .toList();
-      inp.add('"columns": [${columns.join(', ')}]');
-      var name = o.getField('name')!.toStringValue()!;
-      inp.add('"name": "$name"');
-      var unique = o.getField('unique')!.toBoolValue()!;
-      if (unique) {
-        inp.add('"unique": true');
-      }
-      var aIndex = o.getField('algorithm')!.getField('index')!.toIntValue()!;
-      var algorithm = IndexAlgorithm.values[aIndex];
-      if (algorithm != IndexAlgorithm.BTREE) {
-        inp.add('"algorithm": "$algorithm"');
-      }
-      var condition = o.getField('condition')?.toStringValue();
-      if (condition != null) {
-        inp.add('"condition": "$condition"');
-      }
-      ind.add('{${inp.join(', ')}}');
-    }
-
-    if (ind.isNotEmpty) {
-      args.add('"indexes": [\n${ind.join(',\n').indent()},\n]');
-    }
-
-    return '"$tableName": {\n${args.join(',\n').indent()}\n}';
-  }
-
   ParameterElement? findMatchingParam(ParameterElement param) {
     // TODO add binding
     return constructor.parameters.where((p) {
@@ -261,8 +171,8 @@ class TableBuilder {
     if (base != null && plural && name.endsWith('s')) {
       name = name.substring(0, base.length - (base.endsWith('es') ? 2 : 1));
     }
-    name = toCaseStyle(
-        '$name-${primaryKeyColumn!.columnName}', state.options.columnCaseStyle);
+    name = state.options.columnCaseStyle
+        .transform('$name-${primaryKeyColumn!.columnName}');
     if (plural) {
       name += name.endsWith('s') ? 'es' : 's';
     }

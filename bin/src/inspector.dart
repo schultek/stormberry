@@ -1,7 +1,8 @@
 import 'package:stormberry/stormberry.dart';
 
 Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
-  var schema = const DatabaseSchema({});
+  //ignore: prefer_const_constructors
+  var schema = DatabaseSchema({});
 
   var tables = await db.query(
       "SELECT * FROM information_schema.tables WHERE table_schema = 'public'");

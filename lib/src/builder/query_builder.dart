@@ -2,8 +2,8 @@ import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 
-import '../utils.dart';
 import '../core/case_style.dart';
+import '../helpers/utils.dart';
 import 'table_builder.dart';
 import 'view_builder.dart';
 
@@ -54,8 +54,7 @@ class QueryBuilder {
   String buildQueryMethod() {
     if (className == 'SingleQuery') {
       var methodName = viewName != null
-          ? toCaseStyle('query_${viewName}_view',
-              CaseStyle.fromString(CaseStyle.camelCase))
+          ? CaseStyle.camelCase.transform('query_${viewName}_view')
           : 'queryOne';
       return ''
           'Future<$resultClassName?> $methodName(${table.primaryKeyColumn!.dartType} ${table.primaryKeyColumn!.paramName}) async {\n'
@@ -66,8 +65,7 @@ class QueryBuilder {
           '}';
     } else if (className == 'MultiQuery') {
       var methodName = viewName != null
-          ? toCaseStyle('query_${viewName}_views',
-              CaseStyle.fromString(CaseStyle.camelCase))
+          ? CaseStyle.camelCase.transform('query_${viewName}_views')
           : 'queryAll';
       return ''
           'Future<List<$resultClassName>> $methodName([QueryParams? params]) {\n'

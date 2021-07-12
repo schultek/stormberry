@@ -1,5 +1,5 @@
-import '../utils.dart';
 import '../core/case_style.dart';
+import '../helpers/utils.dart';
 import 'stormberry_builder.dart';
 import 'table_builder.dart';
 
@@ -7,16 +7,17 @@ class JoinTableBuilder {
   late TableBuilder first, second;
   BuilderState state;
 
+  late String tableName;
+
   JoinTableBuilder(TableBuilder first, TableBuilder second, this.state) {
     var sorted = [first, second]
       ..sort((a, b) => a.tableName.compareTo(b.tableName));
     this.first = sorted.first;
     this.second = sorted.last;
-  }
 
-  String? _tableName;
-  String get tableName => _tableName ??= toCaseStyle(
-      '${first.tableName}-${second.tableName}', state.options.tableCaseStyle);
+    tableName = state.options.tableCaseStyle
+        .transform('${first.tableName}-${second.tableName}');
+  }
 
   String generateJsonSchema() {
     var args = <String>[];
@@ -30,8 +31,8 @@ class JoinTableBuilder {
     var cons = [];
 
     var compositeKey =
-        [first, second].map((t) => t.getForeignKeyName()).join('", "');
-    cons.add('{"type": "primary_key", "column": ["$compositeKey"]}');
+        [first, second].map((t) => t.getForeignKeyName()).join('\\", \\"');
+    cons.add('{"type": "primary_key", "column": "$compositeKey"}');
 
     for (var t in [first, second]) {
       var columnName = t.getForeignKeyName();

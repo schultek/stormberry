@@ -14,12 +14,14 @@ class DatabaseSchema {
         key,
         columns: (table['columns'] as Map<String, dynamic>).map((k, v) =>
             MapEntry(k, ColumnSchema.fromMap(k, v as Map<String, dynamic>))),
-        constraints: (table['constraints'] as List)
-            .map((c) => TableConstraint.fromMap(c as Map<String, dynamic>))
-            .toList(),
-        indexes: (table['indexes'] as List)
-            .map((i) => TableIndex.fromMap(i as Map<String, dynamic>))
-            .toList(),
+        constraints: (table['constraints'] as List?)
+                ?.map((c) => TableConstraint.fromMap(c as Map<String, dynamic>))
+                .toList() ??
+            [],
+        indexes: (table['indexes'] as List?)
+                ?.map((i) => TableIndex.fromMap(i as Map<String, dynamic>))
+                .toList() ??
+            [],
       );
     }
     return DatabaseSchema(tables);

@@ -14,26 +14,39 @@ Future<void> main(List<String> args) async {
       .firstOrNull;
   bool applyChanges = args.contains('--apply-changes');
 
-  var schemaFile = args
+  var schemaPath = args
       .where((a) => a.startsWith('-schema='))
       .map((a) => a.split('=')[1])
       .firstOrNull;
 
-  if (schemaFile == null) {
+  if (schemaPath == null) {
     stdout
         .write('Missing database schema. Specify using "-schema=<file-path>"');
     exit(1);
   }
 
-  var schemaMap = jsonDecode(await File(schemaFile).readAsString());
+  if (!schemaPath.endsWith('.schema.g.json')) {
+    if (schemaPath.endsWith('.schema')) {
+      schemaPath += '.g.json';
+    } else {
+      schemaPath += '.schema.g.json';
+    }
+  }
+
+  var file = File(schemaPath);
+  if (!file.existsSync()) {
+    stdout.write('Could not find file $schemaPath');
+    exit(1);
+  }
+  var schemaMap = jsonDecode(await file.readAsString());
   var schema = DatabaseSchema.fromMap(schemaMap as Map<String, dynamic>);
 
-  if (dbName == null) {
+  if (dbName == null && Platform.environment['DB_NAME'] == null) {
     stdout.write('Select a database to update: ');
     dbName = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
   }
 
-  var db = Database(debugPrint: false, dbName: dbName);
+  var db = Database(debugPrint: false, database: dbName);
 
   await db.open();
 
