@@ -1,6 +1,6 @@
 import 'package:analyzer/dart/element/type.dart';
 
-import 'builder/case_style.dart';
+import '../core/case_style.dart';
 
 extension NullableWhere<T> on Iterable<T> {
   T? get firstOrNull {

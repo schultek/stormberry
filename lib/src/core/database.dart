@@ -2,40 +2,39 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:postgres/postgres.dart';
-// ignore: implementation_imports
-import 'package:postgres/src/text_codec.dart';
 
 class Database {
   bool debugPrint;
 
-  static String get hostAddress =>
-      Platform.environment['DB_HOST_ADDRESS'] ?? '127.0.0.1';
-
-  static String get databaseName =>
-      Platform.environment['DB_NAME'] ?? 'postgres';
-  static int get databasePort =>
-      int.tryParse(Platform.environment['DB_PORT'] ?? '') ?? 5432;
-  static String get userName =>
-      Platform.environment['DB_USERNAME'] ?? 'postgres';
-  static String get password => Platform.environment['DB_PASSWORD'] ?? 'root';
+  String host, database, user, password;
+  int port;
+  bool useSSL;
 
   static PostgreSQLConnection? _cachedConnection;
 
-  String? dbName;
-
-  Database({this.debugPrint = true, this.dbName}) {
+  Database({
+    this.debugPrint = true,
+    String? host,
+    int? port,
+    String? database,
+    String? user,
+    String? password,
+    bool? useSSL,
+  })  : host = host ?? Platform.environment['DB_HOST_ADDRESS'] ?? '127.0.0.1',
+        port =
+            port ?? int.tryParse(Platform.environment['DB_PORT'] ?? '') ?? 5432,
+        database = database ?? Platform.environment['DB_NAME'] ?? 'postgres',
+        user = user ?? Platform.environment['DB_USERNAME'] ?? 'postgres',
+        password = password ?? Platform.environment['DB_PASSWORD'] ?? 'root',
+        useSSL = useSSL ??
+            Platform.environment['DB_SSL']?.startsWith('true') ??
+            true {
     _cachedConnection ??= connection();
   }
 
   PostgreSQLConnection connection() {
-    return PostgreSQLConnection(
-      hostAddress,
-      databasePort,
-      dbName ?? databaseName,
-      username: userName,
-      password: password,
-      useSSL: true,
-    );
+    return PostgreSQLConnection(host, port, database,
+        username: user, password: password, useSSL: useSSL);
   }
 
   String get name => _cachedConnection!.databaseName;
@@ -94,6 +93,9 @@ class Database {
 
   Future<void> startTransaction() async {
     await _tryOpen();
+    if (transactionContext != null) {
+      return;
+    }
     transactionCompleter = Completer();
     var transactionStarted = Completer();
     transactionFuture = _cachedConnection!.transaction((context) async {
@@ -134,15 +136,5 @@ class Database {
       cancelTransaction();
       rethrow;
     }
-  }
-
-  T decodeRow<T>(Map<String, dynamic> row) {
-    return row as T; // TODO custom json decoder
-  }
-
-  dynamic dec(dynamic value) {}
-
-  String enc(dynamic value) {
-    return PostgresTextEncoder().convert(value); // todo: custom json encoder
   }
 }

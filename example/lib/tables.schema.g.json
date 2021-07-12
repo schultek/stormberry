@@ -1,0 +1,77 @@
+{
+  "accounts": {
+    "columns": {
+      "id": {"type": "text"},
+      "first_name": {"type": "text"},
+      "last_name": {"type": "text"},
+      "location": {"type": "point"},
+      "company_id": {"type": "text", "isNullable": true}
+    },
+    "constraints": [
+      {"type": "primary_key", "column": "id"},
+      {"type": "foreign_key", "column": "company_id", "target": "companies.id", "on_delete": "set_null", "on_update": "cascade"}
+    ]
+  },
+  "billing_addresses": {
+    "columns": {
+      "account_id": {"type": "text", "isNullable": true},
+      "company_id": {"type": "text", "isNullable": true},
+      "name": {"type": "text"},
+      "street": {"type": "text"},
+      "city": {"type": "text"}
+    },
+    "constraints": [
+      {"type": "foreign_key", "column": "account_id", "target": "accounts.id", "on_delete": "cascade", "on_update": "cascade"},
+      {"type": "foreign_key", "column": "company_id", "target": "companies.id", "on_delete": "cascade", "on_update": "cascade"},
+      {"type": "unique", "column": "account_id"}
+    ]
+  },
+  "companies": {
+    "columns": {
+      "party_id": {"type": "text", "isNullable": true},
+      "id": {"type": "text"}
+    },
+    "constraints": [
+      {"type": "primary_key", "column": "id"},
+      {"type": "foreign_key", "column": "party_id", "target": "parties.id", "on_delete": "set_null", "on_update": "cascade"},
+      {"type": "unique", "column": "party_id"}
+    ]
+  },
+  "invoices": {
+    "columns": {
+      "account_id": {"type": "text", "isNullable": true},
+      "company_id": {"type": "text", "isNullable": true},
+      "id": {"type": "text"},
+      "title": {"type": "text"},
+      "invoice_id": {"type": "text"}
+    },
+    "constraints": [
+      {"type": "primary_key", "column": "id"},
+      {"type": "foreign_key", "column": "account_id", "target": "accounts.id", "on_delete": "set_null", "on_update": "cascade"},
+      {"type": "foreign_key", "column": "company_id", "target": "companies.id", "on_delete": "set_null", "on_update": "cascade"}
+    ]
+  },
+  "parties": {
+    "columns": {
+      "id": {"type": "text"},
+      "name": {"type": "text"},
+      "sponsor_id": {"type": "text", "isNullable": true}
+    },
+    "constraints": [
+      {"type": "primary_key", "column": "id"},
+      {"type": "foreign_key", "column": "sponsor_id", "target": "companies.id", "on_delete": "set_null", "on_update": "cascade"},
+      {"type": "unique", "column": "sponsor_id"}
+    ]
+  },
+  "accounts_parties": {
+    "columns": {
+      "account_id": {"type": "text"},
+      "party_id": {"type": "text"}
+    },
+    "constraints": [
+      {"type": "primary_key", "column": "account_id\", \"party_id"},
+      {"type": "foreign_key", "column": "account_id", "target": "accounts.id", "on_delete": "cascade", "on_update": "cascade"},
+      {"type": "foreign_key", "column": "party_id", "target": "parties.id", "on_delete": "cascade", "on_update": "cascade"}
+    ]
+  }
+}

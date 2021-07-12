@@ -1,7 +1,7 @@
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 
-import '../utils.dart';
+import '../helpers/utils.dart';
 import 'table_builder.dart';
 
 class ActionBuilder {

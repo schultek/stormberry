@@ -2,9 +2,9 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 
-import 'case_style.dart';
-import 'database_builder.dart';
+import '../core/case_style.dart';
 import 'join_table_builder.dart';
+import 'stormberry_builder.dart';
 import 'table_builder.dart';
 
 class ColumnBuilder {
@@ -61,8 +61,7 @@ class ColumnBuilder {
 
   String? get paramName {
     if (isForeignColumn) {
-      return toCaseStyle(
-          columnName!, CaseStyle.fromString(CaseStyle.camelCase));
+      return CaseStyle.camelCase.transform(columnName!);
     } else {
       return parameter?.name;
     }
@@ -70,7 +69,7 @@ class ColumnBuilder {
 
   String? get columnName {
     if (isFieldColumn) {
-      return toCaseStyle(parameter!.name, state.options.columnCaseStyle);
+      return state.options.columnCaseStyle.transform(parameter!.name);
     } else if (isForeignColumn) {
       return linkBuilder!
           .getForeignKeyName(base: parameter?.name, plural: isList);

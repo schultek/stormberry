@@ -1,6 +1,6 @@
 targets:
   $default:
     builders:
-      dartabase:
+      stormberry:
         generate_for:
-          - lib/main.dart
+          - lib/tables.dart

@@ -4,12 +4,17 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
-import '../../annotations.dart';
-import '../utils.dart';
-import 'builder_snippets.dart';
-import 'case_style.dart';
+import '../core/annotations.dart';
+import '../core/case_style.dart';
+import '../helpers/builder_snippets.dart';
+import '../helpers/utils.dart';
 import 'join_table_builder.dart';
+import 'json_builder.dart';
 import 'table_builder.dart';
+
+const tableChecker = TypeChecker.fromRuntime(Table);
+const typeConverterChecker = TypeChecker.fromRuntime(TypeConverter);
+const primaryKeyChecker = TypeChecker.fromRuntime(PrimaryKey);
 
 class BuilderState {
   Set<Uri> imports = {};
@@ -24,22 +29,26 @@ class BuilderState {
 }
 
 /// The main builder used for code generation
-class DatabaseBuilder implements Builder {
+class StormberryBuilder implements Builder {
   /// The global options defined in the 'build.yaml' file
   late GlobalOptions options;
 
-  DatabaseBuilder(BuilderOptions options)
+  StormberryBuilder(BuilderOptions options)
       : options = GlobalOptions.parse(options.config);
 
   @override
   FutureOr<void> build(BuildStep buildStep) async {
     var resolver = buildStep.resolver;
     var inputId = buildStep.inputId;
-    var outputId = inputId.changeExtension('.schema.g.dart');
+
     var visibleLibraries = await resolver.libraries.toList();
     try {
-      var generatedSource = generate(visibleLibraries, buildStep);
-      await buildStep.writeAsString(outputId, generatedSource);
+      var outputMap = generate(visibleLibraries, buildStep);
+
+      for (var key in outputMap.keys) {
+        var outputId = inputId.changeExtension(key);
+        await buildStep.writeAsString(outputId, outputMap[key]!);
+      }
     } catch (e, st) {
       print(e);
       print(st);
@@ -48,16 +57,14 @@ class DatabaseBuilder implements Builder {
 
   @override
   Map<String, List<String>> get buildExtensions => const {
-        '.dart': ['.schema.g.dart']
+        '.dart': ['.schema.g.dart', '.schema.g.json']
       };
 
   /// Main generation handler
   /// Searches for mappable classes and enums recursively
-  String generate(List<LibraryElement> libraries, BuildStep buildStep) {
+  Map<String, String> generate(
+      List<LibraryElement> libraries, BuildStep buildStep) {
     BuilderState state = BuilderState(options);
-
-    var checker = const TypeChecker.fromRuntime(Table);
-    var typeConverterChecker = const TypeChecker.fromRuntime(TypeConverter);
 
     for (var library in libraries) {
       if (library.isInSdk) {
@@ -67,7 +74,7 @@ class DatabaseBuilder implements Builder {
       var reader = LibraryReader(library);
 
       var typeConverters = reader.annotatedWith(typeConverterChecker);
-      var elements = reader.annotatedWith(checker);
+      var elements = reader.annotatedWith(tableChecker);
 
       if (elements.isNotEmpty || typeConverters.isNotEmpty) {
         state.imports.add(library.source.uri);
@@ -100,15 +107,13 @@ class DatabaseBuilder implements Builder {
       builder.prepareColumns();
     }
 
-    return <String>[
+    var map = <String, String>{};
+
+    map['.schema.g.dart'] = <String>[
       '// ignore_for_file: unnecessary_cast, prefer_relative_imports, unused_element, prefer_single_quotes',
       "import 'dart:convert';",
-      "import 'package:dartabase/dartabase.dart';",
+      "import 'package:stormberry/stormberry.dart';",
       state.imports.map((i) => "import '$i';").join('\n'),
-      'const databaseSchema = DatabaseSchema({',
-      state.builders.values.map((b) => b.generateSchema()).join().indent(),
-      state.joinBuilders.values.map((b) => b.generateSchema()).join().indent(),
-      '});',
       '',
       generateDatabaseExtension(state),
       '',
@@ -137,12 +142,25 @@ class DatabaseBuilder implements Builder {
       '',
       staticCode,
     ].join('\n');
+
+    map['.schema.g.json'] = <String>[
+      '{',
+      state.builders.values
+          .map((b) => b.generateJsonSchema())
+          .followedBy(
+              state.joinBuilders.values.map((b) => b.generateJsonSchema()))
+          .join(',\n')
+          .indent(),
+      '}',
+    ].join('\n');
+
+    return map;
   }
 
   String generateDatabaseExtension(BuilderState state) {
     return ''
         'extension DatabaseTables on Database {\n'
-        '  ${state.builders.values.map((b) => '${b.element.name}Table get ${toCaseStyle(b.tableName, CaseStyle.fromString(CaseStyle.camelCase))} => ${b.element.name}Table._instanceFor(this);').join('\n  ')}\n'
+        '  ${state.builders.values.map((b) => '${b.element.name}Table get ${CaseStyle.camelCase.transform(b.tableName)} => ${b.element.name}Table._instanceFor(this);').join('\n  ')}\n'
         '}';
   }
 

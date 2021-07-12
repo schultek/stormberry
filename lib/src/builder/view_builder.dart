@@ -1,8 +1,8 @@
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 
-import '../../annotations.dart';
-import 'case_style.dart';
+import '../core/annotations.dart';
+import '../core/case_style.dart';
 import 'column_builder.dart';
 import 'table_builder.dart';
 
@@ -53,8 +53,8 @@ class ViewBuilder {
 
   String get name =>
       annotation.getField('name')!.toStringValue()!.toLowerCase();
-  String get className => toCaseStyle('${name}_${table.element.name}_view',
-      CaseStyle.fromString(CaseStyle.pascalCase));
+  String get className =>
+      CaseStyle.pascalCase.transform('${name}_${table.element.name}_view');
 
   List<ViewColumn>? _columns;
   List<ViewColumn> get columns => _columns ??= _getViewColumns();
@@ -115,6 +115,7 @@ class ViewBuilder {
   String _getInitializer(ViewColumn c) {
     var param = c.column.parameter!;
     var str = 'map.get';
+    String? defVal = null;
     if (param.type.isDartCoreList) {
       str += 'List';
     } else if (param.type.isDartCoreMap) {
@@ -123,9 +124,20 @@ class ViewBuilder {
     if (param.isOptional ||
         param.type.nullabilitySuffix == NullabilitySuffix.question) {
       str += 'Opt';
+    } else if (param.type.isDartCoreList) {
+      str += 'Opt';
+      defVal = 'const []';
+    } else if (param.type.isDartCoreMap) {
+      str += 'Opt';
+      defVal = 'const {}';
     }
 
     var key = c.column.isFieldColumn ? c.column.columnName : c.paramName;
-    return "$str('$key')";
+    str += "('$key')";
+
+    if (defVal != null) {
+      str += ' ?? $defVal';
+    }
+    return str;
   }
 }
