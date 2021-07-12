@@ -66,7 +66,7 @@ extension JsonTableBuilder on TableBuilder {
     }
 
     if (ind.isNotEmpty) {
-      args.add('"indexes": [\n${ind.join(',\n').indent()},\n]');
+      args.add('"indexes": [\n${ind.join(',\n').indent()}\n]');
     }
 
     return '"$tableName": {\n${args.join(',\n').indent()}\n}';
