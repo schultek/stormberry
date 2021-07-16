@@ -1,3 +1,7 @@
+# 0.2.1
+
+- Added delete actions
+
 # 0.2.0
 
 - Refactor and cleanup, first published version

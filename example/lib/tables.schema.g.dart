@@ -71,6 +71,10 @@ class CompanyTable {
     }
     return _instance!;
   }
+
+  Future<void> deleteOne(String id) {
+    return _db.runTransaction(() => CompanyDeleteAction().apply(_db, [id]));
+  }
 }
 
 class InvoiceTable {
@@ -562,6 +566,17 @@ class BillingAddressUpdateAction
       FROM ( VALUES ${requests.map((r) => '( ${_encode(r.accountId)}, ${_encode(r.companyId)}, ${_encode(r.name)}, ${_encode(r.street)}, ${_encode(r.city)} )').join(', ')} )
       AS UPDATED("account_id", "company_id", "name", "street", "city")
       WHERE "billing_addresses"."account_id" = UPDATED."account_id" AND "billing_addresses"."company_id" = UPDATED."company_id"
+    """);
+  }
+}
+
+class CompanyDeleteAction implements Action<List<String>> {
+  @override
+  Future<void> apply(Database db, List<String> keys) async {
+    if (keys.isEmpty) return;
+    await db.query("""
+      DELETE FROM "companies"
+      WHERE "companies"."id" = ANY( ${keys.map((k) => _encode(k)).join(',')} )
     """);
   }
 }

@@ -72,7 +72,7 @@ You can specify `Action`s to perform on your table.
 Similar to the queries, for each action a custom `doAction()` method is generated for you to use later.
 
 Again you can choose from the default `Action`s or write a custom class. 
-The available default actions are `SingleInsertAction`, `SingleUpdateAction` as well as their `Multi` variants.
+The available default actions are `SingleInsertAction`, `SingleUpdateAction` and `SingleDeleteAction` as well as their `Multi` variants.
 
 ## Indexes
 

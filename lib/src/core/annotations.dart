@@ -97,6 +97,26 @@ class MultiUpdateAction implements Action {
   }
 }
 
+/// Default delete action
+class SingleDeleteAction implements Action {
+  const SingleDeleteAction();
+
+  @override
+  Future<void> apply(Database db, dynamic request) {
+    throw UnimplementedError();
+  }
+}
+
+/// Default multi-delete action
+class MultiDeleteAction implements Action {
+  const MultiDeleteAction();
+
+  @override
+  Future<void> apply(Database db, dynamic request) {
+    throw UnimplementedError();
+  }
+}
+
 /// Extend this to define a query on a table
 abstract class Query<T, U> {
   const Query();

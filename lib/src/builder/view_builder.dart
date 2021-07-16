@@ -115,7 +115,7 @@ class ViewBuilder {
   String _getInitializer(ViewColumn c) {
     var param = c.column.parameter!;
     var str = 'map.get';
-    String? defVal = null;
+    String? defVal;
     if (param.type.isDartCoreList) {
       str += 'List';
     } else if (param.type.isDartCoreMap) {

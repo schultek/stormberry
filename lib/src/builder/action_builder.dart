@@ -36,6 +36,16 @@ class ActionBuilder {
           'Future<void> updateMany(List<${table.element.name}UpdateRequest> requests) {\n'
           '  return _db.runTransaction(() => ${table.element.name}UpdateAction().apply(_db, requests));\n'
           '}';
+    } else if (className == 'SingleDeleteAction') {
+      return ''
+          'Future<void> deleteOne(${table.primaryKeyColumn!.dartType} ${table.primaryKeyColumn!.paramName}) {\n'
+          '  return _db.runTransaction(() => ${table.element.name}DeleteAction().apply(_db, [${table.primaryKeyColumn!.paramName}]));\n'
+          '}';
+    } else if (className == 'MultiDeleteAction') {
+      return ''
+          'Future<void> deleteMany(List<${table.primaryKeyColumn!.dartType}> keys) {\n'
+          '  return _db.runTransaction(() => ${table.element.name}DeleteAction().apply(_db, keys));\n'
+          '}';
     } else {
       var requestClassName = (annotation!.type!.element! as ClassElement)
           .supertype!
@@ -57,6 +67,9 @@ class ActionBuilder {
     } else if (className == 'SingleUpdateAction' ||
         className == 'MultiUpdateAction') {
       return _generateUpdateAction();
+    } else if (className == 'SingleDeleteAction' ||
+        className == 'MultiDeleteAction') {
+      return _generateDeleteAction();
     }
   }
 
@@ -372,6 +385,29 @@ class ActionBuilder {
         '  ${requestFields.map((f) => '${f.key} ${f.value};').join('\n  ')}\n'
         '  \n'
         '  $requestClassName({${requestFields.map((f) => '${f.key.endsWith('?') ? '' : 'required '}this.${f.value}').join(', ')}});\n'
+        '}';
+  }
+
+  bool _didGenerateDeleteAction = false;
+  String? _generateDeleteAction() {
+    if (_didGenerateDeleteAction) {
+      return null;
+    }
+    _didGenerateDeleteAction = true;
+
+    var requestClassName = table.primaryKeyColumn!.dartType;
+    var actionClassName = '${table.element.name}DeleteAction';
+
+    return ''
+        'class $actionClassName implements Action<List<$requestClassName>> {\n'
+        '  @override\n'
+        '  Future<void> apply(Database db, List<$requestClassName> keys) async {\n'
+        '    if (keys.isEmpty) return;\n'
+        '    await db.query("""\n'
+        '      DELETE FROM "${table.tableName}"\n'
+        '      WHERE ${'"${table.tableName}"."${table.primaryKeyColumn!.columnName}" = ANY( \${keys.map((k) => _encode(k)).join(\',\')} )'}\n'
+        '    """);\n'
+        '  }\n'
         '}';
   }
 }

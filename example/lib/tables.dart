@@ -101,6 +101,8 @@ class BillingAddress {
     Field.hidden('members'),
     Field.hidden('invoices'),
   ])
+], actions: [
+  SingleDeleteAction(),
 ])
 class Company {
   @PrimaryKey()
