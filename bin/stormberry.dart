@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:stormberry/stormberry.dart';
+import 'package:yaml/yaml.dart';
 
 import 'src/differentiator.dart';
 import 'src/patcher.dart';
@@ -14,28 +15,36 @@ Future<void> main(List<String> args) async {
       .firstOrNull;
   bool applyChanges = args.contains('--apply-changes');
 
-  var schemaPath = args
-      .where((a) => a.startsWith('-schema='))
-      .map((a) => a.split('=')[1])
-      .firstOrNull;
+  var buildYaml = File('build.yaml');
 
-  if (schemaPath == null) {
-    stdout
-        .write('Missing database schema. Specify using "-schema=<file-path>"');
+  if (!buildYaml.existsSync()) {
+    stdout.write('Cannot find build.yaml file in current directory.');
     exit(1);
   }
 
-  if (!schemaPath.endsWith('.schema.g.json')) {
-    if (schemaPath.endsWith('.schema')) {
-      schemaPath += '.g.json';
-    } else {
-      schemaPath += '.schema.g.json';
-    }
+  var content = loadYaml(await buildYaml.readAsString());
+
+  List<String>? generateTargets = (content['targets'] as YamlMap?)
+      ?.values
+      .map((t) => t['builders']?['stormberry'])
+      .where((b) => b != null)
+      .expand((b) => b['generate_for'] as List)
+      .map((d) => d as String)
+      .toList();
+
+  if (generateTargets == null || generateTargets.isEmpty) {
+    stdout.write(
+        'Cannot find stormberry generation targets in build.yaml. Make sure you have the stormberry builder configured with at least one generation target.');
+    exit(1);
   }
+
+  var schemaPath =
+      generateTargets.first.replaceFirst('.dart', '.schema.g.json');
 
   var file = File(schemaPath);
   if (!file.existsSync()) {
-    stdout.write('Could not find file $schemaPath');
+    stdout.write(
+        'Could not find file $schemaPath, did you run the build script?');
     exit(1);
   }
   var schemaMap = jsonDecode(await file.readAsString());

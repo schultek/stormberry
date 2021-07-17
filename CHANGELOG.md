@@ -1,3 +1,7 @@
+# 0.2.2
+
+- Update tool: Read json schema location from build.yaml
+
 # 0.2.1
 
 - Added delete actions

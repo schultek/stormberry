@@ -82,9 +82,9 @@ As an advanced configuration you can specify indexes on your table using the `Ta
 
 Stormberry comes with a database migration tool, to create or update the schema of your database.
 
-To use this run the following command and specify the location of your `.schema.g.json` file.
+To use this run the following command from the root folder of your project.
 ```
-flutter pub run stormberry -schema=lib/main.schema.g.json
+flutter pub run stormberry
 ```
 
 In order to connect to your database, provide the following environment variables: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` and `DB_SSL`. 
