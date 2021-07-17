@@ -405,7 +405,7 @@ class ActionBuilder {
         '    if (keys.isEmpty) return;\n'
         '    await db.query("""\n'
         '      DELETE FROM "${table.tableName}"\n'
-        '      WHERE ${'"${table.tableName}"."${table.primaryKeyColumn!.columnName}" = ANY( \${keys.map((k) => _encode(k)).join(\',\')} )'}\n'
+        '      WHERE "${table.tableName}"."${table.primaryKeyColumn!.columnName}" IN ( \${keys.map((k) => _encode(k)).join(\',\')} )\n'
         '    """);\n'
         '  }\n'
         '}';

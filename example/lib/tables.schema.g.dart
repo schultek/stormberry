@@ -576,7 +576,7 @@ class CompanyDeleteAction implements Action<List<String>> {
     if (keys.isEmpty) return;
     await db.query("""
       DELETE FROM "companies"
-      WHERE "companies"."id" = ANY( ${keys.map((k) => _encode(k)).join(',')} )
+      WHERE "companies"."id" IN ( ${keys.map((k) => _encode(k)).join(',')} )
     """);
   }
 }
