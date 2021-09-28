@@ -1,3 +1,7 @@
+# 0.2.3
+
+- Fix encoding bug
+
 # 0.2.2
 
 - Update tool: Read json schema location from build.yaml

@@ -1,7 +1,7 @@
 
 # Stormberry
 
-Stormberry is an strongly-typed ORM-like code-generation package to provide easy bindings between your dart classes and postgres database.
+Stormberry is a strongly-typed ORM-like code-generation package to provide easy bindings between your dart classes and postgres database.
 It supports all kinds of relations without any complex configuration.
 
 # Outline
@@ -33,16 +33,58 @@ It supports all kinds of relations without any complex configuration.
 
 # Get Started
 
-To get started import `stormberry` and run the code-generation.
-You also have to annotate your classes used as database tables.
+To get started, add the following lines to your `pubspec.yaml`:
+
+```yaml
+dependencies:
+  stormberry: ^0.2.3
+```
+
+In your code, specify a class that should act as a table like this:
+
+```dart
+@Table()
+class User {
+	@PrimaryKey()
+	String id;
+	String name;
+	
+	User(this.id, this.name);
+}
+```
+
+Next, create a `build.yaml` in the root directory of your package and add this snippet:
+
+```yaml
+targets:
+  $default:
+    builders:
+      stormberry:
+        generate_for:
+          # library that exposes all your table classes
+          # modify this if to match your library file
+          - lib/tables.dart 
+```
+
+In order to generate the serialization code, run the following command:
+
+```shell script
+pub run build_runner build
+```
+
+You'll need to re-run code generation each time you are making changes to your code. So for development time, use `watch` like this
+
+```shell script
+pub run build_runner watch
+```
+
+This will generate a `.schema.g.dart` file along with a `.schema.g.json` file.
+
+Last step is to `import` the generated dart file wherever you want / need them.
 
 # Code Annotations
 
-You specify your database configuration by annotating some dart classes
-
-## Table Classes
-
-The `@Table()` annotation is the main point for your configuration.
+You specify your database configuration by annotating some dart classes with the `@Table()` annotation. Your class then represents a single entity from this table.
 
 ## Views
 

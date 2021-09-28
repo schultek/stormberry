@@ -30,18 +30,19 @@ T _decode<T>(dynamic value) {
   }
 }
 
-dynamic _encode(dynamic value) {
+String? _encode(dynamic value, {bool escape = true}) {
   if (value == null) return null;
   try {
     var encoded = PostgresTextEncoder().convert(value);
+    if (!escape) return encoded;
     if (value is Map) return "'${encoded.replaceAll("'", "''")}'";
     return value is List || value is PgPoint ? "'$encoded'" : encoded;
   } catch (_) {
     try {
       if (_typeConverters[value.runtimeType] != null) {
-        return _encode(_typeConverters[value.runtimeType]!.encode(value));
+        return _encode(_typeConverters[value.runtimeType]!.encode(value), escape: escape);
       } else if (value is List) {
-        return _encode(value.map((v) => _encode(v)).toList());
+        return _encode(value.map((v) => _encode(v, escape: false)).toList(), escape: escape);
       } else {
         throw ConverterException('');
       }
