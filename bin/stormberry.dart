@@ -6,13 +6,11 @@ import 'package:yaml/yaml.dart';
 
 import 'src/differentiator.dart';
 import 'src/patcher.dart';
+import 'src/schema.dart';
 
 Future<void> main(List<String> args) async {
   bool dryRun = args.contains('--dry-run');
-  String? dbName = args
-      .where((a) => a.startsWith('-db='))
-      .map((a) => a.split('=')[1])
-      .firstOrNull;
+  String? dbName = args.where((a) => a.startsWith('-db=')).map((a) => a.split('=')[1]).firstOrNull;
   bool applyChanges = args.contains('--apply-changes');
 
   var buildYaml = File('build.yaml');
@@ -38,13 +36,11 @@ Future<void> main(List<String> args) async {
     exit(1);
   }
 
-  var schemaPath =
-      generateTargets.first.replaceFirst('.dart', '.schema.g.json');
+  var schemaPath = generateTargets.first.replaceFirst('.dart', '.schema.g.json');
 
   var file = File(schemaPath);
   if (!file.existsSync()) {
-    stdout.write(
-        'Could not find file $schemaPath, did you run the build script?');
+    stdout.write('Could not find file $schemaPath, did you run the build script?');
     exit(1);
   }
   var schemaMap = jsonDecode(await file.readAsString());
@@ -64,21 +60,21 @@ Future<void> main(List<String> args) async {
 
   var diff = await getSchemaDiff(db, schema);
 
-  await db.startTransaction();
-
   if (diff.hasChanges) {
-    diff.printDiff();
+    printDiff(diff);
     print('=========================');
 
     if (dryRun) {
       print('DATABASE SCHEME HAS CHANGES, EXITING');
-      db.cancelTransaction();
+      await db.close();
+      exit(1);
     } else {
+      await db.startTransaction();
+
       String? answerApplyChanges;
       if (!applyChanges) {
         stdout.write('Do you want to apply these changes? (yes/no): ');
-        answerApplyChanges =
-            stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
+        answerApplyChanges = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
       }
 
       if (applyChanges || answerApplyChanges == 'yes') {
@@ -87,54 +83,26 @@ Future<void> main(List<String> args) async {
         try {
           db.debugPrint = true;
           await patchSchema(db, diff);
-
-          if (diff.tables.removed.isNotEmpty ||
-              diff.tables.modified.any((t) => t.columns.removed.isNotEmpty)) {
-            print('=========================');
-            print('The following changes would lead to data loss:');
-
-            for (var table in diff.tables.removed) {
-              print('-- TABLE ${table.name}');
-            }
-            for (var table in diff.tables.modified) {
-              for (var column in table.columns.removed) {
-                print('-- COLUMN ${table.name}.${column.name}');
-              }
-            }
-
-            if (!applyChanges) {
-              stdout.write('Do you want to continue anyways? (yes/no): ');
-              var choose =
-                  stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
-
-              if (choose == 'yes') {
-                await removeUnused(db, diff);
-                print('---\nDATABASE UPDATE SUCCESSFUL');
-              } else {
-                db.cancelTransaction();
-                print('---\nALL CHANGES REVERTED, EXITING');
-              }
-            } else {
-              db.cancelTransaction();
-              print('---\nALL CHANGES REVERTED, EXITING');
-            }
-          } else {
-            print('---\nDATABASE UPDATE SUCCESSFUL');
-          }
         } catch (_) {
           db.cancelTransaction();
         }
       } else {
         db.cancelTransaction();
       }
+
+      var updateWasSuccessFull = await db.finishTransaction();
+
+      print('========================');
+      if (updateWasSuccessFull) {
+        print('---\nDATABASE UPDATE SUCCESSFUL');
+      } else {
+        print('---\nALL CHANGES REVERTED, EXITING');
+      }
+
+      await db.close();
+      exit(updateWasSuccessFull ? 0 : 1);
     }
   } else {
     print('NO CHANGES, ALL DONE');
   }
-  print('========================');
-
-  var updateWasSuccessFull = await db.finishTransaction();
-  await db.close();
-
-  exit(updateWasSuccessFull ? 0 : 1);
 }

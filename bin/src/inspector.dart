@@ -1,21 +1,21 @@
 import 'package:stormberry/stormberry.dart';
 
+import 'schema.dart';
+
 Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
   //ignore: prefer_const_constructors
-  var schema = DatabaseSchema({});
+  var schema = DatabaseSchema({}, {});
 
-  var tables = await db.query(
-      "SELECT * FROM information_schema.tables WHERE table_schema = 'public'");
+  var tables = await db
+      .query("SELECT * FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'");
   for (var row in tables) {
     var tableMap = row.toColumnMap();
     var tableName = tableMap['table_name'] as String;
 
-    var tableScheme = TableSchema(tableName,
-        columns: {}, constraints: [], triggers: [], indexes: []);
+    var tableScheme = TableSchema(tableName, columns: {}, constraints: [], triggers: [], indexes: []);
     schema.tables[tableName] = tableScheme;
 
-    var columns = await db.query(
-        "SELECT * FROM information_schema.columns WHERE table_name = '$tableName'");
+    var columns = await db.query("SELECT * FROM information_schema.columns WHERE table_name = '$tableName'");
     for (var row in columns) {
       var columnMap = row.toColumnMap();
       var columnName = columnMap['column_name'] as String;
@@ -66,12 +66,8 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
         srcColumns[0] as String,
         constraintMap['target_table'] as String,
         targetColumns[0] as String,
-        constraintMap['delete_rule'] == 'CASCADE'
-            ? ForeignKeyAction.cascade
-            : ForeignKeyAction.setNull,
-        constraintMap['update_rule'] == 'CASCADE'
-            ? ForeignKeyAction.cascade
-            : ForeignKeyAction.setNull,
+        constraintMap['delete_rule'] == 'CASCADE' ? ForeignKeyAction.cascade : ForeignKeyAction.setNull,
+        constraintMap['update_rule'] == 'CASCADE' ? ForeignKeyAction.cascade : ForeignKeyAction.setNull,
       );
     }
     if (constraint != null) {
@@ -93,18 +89,13 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
     var triggerMap = row.toColumnMap();
     var tableName = triggerMap['event_object_table'] as String;
     var statement = triggerMap['action_statement'] as String;
-    var match =
-        RegExp(r'^EXECUTE FUNCTION ([\w_]+)\((.*)\)$').firstMatch(statement)!;
+    var match = RegExp(r'^EXECUTE FUNCTION ([\w_]+)\((.*)\)$').firstMatch(statement)!;
 
     schema.tables[tableName]?.triggers.add(TableTrigger(
       triggerMap['trigger_name'] as String,
       triggerMap['columns'].firstWhere((c) => c != null) as String,
       match.group(1)!,
-      match
-          .group(2)!
-          .split(', ')
-          .map((a) => a.substring(1, a.length - 1))
-          .toList(),
+      match.group(2)!.split(', ').map((a) => a.substring(1, a.length - 1)).toList(),
     ));
   }
 
@@ -115,8 +106,7 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
     var indexMap = row.toColumnMap();
     var indexName = (indexMap['indexname'] as String).substring(2);
     var tableName = indexMap['tablename'];
-    var defRegex = RegExp(
-        r'^CREATE( UNIQUE)? INDEX \w+ ON public.\w+ USING (\w+) \((\w+)\)(?: WHERE (.+))?$');
+    var defRegex = RegExp(r'^CREATE( UNIQUE)? INDEX \w+ ON public.\w+ USING (\w+) \((\w+)\)(?: WHERE (.+))?$');
     var defMatch = defRegex.firstMatch(indexMap['indexdef'] as String);
     if (defMatch == null || defMatch.groupCount != 4) continue;
     var unique = defMatch.group(1) != null;
@@ -126,8 +116,7 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
     if (condition != null && RegExp(r'^\(.*\)$').hasMatch(condition)) {
       condition = condition.substring(1, condition.length - 1);
     }
-    var algorithm = IndexAlgorithm.values
-        .firstWhere((a) => a.toString().split('.')[1] == algo);
+    var algorithm = IndexAlgorithm.values.firstWhere((a) => a.toString().split('.')[1] == algo);
     schema.tables[tableName]?.indexes.add(TableIndex(
       columns: columns,
       name: indexName,
@@ -137,5 +126,23 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
     ));
   }
 
+  var views = await db.query("""
+    SELECT * 
+    FROM information_schema.views WHERE table_schema = 'public' AND table_name like '%_view'
+  """);
+  for (var row in views) {
+    var viewMap = row.toColumnMap();
+    var viewName = viewMap['table_name'] as String;
+    var viewDefinition = viewMap['view_definition'] as String;
+    var viewHash = RegExp('_#(.+)#_').firstMatch(viewDefinition)?.group(1) ?? '';
+    schema.views[viewName] = ViewSchema(name: viewName, definition: viewDefinition, hash: viewHash);
+  }
+
   return schema;
+}
+
+extension SkipEnd<T> on Iterable<T> {
+  Iterable<T> skipEnd(int n) {
+    return take(length - n);
+  }
 }

@@ -1,10 +1,37 @@
+import 'package:stormberry/stormberry.dart';
+
+import 'view_query.dart';
+
 class DatabaseSchema {
   final Map<String, TableSchema> tables;
   final Map<String, ViewSchema> views;
   const DatabaseSchema(this.tables, this.views);
 
-  TableSchema table(String key) {
-    return tables[key] ??= TableSchema(key, columns: {}, constraints: [], indexes: []);
+  DatabaseSchema copy() => DatabaseSchema(
+        {for (var t in tables.entries) t.key: t.value.copy()},
+        {...views},
+      );
+
+  factory DatabaseSchema.fromMap(Map<String, dynamic> map) {
+    var tables = <String, TableSchema>{};
+    var views = <String, ViewSchema>{};
+    for (var key in map.keys) {
+      var table = map[key];
+      tables[key] = TableSchema(
+        key,
+        columns: (table['columns'] as Map<String, dynamic>)
+            .map((k, v) => MapEntry(k, ColumnSchema.fromMap(k, v as Map<String, dynamic>))),
+        constraints:
+            (table['constraints'] as List?)?.map((c) => TableConstraint.fromMap(c as Map<String, dynamic>)).toList() ??
+                [],
+        indexes:
+            (table['indexes'] as List?)?.map((i) => TableIndexParser.fromMap(i as Map<String, dynamic>)).toList() ?? [],
+      );
+      for (var v in table['views'] as List? ?? []) {
+        views[v['name'] as String] = buildViewSchema(v as Map<String, dynamic>);
+      }
+    }
+    return DatabaseSchema(tables, views);
   }
 }
 
@@ -31,42 +58,6 @@ class TableSchema {
         indexes: [...indexes],
       );
 }
-
-class TableIndex {
-  final List<String> columns;
-  final String name;
-  final bool unique;
-  final IndexAlgorithm algorithm;
-  final String? condition;
-
-  const TableIndex({
-    this.columns = const [],
-    required this.name,
-    this.unique = false,
-    this.algorithm = IndexAlgorithm.BTREE,
-    this.condition,
-  });
-
-  String get joinedColumns => columns.map((c) => '"$c"').join(', ');
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is TableIndex &&
-          runtimeType == other.runtimeType &&
-          joinedColumns == other.joinedColumns &&
-          name == other.name &&
-          unique == other.unique &&
-          algorithm == other.algorithm &&
-          condition == other.condition;
-
-  @override
-  int get hashCode =>
-      joinedColumns.hashCode ^ name.hashCode ^ unique.hashCode ^ algorithm.hashCode ^ condition.hashCode;
-}
-
-// ignore: constant_identifier_names
-enum IndexAlgorithm { BTREE, GIST, HASH, GIN, BRIN, SPGIST }
 
 class ColumnSchema {
   final String name;

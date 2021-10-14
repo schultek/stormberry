@@ -1,6 +1,7 @@
 import 'package:stormberry/stormberry.dart';
 
 import 'differentiator.dart';
+import 'schema.dart';
 
 Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
   for (var table in diff.tables.added) {
@@ -52,9 +53,8 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
   }
 
   for (var table in diff.tables.modified) {
-    var uniqueConstraints = table.constraints.added
-        .where((c) => c is PrimaryKeyConstraint || c is UniqueConstraint)
-        .toList();
+    var uniqueConstraints =
+        table.constraints.added.where((c) => c is PrimaryKeyConstraint || c is UniqueConstraint).toList();
     if (uniqueConstraints.isNotEmpty) {
       await db.query("""
           ALTER TABLE "${table.name}"
@@ -64,9 +64,7 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
   }
 
   for (var table in diff.tables.added) {
-    var uniqueConstraints = table.constraints
-        .where((c) => c is PrimaryKeyConstraint || c is UniqueConstraint)
-        .toList();
+    var uniqueConstraints = table.constraints.where((c) => c is PrimaryKeyConstraint || c is UniqueConstraint).toList();
     if (uniqueConstraints.isNotEmpty) {
       await db.query("""
           ALTER TABLE "${table.name}"
@@ -76,8 +74,7 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
   }
 
   for (var table in diff.tables.modified) {
-    var foreignKeyConstraints =
-        table.constraints.added.whereType<ForeignKeyConstraint>().toList();
+    var foreignKeyConstraints = table.constraints.added.whereType<ForeignKeyConstraint>().toList();
     if (foreignKeyConstraints.isNotEmpty) {
       await db.query("""
           ALTER TABLE "${table.name}"
@@ -87,8 +84,7 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
   }
 
   for (var table in diff.tables.added) {
-    var foreignKeyConstraints =
-        table.constraints.whereType<ForeignKeyConstraint>().toList();
+    var foreignKeyConstraints = table.constraints.whereType<ForeignKeyConstraint>().toList();
     if (foreignKeyConstraints.isNotEmpty) {
       await db.query("""
           ALTER TABLE "${table.name}"
@@ -128,6 +124,78 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
       await db.query('CREATE ${index.statement(table.name)}');
     }
   }
+
+  await patchViews(db, diff);
+}
+
+Future<void> patchViews(Database db, DatabaseSchemaDiff diff) async {
+  var toDrop = {...diff.views.removed, ...diff.views.modified.prev};
+  var toAdd = {...diff.views.added, ...diff.views.modified.newly};
+
+  String? nodePath(ViewNode node, [ViewNode? n0]) {
+    if (node == n0) return node.view.name;
+    for (var child in node.children) {
+      var s = nodePath(child, n0 ?? node);
+      if (s != null) {
+        return '${node.view.name} -> $s';
+      }
+    }
+  }
+
+  var currViewNodes = ViewSchema.buildGraph(diff.existingSchema.views.values.toSet());
+
+  Iterable<ViewNode> getParents(ViewNode n) => [n, ...n.parents.expand(getParents)];
+  var toDropNodes = currViewNodes.where((n) => toDrop.contains(n.view)).expand(getParents).toSet();
+  var toDropGraph = toDropNodes.where((n) => n.parents.isEmpty).toSet();
+
+  while (toDropGraph.isNotEmpty) {
+    var node = toDropGraph.first;
+    toDropGraph.remove(node);
+    toDropNodes.remove(node);
+
+    if (!toDrop.contains(node.view)) {
+      toAdd.add(node.view);
+    }
+
+    await db.query('DROP VIEW ${node.view.name}');
+
+    for (var child in node.children) {
+      child.parents.remove(node);
+      if (child.parents.isEmpty) {
+        toDropGraph.add(child);
+      }
+    }
+  }
+
+  if (toDropNodes.isNotEmpty) {
+    print('Error: Cyclic dependencies in dropped table views found: ${nodePath(toDropNodes.first)}');
+    throw Exception();
+  }
+
+  await removeUnused(db, diff);
+
+  var toAddNodes = ViewSchema.buildGraph(toAdd);
+  var toAddGraph = toAddNodes.where((n) => n.children.isEmpty).toSet();
+
+  while (toAddGraph.isNotEmpty) {
+    var node = toAddGraph.first;
+    toAddGraph.remove(node);
+    toAddNodes.remove(node);
+
+    await db.query('CREATE VIEW ${node.view.name} AS ${node.view.definition}');
+
+    for (var parent in node.parents) {
+      parent.children.remove(node);
+      if (parent.children.isEmpty) {
+        toAddGraph.add(parent);
+      }
+    }
+  }
+
+  if (toAddNodes.isNotEmpty) {
+    print('Error: Cyclic dependencies in added table views found: ${nodePath(toAddNodes.first)}');
+    throw Exception();
+  }
 }
 
 Future<void> removeUnused(Database db, DatabaseSchemaDiff diff) async {
@@ -160,7 +228,7 @@ Future<void> removeUnused(Database db, DatabaseSchemaDiff diff) async {
   }
 
   for (var table in diff.tables.removed) {
-    await db.query('''DROP TABLE "${table.name}" ''');
+    await db.query('DROP TABLE "${table.name}"');
   }
 }
 

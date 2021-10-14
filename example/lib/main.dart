@@ -1,26 +1,44 @@
 import 'package:stormberry/stormberry.dart';
 
-import 'tables.dart';
+part 'main.g.dart';
 
-Future<void> main() async {
-  var db = Database(
-    port: 5433,
-    database: 'dart_test',
-    user: 'dart',
-    password: 'dart',
-    useSSL: false,
-  );
-
-  await db.accounts.insertOne(AccountInsertRequest(
-    '123',
-    'Test',
-    'User',
-    LatLng(1, 2),
-    BillingAddress('Test User', 'SomeRoad 1', 'New York'),
-    null,
-  ));
-
-  var account = await db.accounts.queryUserView('123');
-
-  print(account!.id);
+class Accounts extends Table<Account> {
+  static final id = text().primaryKey();
+  static final name = text();
+  static final location = latLng();
 }
+
+class AccountsCompanies extends Table<Entity> {
+  static final account_id = ref(Accounts.id);
+  static final company_id = ref(Companies.id);
+}
+
+class Companies extends Table<Company> {
+  static final id = text().primaryKey();
+}
+
+class Invoices extends Table<Invoice> {
+  static final id = text().primaryKey();
+}
+
+class LatLng {}
+
+Column<LatLng> latLng() => text().transform(LatLngTransformer());
+
+class UserAccountsView extends View<Accounts, UserAccount> {
+  final companies =
+}
+
+class CompanyAccountsView extends View<Accounts, CompanyAccount> {
+  static final company = Accounts.company.hidden();
+}
+
+class MemberCompaniesView extends View<Companies, MemberCompany> {
+  static final members = Companies.members.viewAs<CompanyAccountsView>();
+}
+
+class OwnerInvoicesView extends View<Invoices, OwnerInvoice> {}
+
+class LatLngTransformer extends Transformer<String, LatLng> {}
+
+class StrLengthTransformer extends Transformer<String, int> {}
