@@ -37,11 +37,11 @@ class CaseStyle {
       if (value.startsWith('custom')) {
         var match = customCase.firstMatch(value);
         if (match == null || match.groupCount != 2) {
-          throw FormatException(
-              "Cannot parse custom caseStyle expression '$value'");
+          throw FormatException("Cannot parse custom caseStyle expression '$value'");
         }
 
-        TextTransform? head, tail;
+        TextTransform? head;
+        TextTransform? tail;
         String separator;
 
         var transforms = match.group(1)!;
@@ -66,19 +66,16 @@ class CaseStyle {
   static const unmodified = 'unmodified';
 
   /// Transforms to 'fieldName'
-  static const camelCase =
-      CaseStyle(head: TextTransform.lowerCase, tail: TextTransform.capitalCase);
+  static const camelCase = CaseStyle(head: TextTransform.lowerCase, tail: TextTransform.capitalCase);
 
   /// Transforms to 'FieldName'
   static const pascalCase = CaseStyle(tail: TextTransform.capitalCase);
 
   /// Transforms to 'field_name'
-  static const snakeCase =
-      CaseStyle(tail: TextTransform.lowerCase, separator: '_');
+  static const snakeCase = CaseStyle(tail: TextTransform.lowerCase, separator: '_');
 
   /// Transforms to 'field-name'
-  static const paramCase =
-      CaseStyle(tail: TextTransform.lowerCase, separator: '-');
+  static const paramCase = CaseStyle(tail: TextTransform.lowerCase, separator: '-');
 
   /// Transforms to 'fieldname'
   static const lowerCase = CaseStyle(tail: TextTransform.lowerCase);
@@ -96,10 +93,7 @@ extension CaseStyleTransform on CaseStyle? {
     } else {
       var words = text.split(splitter);
       if (style.head != null) {
-        words = [
-          style.head.transform(words[0]),
-          ...words.skip(1).map((w) => style.tail.transform(w))
-        ];
+        words = [style.head.transform(words[0]), ...words.skip(1).map((w) => style.tail.transform(w))];
       } else if (style.tail != null) {
         words = words.map((w) => style.tail.transform(w)).toList();
       }

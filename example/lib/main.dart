@@ -12,15 +12,25 @@ Future<void> main() async {
   );
 
   await db.accounts.insertOne(AccountInsertRequest(
-    '123',
-    'Test',
-    'User',
-    LatLng(1, 2),
-    BillingAddress('Test User', 'SomeRoad 1', 'New York'),
-    null,
+    id: '123',
+    firstName: 'Test',
+    lastName: 'User',
+    location: LatLng(1, 2),
+    billingAddress: BillingAddress('Test User', 'SomeRoad 1', 'New York', '123'),
+    companyId: 'abc',
+  ));
+
+  await db.companies.insertOne(CompanyInsertRequest(
+    id: 'abc',
+    name: 'Minga',
+    addresses: [],
   ));
 
   var account = await db.accounts.queryUserView('123');
 
   print(account!.id);
+
+  var company = await db.companies.queryAdminView('abc');
+
+  print(company!.id);
 }

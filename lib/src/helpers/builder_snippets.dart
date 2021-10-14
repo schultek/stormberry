@@ -12,6 +12,66 @@ const defaultConverters = '''
 
 const staticCode = r'''
 
+class BaseTable {
+  static final _tables = <Type, BaseTable>{};
+
+  final Database _db;
+  BaseTable(this._db);
+
+  static T get<T extends BaseTable>(Database db, T Function() fn) {
+    return _tables[T]?._db == db ? _tables[T]! as T : _tables[T] = fn();
+  }
+  
+  Future<T?> queryOne<T>(dynamic key, String table, String name, String keyName) async {
+    var params = QueryParams(where: '"$name"."$keyName" = ${_encode(key)}', limit: 1);
+    return (await query(BasicQuery<T>(table, name), params)).firstOrNull;
+  }
+
+  Future<List<T>> queryMany<T>(QueryParams params, String table, String name) {
+    return query(BasicQuery<T>(table, name), params);
+  }
+  
+  Future<T> query<T, U>(Query<T, U> query, U params) {
+    return query.apply(_db, params);
+  }
+  
+  Future<void> run<T>(Action<T> action, T request) {
+    return _db.runTransaction(() => action.apply(_db, request));
+  }
+}
+
+class QueryParams {
+  String? where;
+  String? orderBy;
+  int? limit;
+  int? offset;
+  
+  QueryParams({this.where, this.orderBy, this.limit, this.offset});
+}
+        
+class BasicQuery<Result> implements Query<List<Result>, QueryParams> {
+  BasicQuery(this.table, this.name);
+
+  final String table;
+  final String name;
+
+  @override
+  Future<List<Result>> apply(Database db, QueryParams params) async {
+    var time = DateTime.now();
+    var res = await db.query("""
+      SELECT * FROM "$table" "$name"
+      ${params.where != null ? "WHERE ${params.where}" : ""}
+      ${params.orderBy != null ? "ORDER BY ${params.orderBy}" : ""}
+      ${params.limit != null ? "LIMIT ${params.limit}" : ""}
+      ${params.offset != null ? "OFFSET ${params.offset}" : ""}
+    """);
+
+    var results = res.map((row) => _decode<Result>(row.toColumnMap())).toList();
+    print('Queried ${results.length} rows in ${DateTime.now().difference(time)}');
+    return results;
+  }
+}
+
 Type _typeOf<T>() => T;
 
 T _decode<T>(dynamic value) {
@@ -99,13 +159,7 @@ extension on Map<String, dynamic> {
     if (this[key] == null) {
       throw ConverterException('Parameter $key is required.');
     } else if (this[key] is! List) {
-      var v = this[key];
-      if (v is Map<String, dynamic> && v['data'] is List) {
-        return v.getList<T>('data');
-      } else {
-        throw ConverterException(
-            'Parameter $v with key $key is not a List');
-      }
+      throw ConverterException('Parameter $key is not a List');
     }
     List value = this[key] as List<dynamic>;
     return value.map((dynamic item) => _decode<T>(item)).toList();

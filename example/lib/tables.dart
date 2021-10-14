@@ -22,9 +22,8 @@ export 'tables.schema.g.dart';
     Field.hidden('billingAddress'),
     Field.hidden('invoices'),
     Field.hidden('company'),
-    Field.hidden('parties'),
-    Field.filtered('chargeLocations', by: 'is_private = false')
-  ])
+    Field('parties', viewAs: 'company', transformer: FilterByField('sponsor_id', '=', 'company_id')),
+  ]),
 ], actions: [
   SingleInsertAction(),
   SingleUpdateAction(),
@@ -88,31 +87,40 @@ class LatLngConverter extends TypeConverter<LatLng> {
 @Table()
 class BillingAddress {
   String name, street, city;
+  String postcode;
 
-  BillingAddress(this.name, this.street, this.city);
+  BillingAddress(this.name, this.street, this.postcode, this.city);
 }
 
 @Table(views: [
   View('Admin', [
     Field.view('invoices', as: 'owner'),
     Field.view('members', as: 'company'),
+    Field.view('parties', as: 'company'),
   ]),
-  View('member', [
+  View('Member', [
     Field.hidden('members'),
     Field.hidden('invoices'),
+    Field.hidden('parties'),
   ])
 ], actions: [
+  SingleInsertAction(),
   SingleDeleteAction(),
+], queries: [
+  SingleQuery.forView('Admin'),
 ])
 class Company {
   @PrimaryKey()
   String id;
 
+  String name;
+
   List<BillingAddress> addresses;
   List<Account> members;
   List<Invoice> invoices;
+  List<Party> parties;
 
-  Company(this.id, this.addresses, this.members, this.invoices);
+  Company(this.id, this.name, this.addresses, this.members, this.invoices, this.parties);
 }
 
 @Table(views: [
@@ -142,7 +150,11 @@ class Invoice {
   View('Guest', [
     Field.hidden('guests'),
     Field.view('sponsor', as: 'member'),
-  ])
+  ]),
+  View('Company', [
+    Field.hidden('sponsor'),
+    Field.hidden('guests'),
+  ]),
 ])
 class Party {
   @PrimaryKey()
@@ -154,5 +166,7 @@ class Party {
 
   Company? sponsor;
 
-  Party(this.id, this.name, this.guests, this.sponsor);
+  int date;
+
+  Party(this.id, this.name, this.guests, this.sponsor, this.date);
 }

@@ -1,30 +1,37 @@
+import 'package:stormberry/stormberry.dart';
+
+import 'view_query.dart';
+
 class DatabaseSchema {
   final Map<String, TableSchema> tables;
-  const DatabaseSchema([this.tables = const {}]);
+  final Map<String, ViewSchema> views;
+  const DatabaseSchema(this.tables, this.views);
 
-  DatabaseSchema copy() => DatabaseSchema(tables.map(
-        (key, value) => MapEntry(key, value.copy()),
-      ));
+  DatabaseSchema copy() => DatabaseSchema(
+        {for (var t in tables.entries) t.key: t.value.copy()},
+        {...views},
+      );
 
   factory DatabaseSchema.fromMap(Map<String, dynamic> map) {
     var tables = <String, TableSchema>{};
+    var views = <String, ViewSchema>{};
     for (var key in map.keys) {
       var table = map[key];
       tables[key] = TableSchema(
         key,
-        columns: (table['columns'] as Map<String, dynamic>).map((k, v) =>
-            MapEntry(k, ColumnSchema.fromMap(k, v as Map<String, dynamic>))),
-        constraints: (table['constraints'] as List?)
-                ?.map((c) => TableConstraint.fromMap(c as Map<String, dynamic>))
-                .toList() ??
-            [],
-        indexes: (table['indexes'] as List?)
-                ?.map((i) => TableIndex.fromMap(i as Map<String, dynamic>))
-                .toList() ??
-            [],
+        columns: (table['columns'] as Map<String, dynamic>)
+            .map((k, v) => MapEntry(k, ColumnSchema.fromMap(k, v as Map<String, dynamic>))),
+        constraints:
+            (table['constraints'] as List?)?.map((c) => TableConstraint.fromMap(c as Map<String, dynamic>)).toList() ??
+                [],
+        indexes:
+            (table['indexes'] as List?)?.map((i) => TableIndexParser.fromMap(i as Map<String, dynamic>)).toList() ?? [],
       );
+      for (var v in table['views'] as List? ?? []) {
+        views[v['name'] as String] = buildViewSchema(v as Map<String, dynamic>);
+      }
     }
-    return DatabaseSchema(tables);
+    return DatabaseSchema(tables, views);
   }
 }
 
@@ -35,17 +42,21 @@ class TableSchema {
   final List<TableTrigger> triggers;
   final List<TableIndex> indexes;
 
-  const TableSchema(this.name,
-      {this.columns = const {},
-      this.constraints = const [],
-      this.triggers = const [],
-      this.indexes = const []});
+  const TableSchema(
+    this.name, {
+    this.columns = const {},
+    this.constraints = const [],
+    this.triggers = const [],
+    this.indexes = const [],
+  });
 
-  TableSchema copy() => TableSchema(name,
-      columns: {...columns},
-      constraints: [...constraints],
-      triggers: [...triggers],
-      indexes: [...indexes]);
+  TableSchema copy() => TableSchema(
+        name,
+        columns: {...columns},
+        constraints: [...constraints],
+        triggers: [...triggers],
+        indexes: [...indexes],
+      );
 }
 
 class ColumnSchema {
@@ -78,12 +89,8 @@ abstract class TableConstraint {
           map['column']! as String,
           (map['target']! as String).split('.')[0],
           (map['target']! as String).split('.')[1],
-          map['on_delete'] == 'cascade'
-              ? ForeignKeyAction.cascade
-              : ForeignKeyAction.setNull,
-          map['on_update'] == 'cascade'
-              ? ForeignKeyAction.cascade
-              : ForeignKeyAction.setNull,
+          map['on_delete'] == 'cascade' ? ForeignKeyAction.cascade : ForeignKeyAction.setNull,
+          map['on_update'] == 'cascade' ? ForeignKeyAction.cascade : ForeignKeyAction.setNull,
         );
       case 'unique':
         return UniqueConstraint(null, map['column']! as String);
@@ -107,9 +114,7 @@ class PrimaryKeyConstraint extends TableConstraint {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PrimaryKeyConstraint &&
-          runtimeType == other.runtimeType &&
-          column == other.column;
+      other is PrimaryKeyConstraint && runtimeType == other.runtimeType && column == other.column;
 
   @override
   int get hashCode => name.hashCode;
@@ -118,11 +123,13 @@ class PrimaryKeyConstraint extends TableConstraint {
 enum ForeignKeyAction { setNull, cascade }
 
 class ForeignKeyConstraint extends TableConstraint {
-  final String srcColumn, table, column;
-  final ForeignKeyAction onDelete, onUpdate;
+  final String srcColumn;
+  final String table;
+  final String column;
+  final ForeignKeyAction onDelete;
+  final ForeignKeyAction onUpdate;
 
-  const ForeignKeyConstraint(String? name, this.srcColumn, this.table,
-      this.column, this.onDelete, this.onUpdate)
+  const ForeignKeyConstraint(String? name, this.srcColumn, this.table, this.column, this.onDelete, this.onUpdate)
       : super(name);
 
   @override
@@ -154,12 +161,7 @@ class ForeignKeyConstraint extends TableConstraint {
           onUpdate == other.onUpdate;
 
   @override
-  int get hashCode =>
-      name.hashCode ^
-      table.hashCode ^
-      column.hashCode ^
-      onDelete.hashCode ^
-      onUpdate.hashCode;
+  int get hashCode => name.hashCode ^ table.hashCode ^ column.hashCode ^ onDelete.hashCode ^ onUpdate.hashCode;
 }
 
 class UniqueConstraint extends TableConstraint {
@@ -175,10 +177,7 @@ class UniqueConstraint extends TableConstraint {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is UniqueConstraint &&
-          runtimeType == other.runtimeType &&
-          column == other.column;
+      identical(this, other) || other is UniqueConstraint && runtimeType == other.runtimeType && column == other.column;
 
   @override
   int get hashCode => name.hashCode;
@@ -203,45 +202,19 @@ class TableTrigger {
           args.join(',') == other.args.join(',');
 
   @override
-  int get hashCode =>
-      name.hashCode ^ column.hashCode ^ function.hashCode ^ args.hashCode;
+  int get hashCode => name.hashCode ^ column.hashCode ^ function.hashCode ^ args.hashCode;
 }
 
-class TableIndex {
-  final List<String> columns;
-  final String name;
-  final bool unique;
-  final IndexAlgorithm algorithm;
-  final String? condition;
-
-  const TableIndex({
-    this.columns = const [],
-    required this.name,
-    this.unique = false,
-    this.algorithm = IndexAlgorithm.BTREE,
-    this.condition,
-  });
-
-  String get joinedColumns => columns.map((c) => '"$c"').join(', ');
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is TableIndex &&
-          runtimeType == other.runtimeType &&
-          joinedColumns == other.joinedColumns &&
-          name == other.name &&
-          unique == other.unique &&
-          algorithm == other.algorithm &&
-          condition == other.condition;
-
-  @override
-  int get hashCode =>
-      joinedColumns.hashCode ^
-      name.hashCode ^
-      unique.hashCode ^
-      algorithm.hashCode ^
-      condition.hashCode;
+extension TableIndexParser on TableIndex {
+  static TableIndex fromMap(Map<String, dynamic> map) {
+    return TableIndex(
+      name: map['name']! as String,
+      columns: (map['columns'] as List?)?.cast<String>() ?? [],
+      unique: (map['unique'] as bool?) ?? false,
+      algorithm: IndexAlgorithmParser.parse(map['algorithm'] as String?) ?? IndexAlgorithm.BTREE,
+      condition: map['condition'] as String?,
+    );
+  }
 
   String statement(String tableName) {
     return """
@@ -250,21 +223,7 @@ class TableIndex {
       ${condition != null ? 'WHERE $condition' : ''}
     """;
   }
-
-  factory TableIndex.fromMap(Map<String, dynamic> map) {
-    return TableIndex(
-      name: map['name']! as String,
-      columns: (map['columns'] as List?)?.cast<String>() ?? [],
-      unique: (map['unique'] as bool?) ?? false,
-      algorithm: IndexAlgorithmParser.parse(map['algorithm'] as String?) ??
-          IndexAlgorithm.BTREE,
-      condition: map['condition'] as String?,
-    );
-  }
 }
-
-// ignore: constant_identifier_names
-enum IndexAlgorithm { BTREE, GIST, HASH, GIN, BRIN, SPGIST }
 
 extension IndexAlgorithmParser on IndexAlgorithm {
   static IndexAlgorithm? parse(String? str) {
@@ -275,7 +234,32 @@ extension IndexAlgorithmParser on IndexAlgorithm {
   }
 }
 
-class Join {
-  String table, statement;
-  Join(this.table, this.statement);
+class ViewSchema {
+  final String name;
+  final String definition;
+  final String hash;
+
+  ViewSchema({required this.name, required this.definition, required this.hash});
+
+  static Set<ViewNode> buildGraph(Set<ViewSchema> views) {
+    var nodes = {for (var v in views) ViewNode(v, {}, {})};
+
+    for (var a in nodes) {
+      for (var b in nodes) {
+        if (a.view.definition.contains(b.view.name)) {
+          a.children.add(b);
+          b.parents.add(a);
+        }
+      }
+    }
+    return nodes;
+  }
+}
+
+class ViewNode {
+  ViewSchema view;
+  Set<ViewNode> children;
+  Set<ViewNode> parents;
+
+  ViewNode(this.view, this.children, this.parents);
 }

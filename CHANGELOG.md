@@ -1,3 +1,8 @@
+# 0.4.0
+
+- Rewrote view system
+- Internal refactoring
+
 # 0.3.0
 
 - Update dependencies

@@ -1,5 +1,4 @@
 import 'database.dart';
-import 'schema.dart';
 
 /// Used to annotate a class as a database table
 class Table {
@@ -25,26 +24,52 @@ class View {
 /// Used to define fields of [View]s
 class Field {
   final String name;
-  final FieldMode mode;
 
+  final bool isHidden;
   final String? viewAs;
-  final String? filteredBy;
+  final Transformer? transformer;
+
+  const Field(this.name, {this.viewAs, this.isHidden = false, this.transformer});
 
   const Field.hidden(this.name)
-      : mode = FieldMode.hidden,
+      : isHidden = true,
         viewAs = null,
-        filteredBy = null;
+        transformer = null;
   const Field.view(this.name, {required String as})
-      : mode = FieldMode.view,
+      : isHidden = false,
         viewAs = as,
-        filteredBy = null;
-  const Field.filtered(this.name, {required String by})
-      : mode = FieldMode.filtered,
-        viewAs = null,
-        filteredBy = by;
+        transformer = null;
+  const Field.transform(this.name, this.transformer)
+      : isHidden = false,
+        viewAs = null;
 }
 
-enum FieldMode { hidden, view, filtered }
+class Transformer {
+  final String statement;
+  const Transformer(this.statement);
+}
+
+class ListTransformer extends Transformer {
+  const ListTransformer({String? select, String? where})
+      : super(
+          '''
+    array_to_json(ARRAY ((
+      SELECT ${select ?? '*'} 
+      FROM jsonb_array_elements({{key}}.data) AS {{key}}
+      ${where != null ? 'WHERE $where' : ''}
+    )) ) AS {{key}}
+  ''',
+        );
+}
+
+class FilterByField extends FilterByValue {
+  const FilterByField(String key, String operand, String value) : super(key, operand, '{{table}}.$value');
+}
+
+class FilterByValue extends ListTransformer {
+  const FilterByValue(String key, String operand, String value)
+      : super(where: "({{key}} -> '$key') $operand to_jsonb ($value)");
+}
 
 /// Used to annotate a field as the primary key of the table
 class PrimaryKey {
@@ -125,8 +150,7 @@ abstract class Query<T, U> {
 
 /// Default query
 class SingleQuery implements Query {
-  final String? viewName;
-  const SingleQuery() : viewName = null;
+  final String viewName;
   const SingleQuery.forView(String name) : viewName = name;
   @override
   Future apply(Database db, dynamic params) => throw UnimplementedError();
@@ -134,8 +158,7 @@ class SingleQuery implements Query {
 
 /// Default multi-query
 class MultiQuery implements Query {
-  final String? viewName;
-  const MultiQuery() : viewName = null;
+  final String viewName;
   const MultiQuery.forView(String name) : viewName = name;
   @override
   Future apply(Database db, dynamic params) => throw UnimplementedError();
@@ -150,3 +173,40 @@ class TypeConverter<T> {
   dynamic encode(T value) => throw UnimplementedError();
   T decode(dynamic value) => throw UnimplementedError();
 }
+
+/// Used to define indexes on a table
+class TableIndex {
+  final List<String> columns;
+  final String name;
+  final bool unique;
+  final IndexAlgorithm algorithm;
+  final String? condition;
+
+  const TableIndex({
+    this.columns = const [],
+    required this.name,
+    this.unique = false,
+    this.algorithm = IndexAlgorithm.BTREE,
+    this.condition,
+  });
+
+  String get joinedColumns => columns.map((c) => '"$c"').join(', ');
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TableIndex &&
+          runtimeType == other.runtimeType &&
+          joinedColumns == other.joinedColumns &&
+          name == other.name &&
+          unique == other.unique &&
+          algorithm == other.algorithm &&
+          condition == other.condition;
+
+  @override
+  int get hashCode =>
+      joinedColumns.hashCode ^ name.hashCode ^ unique.hashCode ^ algorithm.hashCode ^ condition.hashCode;
+}
+
+// ignore: constant_identifier_names
+enum IndexAlgorithm { BTREE, GIST, HASH, GIN, BRIN, SPGIST }

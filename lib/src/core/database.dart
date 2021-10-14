@@ -6,7 +6,10 @@ import 'package:postgres/postgres.dart';
 class Database {
   bool debugPrint;
 
-  String host, database, user, password;
+  String host;
+  String database;
+  String user;
+  String password;
   int port;
   bool useSSL;
 
@@ -21,32 +24,26 @@ class Database {
     String? password,
     bool? useSSL,
   })  : host = host ?? Platform.environment['DB_HOST_ADDRESS'] ?? '127.0.0.1',
-        port =
-            port ?? int.tryParse(Platform.environment['DB_PORT'] ?? '') ?? 5432,
+        port = port ?? int.tryParse(Platform.environment['DB_PORT'] ?? '') ?? 5432,
         database = database ?? Platform.environment['DB_NAME'] ?? 'postgres',
         user = user ?? Platform.environment['DB_USERNAME'] ?? 'postgres',
         password = password ?? Platform.environment['DB_PASSWORD'] ?? 'root',
-        useSSL = useSSL ??
-            Platform.environment['DB_SSL']?.startsWith('true') ??
-            true {
+        useSSL = useSSL ?? Platform.environment['DB_SSL']?.startsWith('true') ?? true {
     _cachedConnection ??= connection();
   }
 
   PostgreSQLConnection connection() {
-    return PostgreSQLConnection(host, port, database,
-        username: user, password: password, useSSL: useSSL);
+    return PostgreSQLConnection(host, port, database, username: user, password: password, useSSL: useSSL);
   }
 
   String get name => _cachedConnection!.databaseName;
 
   Future<void> open() => _tryOpen();
-  Future<void> close() async =>
-      !_cachedConnection!.isClosed ? await _cachedConnection!.close() : null;
+  Future<void> close() async => !_cachedConnection!.isClosed ? await _cachedConnection!.close() : null;
 
   Future<void> _tryOpen() async {
     if (_cachedConnection!.isClosed) {
-      print(
-          'Database: connecting to ${_cachedConnection!.databaseName} at ${_cachedConnection!.host}...');
+      print('Database: connecting to ${_cachedConnection!.databaseName} at ${_cachedConnection!.host}...');
       try {
         await _cachedConnection!.open();
       } catch (e) {
@@ -59,8 +56,7 @@ class Database {
     }
   }
 
-  Future<PostgreSQLResult> query(String query,
-      [Map<String, dynamic>? values]) async {
+  Future<PostgreSQLResult> query(String query, [Map<String, dynamic>? values]) async {
     await _tryOpen();
     if (debugPrint) {
       _printQuery(query);

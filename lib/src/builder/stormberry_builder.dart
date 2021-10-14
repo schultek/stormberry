@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
@@ -33,8 +34,7 @@ class StormberryBuilder implements Builder {
   /// The global options defined in the 'build.yaml' file
   late GlobalOptions options;
 
-  StormberryBuilder(BuilderOptions options)
-      : options = GlobalOptions.parse(options.config);
+  StormberryBuilder(BuilderOptions options) : options = GlobalOptions.parse(options.config);
 
   @override
   FutureOr<void> build(BuildStep buildStep) async {
@@ -62,8 +62,7 @@ class StormberryBuilder implements Builder {
 
   /// Main generation handler
   /// Searches for mappable classes and enums recursively
-  Map<String, String> generate(
-      List<LibraryElement> libraries, BuildStep buildStep) {
+  Map<String, String> generate(List<LibraryElement> libraries, BuildStep buildStep) {
     BuilderState state = BuilderState(options);
 
     for (var library in libraries) {
@@ -81,17 +80,10 @@ class StormberryBuilder implements Builder {
       }
 
       for (var element in typeConverters) {
-        var typeClassName = (element.element as ClassElement)
-            .thisType
-            .superclass!
-            .typeArguments[0]
-            .element!
-            .name!;
+        var typeClassName = (element.element as ClassElement).thisType.superclass!.typeArguments[0].element!.name!;
         var converterClassName = element.element.name!;
-        var sqlType =
-            element.annotation.objectValue.getField('type')?.toStringValue();
-        state.typeConverters[typeClassName] =
-            MapEntry(converterClassName, sqlType);
+        var sqlType = element.annotation.objectValue.getField('type')?.toStringValue();
+        state.typeConverters[typeClassName] = MapEntry(converterClassName, sqlType);
       }
 
       for (var element in elements) {
@@ -121,57 +113,32 @@ class StormberryBuilder implements Builder {
       '',
       state.builders.values.map((b) => b.generateViews()).join('\n'),
       '',
-      if (state.builders.values.any((b) => b.hasDefaultQuery))
-        generateQueryParams(),
-      state.builders.values.map((b) => b.generateQueries()).join('\n'),
-      '',
       state.builders.values.map((b) => b.generateActions()).join('\n'),
       '',
       'var _typeConverters = <Type, TypeConverter>{',
       defaultConverters,
-      state.typeConverters.entries
-          .map((e) => '  _typeOf<${e.key}>(): ${e.value.key}(),')
-          .join('\n'),
+      state.typeConverters.entries.map((e) => '  _typeOf<${e.key}>(): ${e.value.key}(),').join('\n'),
       '};',
       'var _decoders = <Type, Function>{',
       state.decoders.entries
-          .map((e) =>
-              '  _typeOf<${e.key}>(): (Map<String, dynamic> v) => ${e.value}.fromMap(v),')
+          .map((e) => '  _typeOf<${e.key}>(): (Map<String, dynamic> v) => ${e.value}.fromMap(v),')
           .join('\n'),
       '};',
       '',
       staticCode,
     ].join('\n');
 
-    map['.schema.g.json'] = <String>[
-      '{',
-      state.builders.values
-          .map((b) => b.generateJsonSchema())
-          .followedBy(
-              state.joinBuilders.values.map((b) => b.generateJsonSchema()))
-          .join(',\n')
-          .indent(),
-      '}',
-    ].join('\n');
+    map['.schema.g.json'] = const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
+      for (var builder in state.builders.values) builder.tableName: builder.generateJsonSchema(),
+      for (var builder in state.joinBuilders.values) builder.tableName: builder.generateJsonSchema(),
+    });
 
     return map;
   }
 
   String generateDatabaseExtension(BuilderState state) {
-    return ''
-        'extension DatabaseTables on Database {\n'
-        '  ${state.builders.values.map((b) => '${b.element.name}Table get ${CaseStyle.camelCase.transform(b.tableName)} => ${b.element.name}Table._instanceFor(this);').join('\n  ')}\n'
+    return 'extension DatabaseTables on Database {\n'
+        '  ${state.builders.values.map((b) => '${b.element.name}Table get ${CaseStyle.camelCase.transform(b.tableName)} => BaseTable.get(this, () => ${b.element.name}Table._(this));').join('\n  ')}\n'
         '}';
-  }
-
-  String generateQueryParams() {
-    return ''
-        'class QueryParams {\n'
-        '  String? where;\n'
-        '  String? orderBy;\n'
-        '  int? limit;\n'
-        '  int? offset;\n'
-        '  QueryParams({this.where, this.orderBy, this.limit, this.offset});\n'
-        '}\n';
   }
 }
