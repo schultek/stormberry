@@ -1,3 +1,8 @@
+# 0.6.0
+
+- Update dependencies
+- Cleanup lints
+
 # 0.5.0
 
 - Internal rewrite (again)

@@ -1,4 +1,5 @@
 import 'package:postgres/postgres.dart';
+// ignore: implementation_imports
 import 'package:postgres/src/text_codec.dart';
 
 import '../core/annotations.dart';

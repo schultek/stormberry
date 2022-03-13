@@ -1,5 +1,4 @@
-// ignore_for_file: unnecessary_cast, prefer_relative_imports, unused_element, prefer_single_quotes
-import 'dart:convert';
+// ignore_for_file: prefer_relative_imports
 import 'package:stormberry/internals.dart';
 import 'package:stormberry_example/models.dart';
 
@@ -39,26 +38,32 @@ class _AccountRepository extends BaseRepository
     implements AccountRepository {
   _AccountRepository(Database db) : super(db: db);
 
+  @override
   Future<UserAccountView?> queryUserView(String id) {
     return queryOne(id, UserAccountViewQueryable());
   }
 
+  @override
   Future<List<UserAccountView>> queryUserViews([QueryParams? params]) {
     return queryMany(UserAccountViewQueryable(), params);
   }
 
+  @override
   Future<AdminAccountView?> queryAdminView(String id) {
     return queryOne(id, AdminAccountViewQueryable());
   }
 
+  @override
   Future<List<AdminAccountView>> queryAdminViews([QueryParams? params]) {
     return queryMany(AdminAccountViewQueryable(), params);
   }
 
+  @override
   Future<CompanyAccountView?> queryCompanyView(String id) {
     return queryOne(id, CompanyAccountViewQueryable());
   }
 
+  @override
   Future<List<CompanyAccountView>> queryCompanyViews([QueryParams? params]) {
     return queryMany(CompanyAccountViewQueryable(), params);
   }
@@ -174,18 +179,22 @@ class _CompanyRepository extends BaseRepository
     implements CompanyRepository {
   _CompanyRepository(Database db) : super(db: db);
 
+  @override
   Future<AdminCompanyView?> queryAdminView(String id) {
     return queryOne(id, AdminCompanyViewQueryable());
   }
 
+  @override
   Future<List<AdminCompanyView>> queryAdminViews([QueryParams? params]) {
     return queryMany(AdminCompanyViewQueryable(), params);
   }
 
+  @override
   Future<MemberCompanyView?> queryMemberView(String id) {
     return queryOne(id, MemberCompanyViewQueryable());
   }
 
+  @override
   Future<List<MemberCompanyView>> queryMemberViews([QueryParams? params]) {
     return queryMany(MemberCompanyViewQueryable(), params);
   }
@@ -259,10 +268,12 @@ class _InvoiceRepository extends BaseRepository
     implements InvoiceRepository {
   _InvoiceRepository(Database db) : super(db: db);
 
+  @override
   Future<OwnerInvoiceView?> queryOwnerView(String id) {
     return queryOne(id, OwnerInvoiceViewQueryable());
   }
 
+  @override
   Future<List<OwnerInvoiceView>> queryOwnerViews([QueryParams? params]) {
     return queryMany(OwnerInvoiceViewQueryable(), params);
   }
@@ -321,18 +332,22 @@ class _PartyRepository extends BaseRepository
     implements PartyRepository {
   _PartyRepository(Database db) : super(db: db);
 
+  @override
   Future<GuestPartyView?> queryGuestView(String id) {
     return queryOne(id, GuestPartyViewQueryable());
   }
 
+  @override
   Future<List<GuestPartyView>> queryGuestViews([QueryParams? params]) {
     return queryMany(GuestPartyViewQueryable(), params);
   }
 
+  @override
   Future<CompanyPartyView?> queryCompanyView(String id) {
     return queryOne(id, CompanyPartyViewQueryable());
   }
 
+  @override
   Future<List<CompanyPartyView>> queryCompanyViews([QueryParams? params]) {
     return queryMany(CompanyPartyViewQueryable(), params);
   }
@@ -618,9 +633,13 @@ class BillingAddressQueryable extends ViewQueryable<BillingAddress> {
 class BillingAddressView implements BillingAddress {
   BillingAddressView({required this.name, required this.street, required this.city, required this.postcode});
 
+  @override
   final String name;
+  @override
   final String street;
+  @override
   final String city;
+  @override
   final String postcode;
 }
 

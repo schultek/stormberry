@@ -19,7 +19,7 @@ class ViewGenerator {
           str.writeln('$signature;');
         } else {
           str.writeln(
-            '$signature {\nreturn queryOne($paramName, ${view.className}Queryable());\n}',
+            '@override $signature {\nreturn queryOne($paramName, ${view.className}Queryable());\n}',
           );
         }
       }
@@ -28,7 +28,7 @@ class ViewGenerator {
       if (abstract) {
         str.writeln('$signature;');
       } else {
-        str.writeln('$signature {\nreturn queryMany(${view.className}Queryable(), params);\n}');
+        str.writeln('@override $signature {\nreturn queryMany(${view.className}Queryable(), params);\n}');
       }
     }
 
@@ -42,6 +42,8 @@ class ViewGenerator {
   String generateViewClass(ViewBuilder view) {
     var hasKey = view.table.primaryKeyColumn != null;
     var keyType = hasKey ? view.table.primaryKeyColumn!.dartType : null;
+
+    var implementsBase = view.name.isEmpty;
 
     return '''
       class ${view.entityName}Queryable extends ${hasKey ? 'Keyed' : ''}ViewQueryable<${view.entityName}${hasKey ? ', $keyType' : ''}> {
@@ -63,10 +65,10 @@ class ViewGenerator {
         ${view.entityName} decode(TypedMap map) => ${view.className}(${view.columns.map((c) => '${c.paramName}: ${_getInitializer(c)}').join(',')});
       }
       
-      class ${view.className}${view.name.isEmpty ? ' implements ${view.table.element.name}' : ''} {
+      class ${view.className}${implementsBase ? ' implements ${view.table.element.name}' : ''} {
         ${view.className}({${view.columns.map((c) => '${c.isNullable ? '' : 'required '}this.${c.paramName}').join(', ')}});
         
-        ${view.columns.map((c) => 'final ${c.dartType} ${c.paramName};').join('\n')}
+        ${view.columns.map((c) => '${implementsBase ? '@override ' : ''}final ${c.dartType} ${c.paramName};').join('\n')}
       }
     ''';
   }

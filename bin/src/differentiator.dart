@@ -135,12 +135,12 @@ void printDiff(DatabaseSchemaDiff diff) {
     }
 
     for (var trigger in table.triggers.added) {
-      print('++ TRIGGER ${trigger.name} ON ${table.name}.${trigger.column} ' +
+      print('++ TRIGGER ${trigger.name} ON ${table.name}.${trigger.column} '
           "EXECUTE ${trigger.function}(${trigger.args.join(", ")})");
     }
 
     for (var trigger in table.triggers.removed) {
-      print('-- TRIGGER ${trigger.name} ON ${table.name}.${trigger.column} ' +
+      print('-- TRIGGER ${trigger.name} ON ${table.name}.${trigger.column} '
           "EXECUTE ${trigger.function}(${trigger.args.join(", ")})");
     }
 

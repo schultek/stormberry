@@ -57,6 +57,7 @@ class CaseStyle {
         return CaseStyle(head: head, tail: tail, separator: separator);
       }
     }
+    return null;
   }
 
   /// No [CaseStyle] will be applied

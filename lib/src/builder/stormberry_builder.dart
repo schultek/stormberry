@@ -101,16 +101,10 @@ class StormberryBuilder implements Builder {
       builder.prepareColumns();
     }
 
-    for (var b in state.builders.values) {
-      print(b.element.name);
-      print(b.columns.map((c) => c.toString()).join(', '));
-    }
-
     var map = <String, String>{};
 
     map['.output.g.dart'] = DartFormatter(pageWidth: 120).format('''
-      // ignore_for_file: unnecessary_cast, prefer_relative_imports, unused_element, prefer_single_quotes
-      import 'dart:convert';
+      // ignore_for_file: prefer_relative_imports
       import 'package:stormberry/internals.dart';
       ${state.imports.map((i) => "import '$i';").join('\n')}
       ${RepositoryGenerator().generateRepositories(state)}

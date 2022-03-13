@@ -3,7 +3,10 @@ name: stormberry_example
 environment:
   sdk: '>=2.12.0 <3.0.0'
 
-dev_dependencies:
-  build_runner: ^2.0.5
+dependencies:
   stormberry:
     path: ../
+
+dev_dependencies:
+  build_runner: ^2.1.7
+  lints: ^1.0.1
