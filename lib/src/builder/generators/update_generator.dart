@@ -10,6 +10,12 @@ class UpdateGenerator {
 
     for (var column
         in table.columns.whereType<ReferenceColumnBuilder>().where((c) => c.linkBuilder.primaryKeyColumn == null)) {
+      if (column.linkBuilder.columns
+          .where((c) => c is ForeignColumnBuilder && c.linkBuilder != table && !c.isNullable)
+          .isNotEmpty) {
+        continue;
+      }
+
       if (!column.isList) {
         var requestParams = <String>[];
         for (var c in column.linkBuilder.columns.whereType<ParameterColumnBuilder>()) {

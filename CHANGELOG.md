@@ -1,3 +1,7 @@
+# 0.6.1
+
+- Fix deep insert bug
+
 # 0.6.0
 
 - Update dependencies
