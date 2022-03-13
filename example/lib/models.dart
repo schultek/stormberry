@@ -70,10 +70,15 @@ class LatLngConverter extends TypeConverter<LatLng> {
   }
 }
 
+class Address {
+  final String name;
+  final String street;
+
+  Address(this.name, this.street);
+}
+
 @Model()
-abstract class BillingAddress {
-  String get name;
-  String get street;
+abstract class BillingAddress extends Address {
   String get city;
   String get postcode;
 

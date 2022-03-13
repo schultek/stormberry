@@ -1,3 +1,7 @@
+# 0.6.2
+
+- Allow models to inherit fields from other classes
+
 # 0.6.1
 
 - Fix deep insert bug

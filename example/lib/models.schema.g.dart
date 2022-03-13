@@ -82,10 +82,10 @@ class _AccountRepository extends BaseRepository
           return BillingAddressInsertRequest(
               accountId: r.id,
               companyId: null,
-              name: r.billingAddress!.name,
-              street: r.billingAddress!.street,
               city: r.billingAddress!.city,
-              postcode: r.billingAddress!.postcode);
+              postcode: r.billingAddress!.postcode,
+              name: r.billingAddress!.name,
+              street: r.billingAddress!.street);
         }).toList());
   }
 
@@ -104,10 +104,10 @@ class _AccountRepository extends BaseRepository
         requests.where((r) => r.billingAddress != null).map((r) {
           return BillingAddressUpdateRequest(
               accountId: r.id,
-              name: r.billingAddress!.name,
-              street: r.billingAddress!.street,
               city: r.billingAddress!.city,
-              postcode: r.billingAddress!.postcode);
+              postcode: r.billingAddress!.postcode,
+              name: r.billingAddress!.name,
+              street: r.billingAddress!.street);
         }).toList());
   }
 
@@ -138,9 +138,9 @@ class _BillingAddressRepository extends BaseRepository
   Future<void> insert(Database db, List<BillingAddressInsertRequest> requests) async {
     if (requests.isEmpty) return;
     await db.query("""
-          INSERT INTO "billing_addresses" ( "account_id", "company_id", "name", "street", "city", "postcode" )
-          VALUES ${requests.map((r) => '( ${registry.encode(r.accountId)}, ${registry.encode(r.companyId)}, ${registry.encode(r.name)}, ${registry.encode(r.street)}, ${registry.encode(r.city)}, ${registry.encode(r.postcode)} )').join(', ')}
-          ON CONFLICT ( "account_id" ) DO UPDATE SET "name" = EXCLUDED."name", "street" = EXCLUDED."street", "city" = EXCLUDED."city", "postcode" = EXCLUDED."postcode"
+          INSERT INTO "billing_addresses" ( "account_id", "company_id", "city", "postcode", "name", "street" )
+          VALUES ${requests.map((r) => '( ${registry.encode(r.accountId)}, ${registry.encode(r.companyId)}, ${registry.encode(r.city)}, ${registry.encode(r.postcode)}, ${registry.encode(r.name)}, ${registry.encode(r.street)} )').join(', ')}
+          ON CONFLICT ( "account_id" ) DO UPDATE SET "city" = EXCLUDED."city", "postcode" = EXCLUDED."postcode", "name" = EXCLUDED."name", "street" = EXCLUDED."street"
         """);
   }
 
@@ -149,9 +149,9 @@ class _BillingAddressRepository extends BaseRepository
     if (requests.isEmpty) return;
     await db.query("""
             UPDATE "billing_addresses"
-            SET "name" = COALESCE(UPDATED."name"::text, "billing_addresses"."name"), "street" = COALESCE(UPDATED."street"::text, "billing_addresses"."street"), "city" = COALESCE(UPDATED."city"::text, "billing_addresses"."city"), "postcode" = COALESCE(UPDATED."postcode"::text, "billing_addresses"."postcode")
-            FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.accountId)}, ${registry.encode(r.companyId)}, ${registry.encode(r.name)}, ${registry.encode(r.street)}, ${registry.encode(r.city)}, ${registry.encode(r.postcode)} )').join(', ')} )
-            AS UPDATED("account_id", "company_id", "name", "street", "city", "postcode")
+            SET "city" = COALESCE(UPDATED."city"::text, "billing_addresses"."city"), "postcode" = COALESCE(UPDATED."postcode"::text, "billing_addresses"."postcode"), "name" = COALESCE(UPDATED."name"::text, "billing_addresses"."name"), "street" = COALESCE(UPDATED."street"::text, "billing_addresses"."street")
+            FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.accountId)}, ${registry.encode(r.companyId)}, ${registry.encode(r.city)}, ${registry.encode(r.postcode)}, ${registry.encode(r.name)}, ${registry.encode(r.street)} )').join(', ')} )
+            AS UPDATED("account_id", "company_id", "city", "postcode", "name", "street")
             WHERE "billing_addresses"."account_id" = UPDATED."account_id" AND "billing_addresses"."company_id" = UPDATED."company_id"
           """);
   }
@@ -213,10 +213,10 @@ class _CompanyRepository extends BaseRepository
           return r.addresses.map((rr) => BillingAddressInsertRequest(
               accountId: null,
               companyId: r.id,
-              name: rr.name,
-              street: rr.street,
               city: rr.city,
-              postcode: rr.postcode));
+              postcode: rr.postcode,
+              name: rr.name,
+              street: rr.street));
         }).toList());
   }
 
@@ -234,7 +234,7 @@ class _CompanyRepository extends BaseRepository
         db,
         requests.where((r) => r.addresses != null).expand((r) {
           return r.addresses!.map((rr) => BillingAddressUpdateRequest(
-              companyId: r.id, name: rr.name, street: rr.street, city: rr.city, postcode: rr.postcode));
+              companyId: r.id, city: rr.city, postcode: rr.postcode, name: rr.name, street: rr.street));
         }).toList());
   }
 
@@ -404,16 +404,16 @@ class BillingAddressInsertRequest {
   BillingAddressInsertRequest(
       {this.accountId,
       this.companyId,
-      required this.name,
-      required this.street,
       required this.city,
-      required this.postcode});
+      required this.postcode,
+      required this.name,
+      required this.street});
   String? accountId;
   String? companyId;
-  String name;
-  String street;
   String city;
   String postcode;
+  String name;
+  String street;
 }
 
 class CompanyInsertRequest {
@@ -453,13 +453,13 @@ class AccountUpdateRequest {
 }
 
 class BillingAddressUpdateRequest {
-  BillingAddressUpdateRequest({this.accountId, this.companyId, this.name, this.street, this.city, this.postcode});
+  BillingAddressUpdateRequest({this.accountId, this.companyId, this.city, this.postcode, this.name, this.street});
   String? accountId;
   String? companyId;
-  String? name;
-  String? street;
   String? city;
   String? postcode;
+  String? name;
+  String? street;
 }
 
 class CompanyUpdateRequest {
@@ -624,23 +624,23 @@ class BillingAddressQueryable extends ViewQueryable<BillingAddress> {
 
   @override
   BillingAddress decode(TypedMap map) => BillingAddressView(
-      name: map.get('name', registry.decode),
-      street: map.get('street', registry.decode),
       city: map.get('city', registry.decode),
-      postcode: map.get('postcode', registry.decode));
+      postcode: map.get('postcode', registry.decode),
+      name: map.get('name', registry.decode),
+      street: map.get('street', registry.decode));
 }
 
 class BillingAddressView implements BillingAddress {
-  BillingAddressView({required this.name, required this.street, required this.city, required this.postcode});
+  BillingAddressView({required this.city, required this.postcode, required this.name, required this.street});
 
-  @override
-  final String name;
-  @override
-  final String street;
   @override
   final String city;
   @override
   final String postcode;
+  @override
+  final String name;
+  @override
+  final String street;
 }
 
 class AdminCompanyViewQueryable extends KeyedViewQueryable<AdminCompanyView, String> {

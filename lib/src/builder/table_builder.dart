@@ -61,8 +61,11 @@ class TableBuilder {
       : null;
 
   void prepareColumns() {
-    for (var param in element.fields) {
-      if (columns.any((c) => c.parameter?.id == param.id)) {
+    final allFields =
+        element.fields.followedBy(element.allSupertypes.expand((t) => t.isDartCoreObject ? [] : t.element.fields));
+
+    for (var param in allFields) {
+      if (columns.any((c) => c.parameter == param)) {
         continue;
       }
 
