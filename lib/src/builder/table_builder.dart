@@ -1,19 +1,16 @@
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
+import 'package:collection/collection.dart';
 import 'package:source_gen/source_gen.dart';
 
 import '../core/case_style.dart';
-import '../helpers/utils.dart';
-import 'action/action_builder.dart';
-import 'action/insert_action_builder.dart';
-import 'action/update_action_builder.dart';
 import 'column/column_builder.dart';
 import 'column/field_column_builder.dart';
 import 'column/foreign_column_builder.dart';
 import 'column/join_column_builder.dart';
 import 'column/reference_column_builder.dart';
+import 'index_builder.dart';
 import 'join_table_builder.dart';
-import 'query_builder.dart';
 import 'stormberry_builder.dart';
 import 'view_builder.dart';
 
@@ -22,32 +19,24 @@ class TableBuilder {
   ConstantReader annotation;
   BuilderState state;
 
-  late ConstructorElement constructor;
   late String tableName;
-  late ParameterElement? primaryKeyParameter;
+  late FieldElement? primaryKeyParameter;
   late List<ViewBuilder> views;
-  late List<ActionBuilder> actions;
-  late List<QueryBuilder> queries;
+  late List<IndexBuilder> indexes;
 
   TableBuilder(this.element, this.annotation, this.state) {
-    // TODO add constructor annotation
-    constructor = element.constructors.firstWhere((c) => !c.isPrivate);
-
     tableName = _getTableName();
 
-    primaryKeyParameter = constructor.parameters
-        .whereType<FieldFormalParameterElement>()
-        .where((p) => primaryKeyChecker.hasAnnotationOf(p.field!))
+    primaryKeyParameter = element.fields
+        .where((p) => primaryKeyChecker.hasAnnotationOf(p) || primaryKeyChecker.hasAnnotationOf(p.getter ?? p))
         .firstOrNull;
 
     views = annotation.read('views').listValue.map((o) {
       return ViewBuilder(this, o);
     }).toList();
-    actions = annotation.read('actions').listValue.map((o) {
-      return ActionBuilder.get(this, o);
-    }).toList();
-    queries = annotation.read('queries').listValue.map((o) {
-      return QueryBuilder(this, o);
+
+    indexes = annotation.read('indexes').listValue.map((o) {
+      return IndexBuilder(this, o);
     }).toList();
   }
 
@@ -71,18 +60,9 @@ class TableBuilder {
       ? columns.whereType<FieldColumnBuilder>().where((c) => c.parameter == primaryKeyParameter).firstOrNull
       : null;
 
-  bool get hasDefaultInsertAction => actions.any((a) => a is InsertActionBuilder);
-  bool get hasDefaultUpdateAction => actions.any((a) => a is UpdateActionBuilder);
-
-  bool hasQueryForView(ViewBuilder? view) {
-    return queries.any((q) => q.isDefaultForView(view));
-  }
-
-  bool get hasDefaultQuery => queries.any((q) => q.className == 'SingleQuery' || q.className == 'MultiQuery');
-
   void prepareColumns() {
-    for (var param in constructor.parameters) {
-      if (columns.any((c) => c.parameter == param)) {
+    for (var param in element.fields) {
+      if (columns.any((c) => c.parameter?.id == param.id)) {
         continue;
       }
 
@@ -151,11 +131,11 @@ class TableBuilder {
     }
   }
 
-  ParameterElement? findMatchingParam(ParameterElement param) {
+  FieldElement? findMatchingParam(FieldElement param) {
     // TODO add binding
-    return constructor.parameters.where((p) {
+    return element.fields.where((p) {
       var pType = p.type.isDartCoreList ? (p.type as InterfaceType).typeArguments[0] : p.type;
-      return pType.element == param.enclosingElement?.enclosingElement;
+      return pType.element == param.enclosingElement;
     }).firstOrNull;
   }
 
@@ -170,46 +150,5 @@ class TableBuilder {
       name += name.endsWith('s') ? 'es' : 's';
     }
     return name;
-  }
-
-  String generateTableClass() {
-    var methods = <String>[];
-
-    for (var query in queries) {
-      methods.add(query.buildQueryMethod());
-    }
-
-    for (var action in actions) {
-      methods.add(action.generateActionMethod());
-    }
-
-    return 'class ${element.name}Table extends BaseTable {\n'
-        '  ${element.name}Table._(Database db) : super(db);\n'
-        '\n'
-        '${methods.join('\n\n').indent()}\n'
-        '}';
-  }
-
-  String generateViews() {
-    var viewClasses = <String>[];
-
-    for (var view in [...views]) {
-      viewClasses.add(view.generateClass());
-    }
-
-    return viewClasses.join('\n\n');
-  }
-
-  String generateActions() {
-    var actionClasses = <String>[];
-
-    for (var action in [...actions]) {
-      var actionCode = action.generateActionClass();
-      if (actionCode != null) {
-        actionClasses.add(actionCode);
-      }
-    }
-
-    return actionClasses.join('\n\n');
   }
 }

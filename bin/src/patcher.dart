@@ -132,14 +132,15 @@ Future<void> patchViews(Database db, DatabaseSchemaDiff diff) async {
   var toDrop = {...diff.views.removed, ...diff.views.modified.prev};
   var toAdd = {...diff.views.added, ...diff.views.modified.newly};
 
-  String? nodePath(ViewNode node, [ViewNode? n0]) {
-    if (node == n0) return node.view.name;
+  String? nodePath(ViewNode node, [Set<ViewNode> visited = const {}]) {
+    if (visited.contains(node)) return node.view.name;
     for (var child in node.children) {
-      var s = nodePath(child, n0 ?? node);
+      var s = nodePath(child, {...visited, node});
       if (s != null) {
         return '${node.view.name} -> $s';
       }
     }
+    return null;
   }
 
   var currViewNodes = ViewSchema.buildGraph(diff.existingSchema.views.values.toSet());

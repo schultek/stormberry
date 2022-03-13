@@ -9,7 +9,7 @@ import 'column_builder.dart';
 
 class FieldColumnBuilder extends ColumnBuilder with NamedColumnBuilder {
   @override
-  ParameterElement parameter;
+  FieldElement parameter;
 
   FieldColumnBuilder(this.parameter, TableBuilder parentBuilder, BuilderState state) : super(parentBuilder, state);
 
@@ -53,5 +53,10 @@ class FieldColumnBuilder extends ColumnBuilder with NamedColumnBuilder {
       'type': 'field_column',
       'column_name': columnName,
     };
+  }
+
+  @override
+  String toString() {
+    return 'FieldColumnBuilder{$paramName}';
   }
 }

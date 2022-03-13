@@ -1,22 +1,24 @@
 import 'package:stormberry/stormberry.dart';
 
-import 'tables.dart';
+import 'models.dart';
 
 Future<void> main() async {
   var db = Database(
-    port: 5433,
+    port: 2222,
     database: 'dart_test',
-    user: 'dart',
-    password: 'dart',
+    user: 'postgres',
+    password: 'postgres',
     useSSL: false,
   );
+
+  db.debugPrint = true;
 
   await db.accounts.insertOne(AccountInsertRequest(
     id: '123',
     firstName: 'Test',
     lastName: 'User',
     location: LatLng(1, 2),
-    billingAddress: BillingAddress('Test User', 'SomeRoad 1', 'New York', '123'),
+    billingAddress: BillingAddress(name: 'Test User', street: 'SomeRoad 1', city: 'New York', postcode: '123'),
     companyId: 'abc',
   ));
 
@@ -33,4 +35,6 @@ Future<void> main() async {
   var company = await db.companies.queryAdminView('abc');
 
   print(company!.id);
+
+  await db.close();
 }

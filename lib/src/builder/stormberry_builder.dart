@@ -3,17 +3,19 @@ import 'dart:convert';
 
 import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
+import 'package:dart_style/dart_style.dart';
 import 'package:source_gen/source_gen.dart';
 
 import '../core/annotations.dart';
-import '../core/case_style.dart';
-import '../helpers/builder_snippets.dart';
-import '../helpers/utils.dart';
+import 'generators/join_json_generator.dart';
+import 'generators/repository_generator.dart';
+import 'generators/table_json_generator.dart';
 import 'join_table_builder.dart';
-import 'json_builder.dart';
 import 'table_builder.dart';
+import 'utils.dart';
+import 'view_builder.dart';
 
-const tableChecker = TypeChecker.fromRuntime(Table);
+const tableChecker = TypeChecker.fromRuntime(Model);
 const typeConverterChecker = TypeChecker.fromRuntime(TypeConverter);
 const primaryKeyChecker = TypeChecker.fromRuntime(PrimaryKey);
 
@@ -57,7 +59,7 @@ class StormberryBuilder implements Builder {
 
   @override
   Map<String, List<String>> get buildExtensions => const {
-        '.dart': ['.schema.g.dart', '.schema.g.json']
+        '.dart': ['.output.g.dart', '.runner.g.dart']
       };
 
   /// Main generation handler
@@ -99,46 +101,38 @@ class StormberryBuilder implements Builder {
       builder.prepareColumns();
     }
 
+    for (var b in state.builders.values) {
+      print(b.element.name);
+      print(b.columns.map((c) => c.toString()).join(', '));
+    }
+
     var map = <String, String>{};
 
-    map['.schema.g.dart'] = <String>[
-      '// ignore_for_file: unnecessary_cast, prefer_relative_imports, unused_element, prefer_single_quotes',
-      "import 'dart:convert';",
-      "import 'package:stormberry/stormberry.dart';",
-      state.imports.map((i) => "import '$i';").join('\n'),
-      '',
-      generateDatabaseExtension(state),
-      '',
-      state.builders.values.map((b) => b.generateTableClass()).join('\n\n'),
-      '',
-      state.builders.values.map((b) => b.generateViews()).join('\n'),
-      '',
-      state.builders.values.map((b) => b.generateActions()).join('\n'),
-      '',
-      'var _typeConverters = <Type, TypeConverter>{',
-      defaultConverters,
-      state.typeConverters.entries.map((e) => '  _typeOf<${e.key}>(): ${e.value.key}(),').join('\n'),
-      '};',
-      'var _decoders = <Type, Function>{',
-      state.decoders.entries
-          .map((e) => '  _typeOf<${e.key}>(): (Map<String, dynamic> v) => ${e.value}.fromMap(v),')
-          .join('\n'),
-      '};',
-      '',
-      staticCode,
-    ].join('\n');
+    map['.output.g.dart'] = DartFormatter(pageWidth: 120).format('''
+      // ignore_for_file: unnecessary_cast, prefer_relative_imports, unused_element, prefer_single_quotes
+      import 'dart:convert';
+      import 'package:stormberry/internals.dart';
+      ${state.imports.map((i) => "import '$i';").join('\n')}
+      ${RepositoryGenerator().generateRepositories(state)}
+    ''');
 
-    map['.schema.g.json'] = const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
-      for (var builder in state.builders.values) builder.tableName: builder.generateJsonSchema(),
-      for (var builder in state.joinBuilders.values) builder.tableName: builder.generateJsonSchema(),
-    });
+    map['.runner.g.dart'] = DartFormatter(pageWidth: 120).format('''
+      import 'dart:isolate';
+      import 'package:stormberry/src/helpers/json_schema.dart';
+      import 'package:stormberry/stormberry.dart';
+      
+      import '${buildStep.inputId.uri}';
+      
+      void main(List<String> args, SendPort port) {
+        port.send(buildJsonSchema(jsonSchema));
+      }
+    
+      const jsonSchema = ${LiteralValue.fix(const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
+          for (var def in state.builders.values) def.tableName: TableJsonGenerator().generateJsonSchema(def),
+          for (var def in state.joinBuilders.values) def.tableName: JoinJsonGenerator().generateJsonSchema(def),
+        }))};
+    ''');
 
     return map;
-  }
-
-  String generateDatabaseExtension(BuilderState state) {
-    return 'extension DatabaseTables on Database {\n'
-        '  ${state.builders.values.map((b) => '${b.element.name}Table get ${CaseStyle.camelCase.transform(b.tableName)} => BaseTable.get(this, () => ${b.element.name}Table._(this));').join('\n  ')}\n'
-        '}';
   }
 }

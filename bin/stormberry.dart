@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
+import 'package:collection/collection.dart';
 import 'package:stormberry/stormberry.dart';
 import 'package:yaml/yaml.dart';
 
@@ -12,6 +14,15 @@ Future<void> main(List<String> args) async {
   bool dryRun = args.contains('--dry-run');
   String? dbName = args.where((a) => a.startsWith('-db=')).map((a) => a.split('=')[1]).firstOrNull;
   bool applyChanges = args.contains('--apply-changes');
+
+  var pubspecYaml = File('pubspec.yaml');
+
+  if (!pubspecYaml.existsSync()) {
+    stdout.write('Cannot find pubspec.yaml file in current directory.');
+    exit(1);
+  }
+
+  var packageName = loadYaml(await pubspecYaml.readAsString())['name'] as String;
 
   var buildYaml = File('build.yaml');
 
@@ -36,14 +47,22 @@ Future<void> main(List<String> args) async {
     exit(1);
   }
 
-  var schemaPath = generateTargets.first.replaceFirst('.dart', '.schema.g.json');
-
-  var file = File(schemaPath);
+  var schemaPath = generateTargets.first.replaceFirst('.dart', '.runner.g.dart');
+  var file = File('.dart_tool/build/generated/$packageName/$schemaPath');
   if (!file.existsSync()) {
-    stdout.write('Could not find file $schemaPath, did you run the build script?');
+    stdout.write('Could not run migration for target ${generateTargets.first}. Did you run the build script?');
     exit(1);
   }
-  var schemaMap = jsonDecode(await file.readAsString());
+
+  var port = ReceivePort();
+  await Isolate.spawnUri(
+    file.absolute.uri,
+    [],
+    port.sendPort,
+    packageConfig: Uri.parse('.packages'),
+  );
+
+  var schemaMap = jsonDecode(await port.first as String);
   var schema = DatabaseSchema.fromMap(schemaMap as Map<String, dynamic>);
 
   if (dbName == null && Platform.environment['DB_NAME'] == null) {
@@ -51,7 +70,7 @@ Future<void> main(List<String> args) async {
     dbName = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
   }
 
-  var db = Database(debugPrint: false, database: dbName);
+  var db = Database(database: dbName);
 
   await db.open();
 

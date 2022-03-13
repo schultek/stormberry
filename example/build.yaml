@@ -3,4 +3,4 @@ targets:
     builders:
       stormberry:
         generate_for:
-          - lib/tables.dart
+          - lib/models.dart

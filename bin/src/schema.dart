@@ -1,7 +1,5 @@
 import 'package:stormberry/stormberry.dart';
 
-import 'view_query.dart';
-
 class DatabaseSchema {
   final Map<String, TableSchema> tables;
   final Map<String, ViewSchema> views;
@@ -28,7 +26,11 @@ class DatabaseSchema {
             (table['indexes'] as List?)?.map((i) => TableIndexParser.fromMap(i as Map<String, dynamic>)).toList() ?? [],
       );
       for (var v in table['views'] as List? ?? []) {
-        views[v['name'] as String] = buildViewSchema(v as Map<String, dynamic>);
+        views[v['name'] as String] = ViewSchema(
+          name: v['name'] as String,
+          definition: v['definition'] as String,
+          hash: v['hash'] as String,
+        );
       }
     }
     return DatabaseSchema(tables, views);
@@ -211,7 +213,7 @@ extension TableIndexParser on TableIndex {
       name: map['name']! as String,
       columns: (map['columns'] as List?)?.cast<String>() ?? [],
       unique: (map['unique'] as bool?) ?? false,
-      algorithm: IndexAlgorithmParser.parse(map['algorithm'] as String?) ?? IndexAlgorithm.BTREE,
+      algorithm: IndexAlgorithm.values[map['algorithm'] as int? ?? 0],
       condition: map['condition'] as String?,
     );
   }
@@ -222,15 +224,6 @@ extension TableIndexParser on TableIndex {
       ON "$tableName" USING ${algorithm.toString().split(".")[1]} ( $joinedColumns ) 
       ${condition != null ? 'WHERE $condition' : ''}
     """;
-  }
-}
-
-extension IndexAlgorithmParser on IndexAlgorithm {
-  static IndexAlgorithm? parse(String? str) {
-    switch (str) {
-      case 'BTREE':
-        return IndexAlgorithm.BTREE;
-    }
   }
 }
 

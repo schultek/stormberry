@@ -1,8 +1,10 @@
 import 'package:stormberry/stormberry.dart';
 
-export 'tables.schema.g.dart';
+import 'models.schema.g.dart';
 
-@Table(views: [
+export 'models.schema.g.dart';
+
+@Model(views: [
   View('User', [
     Field.hidden('customerId'),
     Field.view('company', as: 'member'),
@@ -24,41 +26,25 @@ export 'tables.schema.g.dart';
     Field.hidden('company'),
     Field('parties', viewAs: 'company', transformer: FilterByField('sponsor_id', '=', 'company_id')),
   ]),
-], actions: [
-  SingleInsertAction(),
-  SingleUpdateAction(),
-], queries: [
-  SingleQuery.forView('User'),
-  MultiQuery.forView('Admin'),
 ])
-class Account {
+abstract class Account {
   @PrimaryKey()
-  String id;
+  String get id;
 
   // Fields
-  String firstName, lastName;
+  String get firstName;
+  String get lastName;
 
   // Custom Type
-  LatLng location;
+  LatLng get location;
 
   // Foreign Object
-  BillingAddress? billingAddress;
+  BillingAddress? get billingAddress;
 
-  List<Invoice> invoices;
-  Company? company;
+  List<Invoice> get invoices;
+  Company? get company;
 
-  List<Party> parties;
-
-  Account(
-    this.id,
-    this.firstName,
-    this.lastName,
-    this.location,
-    this.billingAddress,
-    this.company,
-    this.invoices,
-    this.parties,
-  );
+  List<Party> get parties;
 }
 
 class LatLng {
@@ -84,15 +70,22 @@ class LatLngConverter extends TypeConverter<LatLng> {
   }
 }
 
-@Table()
-class BillingAddress {
-  String name, street, city;
-  String postcode;
+@Model()
+abstract class BillingAddress {
+  String get name;
+  String get street;
+  String get city;
+  String get postcode;
 
-  BillingAddress(this.name, this.street, this.postcode, this.city);
+  factory BillingAddress({
+    required String name,
+    required String street,
+    required String city,
+    required String postcode,
+  }) = BillingAddressView;
 }
 
-@Table(views: [
+@Model(views: [
   View('Admin', [
     Field.view('invoices', as: 'owner'),
     Field.view('members', as: 'company'),
@@ -103,50 +96,36 @@ class BillingAddress {
     Field.hidden('invoices'),
     Field.hidden('parties'),
   ])
-], actions: [
-  SingleInsertAction(),
-  SingleDeleteAction(),
-], queries: [
-  SingleQuery.forView('Admin'),
 ])
-class Company {
+abstract class Company {
   @PrimaryKey()
-  String id;
+  String get id;
 
-  String name;
+  String get name;
 
-  List<BillingAddress> addresses;
-  List<Account> members;
-  List<Invoice> invoices;
-  List<Party> parties;
-
-  Company(this.id, this.name, this.addresses, this.members, this.invoices, this.parties);
+  List<BillingAddress> get addresses;
+  List<Account> get members;
+  List<Invoice> get invoices;
+  List<Party> get parties;
 }
 
-@Table(views: [
+@Model(views: [
   View('Owner', [
     Field.hidden('account'),
     Field.hidden('company'),
   ])
 ])
-class Invoice {
+abstract class Invoice {
   @PrimaryKey()
-  String id;
-  String title, invoiceId;
+  String get id;
+  String get title;
+  String get invoiceId;
 
-  Account? account;
-  Company? company;
-
-  Invoice(
-    this.id,
-    this.title,
-    this.invoiceId,
-    this.account,
-    this.company,
-  );
+  Account? get account;
+  Company? get company;
 }
 
-@Table(views: [
+@Model(views: [
   View('Guest', [
     Field.hidden('guests'),
     Field.view('sponsor', as: 'member'),
@@ -156,17 +135,15 @@ class Invoice {
     Field.hidden('guests'),
   ]),
 ])
-class Party {
+abstract class Party {
   @PrimaryKey()
-  String id;
+  String get id;
 
-  String name;
+  String get name;
 
-  List<Account> guests;
+  List<Account> get guests;
 
-  Company? sponsor;
+  Company? get sponsor;
 
-  int date;
-
-  Party(this.id, this.name, this.guests, this.sponsor, this.date);
+  int get date;
 }

@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:stormberry/stormberry.dart';
 
 import 'inspector.dart';

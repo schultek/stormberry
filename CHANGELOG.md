@@ -1,3 +1,8 @@
+# 0.5.0
+
+- Internal rewrite (again)
+- Added documentation to README
+
 # 0.4.0
 
 - Rewrote view system

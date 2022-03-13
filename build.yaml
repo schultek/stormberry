@@ -2,6 +2,19 @@ builders:
   stormberry:
     import: "package:stormberry/builder.dart"
     builder_factories: [ "buildSchema" ]
-    build_extensions: { ".dart": [ ".schema.g.dart", ".schema.g.json" ] }
+    build_extensions: { ".dart": [ ".output.g.dart", ".runner.g.dart" ] }
+    auto_apply: none
+    build_to: cache
+    applies_builders: ["stormberry|output"]
+  output:
+    import: "package:stormberry/builder.dart"
+    builder_factories: [ "buildOutput" ]
+    build_extensions: { ".output.g.dart": [ ".schema.g.dart" ] }
     auto_apply: none
     build_to: source
+    required_inputs: [".output.g.dart"]
+    applies_builders: [ "stormberry|output_cleanup" ]
+post_process_builders:
+  output_cleanup:
+    import: "package:stormberry/builder.dart"
+    builder_factory: "outputCleanup"

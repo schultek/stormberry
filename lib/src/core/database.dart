@@ -16,7 +16,7 @@ class Database {
   static PostgreSQLConnection? _cachedConnection;
 
   Database({
-    this.debugPrint = true,
+    this.debugPrint = false,
     String? host,
     int? port,
     String? database,

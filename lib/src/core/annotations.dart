@@ -1,20 +1,16 @@
 import 'database.dart';
 
-/// Used to annotate a class as a database table
-class Table {
+/// Used to annotate a class as a database model
+class Model {
   final List<View> views;
-  final List<Action> actions;
-  final List<Query> queries;
   final List<TableIndex> indexes;
-  const Table({
+  const Model({
     this.views = const [],
-    this.actions = const [],
-    this.queries = const [],
     this.indexes = const [],
   });
 }
 
-/// Used to define views for classes annotated with [Table]
+/// Used to define views for classes annotated with [Model]
 class View {
   final String name;
   final List<Field> fields;
@@ -44,31 +40,54 @@ class Field {
         viewAs = null;
 }
 
-class Transformer {
-  final String statement;
-  const Transformer(this.statement);
+abstract class Transformer {
+  const Transformer();
+
+  String transform(String column, String table);
 }
 
-class ListTransformer extends Transformer {
-  const ListTransformer({String? select, String? where})
-      : super(
-          '''
+abstract class ListTransformer extends Transformer {
+  const ListTransformer();
+
+  String? select(String column, String table) => null;
+  String? where(String column, String table) => null;
+
+  @override
+  String transform(String column, String table) {
+    var w = where(column, table);
+    return '''
     array_to_json(ARRAY ((
-      SELECT ${select ?? '*'} 
-      FROM jsonb_array_elements({{key}}.data) AS {{key}}
-      ${where != null ? 'WHERE $where' : ''}
-    )) ) AS {{key}}
-  ''',
-        );
+      SELECT ${select(column, table) ?? '*'} 
+      FROM jsonb_array_elements("$column".data) AS "$column"
+      ${w != null ? 'WHERE $w' : ''}
+    )) ) AS "$column"
+    ''';
+  }
 }
 
 class FilterByField extends FilterByValue {
-  const FilterByField(String key, String operand, String value) : super(key, operand, '{{table}}.$value');
+  final String _value;
+
+  const FilterByField(String key, String operand, this._value) : super(key, operand);
+
+  @override
+  String value(String column, String table) {
+    return '$table.$_value';
+  }
 }
 
-class FilterByValue extends ListTransformer {
-  const FilterByValue(String key, String operand, String value)
-      : super(where: "({{key}} -> '$key') $operand to_jsonb ($value)");
+abstract class FilterByValue extends ListTransformer {
+  final String key;
+  final String operand;
+
+  const FilterByValue(this.key, this.operand);
+
+  String value(String column, String table);
+
+  @override
+  String? where(String column, String table) {
+    return "($column -> '$key') $operand to_jsonb (${value(column, table)})";
+  }
 }
 
 /// Used to annotate a field as the primary key of the table
@@ -76,92 +95,16 @@ class PrimaryKey {
   const PrimaryKey();
 }
 
-/// Extend this to define an action on a table
+/// Extend this to define a custom action
 abstract class Action<T> {
   const Action();
   Future<void> apply(Database db, T request);
 }
 
-/// Default insert action
-class SingleInsertAction implements Action {
-  const SingleInsertAction();
-
-  @override
-  Future<void> apply(Database db, dynamic request) {
-    throw UnimplementedError();
-  }
-}
-
-/// Default multi-insert action
-class MultiInsertAction implements Action {
-  const MultiInsertAction();
-
-  @override
-  Future<void> apply(Database db, dynamic request) {
-    throw UnimplementedError();
-  }
-}
-
-/// Default update action
-class SingleUpdateAction implements Action {
-  const SingleUpdateAction();
-
-  @override
-  Future<void> apply(Database db, dynamic request) {
-    throw UnimplementedError();
-  }
-}
-
-/// Default multi-update action
-class MultiUpdateAction implements Action {
-  const MultiUpdateAction();
-
-  @override
-  Future<void> apply(Database db, dynamic request) {
-    throw UnimplementedError();
-  }
-}
-
-/// Default delete action
-class SingleDeleteAction implements Action {
-  const SingleDeleteAction();
-
-  @override
-  Future<void> apply(Database db, dynamic request) {
-    throw UnimplementedError();
-  }
-}
-
-/// Default multi-delete action
-class MultiDeleteAction implements Action {
-  const MultiDeleteAction();
-
-  @override
-  Future<void> apply(Database db, dynamic request) {
-    throw UnimplementedError();
-  }
-}
-
-/// Extend this to define a query on a table
+/// Extend this to define a custom query
 abstract class Query<T, U> {
   const Query();
   Future<T> apply(Database db, U params);
-}
-
-/// Default query
-class SingleQuery implements Query {
-  final String viewName;
-  const SingleQuery.forView(String name) : viewName = name;
-  @override
-  Future apply(Database db, dynamic params) => throw UnimplementedError();
-}
-
-/// Default multi-query
-class MultiQuery implements Query {
-  final String viewName;
-  const MultiQuery.forView(String name) : viewName = name;
-  @override
-  Future apply(Database db, dynamic params) => throw UnimplementedError();
 }
 
 /// Extend this to define a custom type converter
@@ -183,8 +126,8 @@ class TableIndex {
   final String? condition;
 
   const TableIndex({
-    this.columns = const [],
     required this.name,
+    this.columns = const [],
     this.unique = false,
     this.algorithm = IndexAlgorithm.BTREE,
     this.condition,

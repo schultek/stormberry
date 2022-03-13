@@ -8,7 +8,7 @@ import 'column_builder.dart';
 
 class ForeignColumnBuilder extends ColumnBuilder with ReferencingColumnBuilder, NamedColumnBuilder {
   @override
-  ParameterElement? parameter;
+  FieldElement? parameter;
   @override
   TableBuilder linkBuilder;
 
@@ -51,5 +51,10 @@ class ForeignColumnBuilder extends ColumnBuilder with ReferencingColumnBuilder, 
       'column_name': columnName,
       'link_primary_key_name': linkBuilder.primaryKeyColumn!.columnName,
     };
+  }
+
+  @override
+  String toString() {
+    return 'ForeignColumnBuilder{$paramName}';
   }
 }

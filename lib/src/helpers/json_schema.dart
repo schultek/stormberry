@@ -2,21 +2,38 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 
-import 'schema.dart';
+import '../../internals.dart';
 
-ViewSchema buildViewSchema(Map<String, dynamic> map) {
-  var hash = sha1.convert(utf8.encode(jsonEncode(map))).toString();
+String buildJsonSchema(Map<String, dynamic> schema) {
+  var out = <String, dynamic>{};
+  for (var key in schema.keys) {
+    var table = schema[key];
+    out[key] = {
+      ...table,
+      'views': table['views']?.map((view) {
+        return buildViewSchema(view as Map<String, dynamic>);
+      }).toList(),
+    };
+  }
+  return jsonEncode(out);
+}
+
+Map<String, dynamic> buildViewSchema(Map<String, dynamic> map) {
   var definition = buildViewQuery(
     map['table_name'] as String,
     map['primary_key_name'] as String?,
     (map['columns'] as List).map((c) => ViewColumnSchema.fromMap(c as Map<String, dynamic>)).toList(),
-    hash,
   ).replaceAll(RegExp(r'\s+'), ' ');
-  return ViewSchema(
-    name: map['name'] as String,
-    definition: definition,
-    hash: hash,
-  );
+
+  var hash = sha1.convert(utf8.encode(definition)).toString();
+
+  definition += "\nWHERE '_#$hash#_' IS NOT NULL";
+
+  return {
+    'name': map['name'],
+    'definition': definition,
+    'hash': hash,
+  };
 }
 
 class ViewColumnSchema {
@@ -34,7 +51,7 @@ class ViewColumnSchema {
   String? parentForeignKeyName;
   String? linkForeignKeyName;
 
-  String? transformer;
+  Transformer? transformer;
 
   ViewColumnSchema({
     required this.type,
@@ -62,17 +79,16 @@ class ViewColumnSchema {
       joinTableName: map['join_table_name'] as String?,
       parentForeignKeyName: map['parent_foreign_key_name'] as String?,
       linkForeignKeyName: map['link_foreign_key_name'] as String?,
-      transformer: map['transformer'] as String?,
+      transformer: map['transformer'] as Transformer?,
     );
   }
 }
 
-String buildViewQuery(String tableName, String? primaryKeyName, List<ViewColumnSchema> columns, String hash) {
+String buildViewQuery(String tableName, String? primaryKeyName, List<ViewColumnSchema> columns) {
   var joins = <MapEntry<String, String>>[];
 
   for (var column in columns) {
-    var transform =
-        column.transformer?.replaceAll('{{key}}', '"${column.paramName}"').replaceAll('{{table}}', '"$tableName"');
+    var transform = column.transformer?.transform(column.paramName!, tableName);
 
     if (column.type == 'foreign_column') {
       joins.add(MapEntry(
@@ -113,10 +129,7 @@ String buildViewQuery(String tableName, String? primaryKeyName, List<ViewColumnS
     }
   }
 
-  return """
-      SELECT "$tableName".*${joins.map((j) => ', ${j.key}').join()}
-      FROM "$tableName"
-      ${joins.map((j) => j.value).join('\n')}
-      WHERE '_#$hash#_' IS NOT NULL
-    """;
+  return 'SELECT "$tableName".*${joins.map((j) => ', ${j.key}').join()}\n'
+      'FROM "$tableName"\n'
+      '${joins.map((j) => j.value).join('\n')}';
 }

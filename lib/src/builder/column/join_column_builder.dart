@@ -7,7 +7,7 @@ import 'column_builder.dart';
 
 class JoinColumnBuilder extends ColumnBuilder with LinkedColumnBuilder {
   @override
-  ParameterElement parameter;
+  FieldElement parameter;
   @override
   TableBuilder linkBuilder;
   JoinTableBuilder joinBuilder;
@@ -31,5 +31,10 @@ class JoinColumnBuilder extends ColumnBuilder with LinkedColumnBuilder {
       'link_primary_key_name': linkBuilder.primaryKeyColumn!.columnName,
       'link_foreign_key_name': linkBuilder.getForeignKeyName()!,
     };
+  }
+
+  @override
+  String toString() {
+    return 'JoinColumnBuilder{${parameter.name}';
   }
 }

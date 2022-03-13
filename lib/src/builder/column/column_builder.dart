@@ -29,7 +29,7 @@ abstract class ColumnBuilder {
 
   ColumnBuilder(this.parentBuilder, this.state);
 
-  ParameterElement? get parameter;
+  FieldElement? get parameter;
 
   bool get isList;
 

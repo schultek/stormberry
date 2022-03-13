@@ -1,0 +1,62 @@
+import '../../core/case_style.dart';
+import '../stormberry_builder.dart';
+import '../table_builder.dart';
+import 'delete_generator.dart';
+import 'insert_generator.dart';
+import 'update_generator.dart';
+import 'view_generator.dart';
+
+class RepositoryGenerator {
+  String generateRepositories(BuilderState state) {
+    return '''
+    extension Repositories on Database {
+      ${state.builders.values.map((b) => '  ${b.element.name}Repository get ${CaseStyle.camelCase.transform(b.tableName)} => ${b.element.name}Repository._(this);\n').join()}
+    }
+    
+    final registry = ModelRegistry({
+      ${state.typeConverters.entries.map((e) => 'typeOf<${e.key}>(): ${e.value.key}(),').join('\n')}
+    });
+    
+    ${state.builders.values.map((t) => generateRepository(t)).join()}
+    
+    ${state.builders.values.map((t) => InsertGenerator().generateInsertRequest(t)).join()}
+    
+    ${state.builders.values.map((t) => UpdateGenerator().generateUpdateRequest(t)).join()}
+    
+    ${state.builders.values.map((t) => ViewGenerator().generateViewClasses(t)).join()}
+  ''';
+  }
+
+  String generateRepository(TableBuilder table) {
+    var repoName = '${table.element.name}Repository';
+
+    var keyType = table.primaryKeyColumn?.dartType;
+
+    return '''
+      abstract class $repoName implements ModelRepository, 
+        ModelRepositoryInsert<${table.element.name}InsertRequest>, 
+        ModelRepositoryUpdate<${table.element.name}UpdateRequest>
+        ${keyType != null ? ', ModelRepositoryDelete<$keyType>' : ''} {
+        factory $repoName._(Database db) = _$repoName;
+         
+        ${ViewGenerator().generateRepositoryMethods(table, abstract: true)} 
+      }
+      
+      class _$repoName extends BaseRepository with 
+        RepositoryInsertMixin<${table.element.name}InsertRequest>, 
+        RepositoryUpdateMixin<${table.element.name}UpdateRequest>
+        ${keyType != null ? ', RepositoryDeleteMixin<$keyType>' : ''} 
+        implements $repoName {
+        _$repoName(Database db): super(db: db);
+        
+        ${ViewGenerator().generateRepositoryMethods(table)}
+        
+        ${InsertGenerator().generateInsertMethod(table)}
+        
+        ${UpdateGenerator().generateUpdateMethod(table)}
+        
+        ${DeleteGenerator().generateDeleteMethod(table)}
+      }
+    ''';
+  }
+}

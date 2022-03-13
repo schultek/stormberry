@@ -1,10 +1,26 @@
+import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 
+import '../../internals.dart';
 import '../core/case_style.dart';
 import 'column/column_builder.dart';
 import 'column/field_column_builder.dart';
 import 'table_builder.dart';
+import 'utils.dart';
+
+class LiteralValue {
+  String value;
+  LiteralValue(this.value);
+
+  dynamic toJson() {
+    return '__%$value%__';
+  }
+
+  static String fix(String json) {
+    return json.replaceAll('"__%', '').replaceAll('%__"', '');
+  }
+}
 
 class ViewColumn {
   String? viewAs;
@@ -23,6 +39,7 @@ class ViewColumn {
         return c.linkBuilder.views.firstWhere((v) => v.name.isEmpty);
       }
     }
+    return null;
   }
 
   String get paramName {
@@ -30,11 +47,11 @@ class ViewColumn {
   }
 
   String get dartType {
-    if (viewAs != null) {
+    if (view != null) {
       var isList = column.isList;
       var nullSuffix = column.parameter!.type.nullabilitySuffix;
       var typeSuffix = nullSuffix == NullabilitySuffix.question ? '?' : '';
-      return isList ? 'List<${view!.className}>$typeSuffix' : '${view!.className}$typeSuffix';
+      return isList ? 'List<${view!.entityName}>$typeSuffix' : '${view!.entityName}$typeSuffix';
     } else {
       return column.parameter!.type.getDisplayString(withNullability: true);
     }
@@ -46,12 +63,15 @@ class ViewColumn {
     } else if (column is LinkedColumnBuilder) {
       return (column as LinkedColumnBuilder).linkBuilder.tableName;
     }
+    return null;
   }
+
+  bool get isNullable => column.parameter!.type.nullabilitySuffix == NullabilitySuffix.question;
 
   Map<String, dynamic> toMap() {
     return column.toMap()
       ..addAll({
-        if (transformer != null) 'transformer': transformer,
+        if (transformer != null) 'transformer': LiteralValue(transformer!),
         if (column is! FieldColumnBuilder) 'table_name': tableName,
       });
   }
@@ -66,6 +86,10 @@ class ViewBuilder {
   String get name => annotation?.getField('name')!.toStringValue()!.toLowerCase() ?? '';
   String get className => CaseStyle.pascalCase
       .transform(name.isNotEmpty ? '${name}_${table.element.name}_view' : '${table.element.name}_view');
+
+  String get entityName => name.isEmpty ? table.element.name : className;
+
+  String get viewName => CaseStyle.pascalCase.transform(name.isNotEmpty ? '${name}_view' : 'view');
 
   String get viewTableName => name.isNotEmpty ? '${name}_${table.tableName}_view' : '${table.tableName}_view';
 
@@ -106,12 +130,42 @@ class ViewBuilder {
         }
 
         var transformer = viewField.getField('transformer')!;
-        while (transformer.getField('(super)') != null) {
-          transformer = transformer.getField('(super)')!;
+        String? transformerCode;
+        if (!transformer.isNull) {
+          var node = table.element.getNode();
+          if (node is ClassDeclaration) {
+            var tnode = node.metadata.firstWhere((a) => a.name.name == (Model).toString());
+            var vnode =
+                tnode.arguments!.arguments.whereType<NamedExpression>().firstWhere((p) => p.name.label.name == 'views');
+            if (vnode.expression is ListLiteral) {
+              var list = vnode.expression as ListLiteral;
+              var fields = list.elements
+                  .whereType<MethodInvocation>()
+                  .firstWhere((node) =>
+                      node.methodName.name == 'View' &&
+                      (node.argumentList.arguments.first as StringLiteral).stringValue?.toLowerCase() == name)
+                  .argumentList
+                  .arguments[1];
+              if (fields is ListLiteral) {
+                var field = fields.elements
+                    .whereType<MethodInvocation>()
+                    .firstWhere((e) => (e.argumentList.arguments.first as StringLiteral).stringValue == fieldName);
+                Expression? exp;
+                if (field.methodName.name == 'transform') {
+                  exp = field.argumentList.arguments[1];
+                } else if (field.methodName.name == 'Field') {
+                  exp = field.argumentList.arguments
+                      .whereType<NamedExpression>()
+                      .firstWhere((a) => a.name.label.name == 'transformer')
+                      .expression;
+                }
+                transformerCode = exp?.toSource();
+              }
+            }
+          }
         }
-        var statement = transformer.getField('statement')?.toStringValue()?.replaceAll(RegExp(r'\s+'), ' ').trim();
 
-        columns.add(ViewColumn(column, viewAs: viewAs, transformer: statement));
+        columns.add(ViewColumn(column, viewAs: viewAs, transformer: transformerCode));
       } else {
         if (column is LinkedColumnBuilder) {
           if (!column.linkBuilder.views.any((v) => v.name.isEmpty)) {
@@ -124,84 +178,5 @@ class ViewBuilder {
     }
 
     return columns;
-  }
-
-  String generateClass() {
-    if (annotation != null) {
-      table.state.decoders[className] = className;
-      return 'class $className {\n'
-          '  $className(${columns.map((c) => 'this.${c.paramName}').join(', ')});\n'
-          '  $className.fromMap(Map<String, dynamic> map)\n'
-          '    : ${columns.map((c) => '${c.paramName} = ${_getInitializer(c)}').join(',\n      ')};\n'
-          '  \n'
-          '  ${columns.map((c) => '${c.dartType} ${c.paramName};').join('\n  ')}\n'
-          '}';
-    } else {
-      return _generateModelExtension();
-    }
-  }
-
-  String _generateModelExtension() {
-    table.state.decoders[table.element.name] = '${table.element.name}Decoder';
-
-    var params = <String>[];
-
-    for (var param in table.constructor.parameters) {
-      var column = table.columns.firstWhere((c) => c.parameter == param);
-
-      var str = '';
-
-      if (param.isNamed) {
-        str = '${param.name}: ';
-      }
-
-      str += 'map.get';
-      if (param.type.isDartCoreList) {
-        str += 'List';
-      } else if (param.type.isDartCoreMap) {
-        str += 'Map';
-      }
-      if (param.isOptional || param.type.nullabilitySuffix == NullabilitySuffix.question) {
-        str += 'Opt';
-      }
-
-      var key = column is FieldColumnBuilder ? column.columnName : param.name;
-      params.add("$str('$key')");
-    }
-
-    return 'extension ${table.element.name}Decoder on ${table.element.name} {\n'
-        '  static ${table.element.name} fromMap(Map<String, dynamic> map) {\n'
-        '    return ${table.element.name}(${params.join(', ')});\n'
-        '  }\n'
-        '}';
-  }
-
-  String _getInitializer(ViewColumn c) {
-    var column = c.column;
-    var param = column.parameter!;
-    var str = 'map.get';
-    String? defVal;
-    if (param.type.isDartCoreList) {
-      str += 'List';
-    } else if (param.type.isDartCoreMap) {
-      str += 'Map';
-    }
-    if (param.isOptional || param.type.nullabilitySuffix == NullabilitySuffix.question) {
-      str += 'Opt';
-    } else if (param.type.isDartCoreList) {
-      str += 'Opt';
-      defVal = 'const []';
-    } else if (param.type.isDartCoreMap) {
-      str += 'Opt';
-      defVal = 'const {}';
-    }
-
-    var key = column is FieldColumnBuilder ? column.columnName : c.paramName;
-    str += "('$key')";
-
-    if (defVal != null) {
-      str += ' ?? $defVal';
-    }
-    return str;
   }
 }
