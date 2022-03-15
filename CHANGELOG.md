@@ -1,3 +1,7 @@
+# 0.6.4
+
+- Fix data encoding
+
 # 0.6.3
 
 - Move QueryParams to public library

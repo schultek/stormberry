@@ -70,7 +70,7 @@ class ModelRegistry {
   String encode(dynamic value, {bool escape = true}) {
     if (value == null) return 'null';
     try {
-      var encoded = PostgresTextEncoder().convert(value);
+      var encoded = PostgresTextEncoder().convert(value, escapeStrings: escape);
       if (!escape) return encoded;
       if (value is Map) return "'${encoded.replaceAll("'", "''")}'";
       return value is List || value is PgPoint ? "'$encoded'" : encoded;

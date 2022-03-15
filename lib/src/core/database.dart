@@ -123,9 +123,18 @@ class Database {
   }
 
   Future<T> runTransaction<T>(FutureOr<T> Function() run) async {
+    if (transactionContext != null) {
+      try {
+        var result = await run();
+        return result;
+      } catch (e) {
+        cancelTransaction();
+        rethrow;
+      }
+    }
     await startTransaction();
     try {
-      var result = run();
+      var result = await run();
       await finishTransaction();
       return result;
     } catch (e) {
