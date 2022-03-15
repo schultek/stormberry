@@ -1,3 +1,7 @@
+# 0.6.3
+
+- Move QueryParams to public library
+
 # 0.6.2
 
 - Allow models to inherit fields from other classes
