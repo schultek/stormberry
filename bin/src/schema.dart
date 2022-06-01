@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:stormberry/stormberry.dart';
 
 class DatabaseSchema {
@@ -33,6 +35,33 @@ class DatabaseSchema {
         );
       }
     }
+    return DatabaseSchema(tables, views);
+  }
+
+  factory DatabaseSchema.empty() {
+    return DatabaseSchema({}, {});
+  }
+
+  DatabaseSchema mergeWith(DatabaseSchema targetSchema) {
+    var tables = {...this.tables};
+    var views = {...this.views};
+
+    for (var key in targetSchema.tables.keys) {
+      if (tables.containsKey(key)) {
+        print('Database contains duplicate table $key. Make sure each table has a unique name.');
+        exit(1);
+      }
+      tables[key] = targetSchema.tables[key]!;
+    }
+
+    for (var key in targetSchema.views.keys) {
+      if (views.containsKey(key)) {
+        stdout.write('Database contains duplicate view $key. Make sure each view has a unique name.');
+        exit(1);
+      }
+      views[key] = targetSchema.views[key]!;
+    }
+
     return DatabaseSchema(tables, views);
   }
 }

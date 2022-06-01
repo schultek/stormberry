@@ -229,7 +229,7 @@ Future<void> removeUnused(Database db, DatabaseSchemaDiff diff) async {
   }
 
   for (var table in diff.tables.removed) {
-    await db.query('DROP TABLE "${table.name}"');
+    await db.query('DROP TABLE "${table.name}" CASCADE');
   }
 }
 

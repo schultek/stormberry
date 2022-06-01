@@ -1,0 +1,7 @@
+targets:
+  $default:
+    builders:
+      stormberry:
+        generate_for:
+          - lib/modelsA.dart
+          - lib/modelsB.dart

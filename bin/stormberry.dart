@@ -18,7 +18,7 @@ Future<void> main(List<String> args) async {
   var pubspecYaml = File('pubspec.yaml');
 
   if (!pubspecYaml.existsSync()) {
-    stdout.write('Cannot find pubspec.yaml file in current directory.');
+    print('Cannot find pubspec.yaml file in current directory.');
     exit(1);
   }
 
@@ -27,7 +27,7 @@ Future<void> main(List<String> args) async {
   var buildYaml = File('build.yaml');
 
   if (!buildYaml.existsSync()) {
-    stdout.write('Cannot find build.yaml file in current directory.');
+    print('Cannot find build.yaml file in current directory.');
     exit(1);
   }
 
@@ -42,28 +42,34 @@ Future<void> main(List<String> args) async {
       .toList();
 
   if (generateTargets == null || generateTargets.isEmpty) {
-    stdout.write(
-        'Cannot find stormberry generation targets in build.yaml. Make sure you have the stormberry builder configured with at least one generation target.');
+    print('Cannot find stormberry generation targets in build.yaml. '
+        'Make sure you have the stormberry builder configured with at least one generation target.');
     exit(1);
   }
 
-  var schemaPath = generateTargets.first.replaceFirst('.dart', '.runner.g.dart');
-  var file = File('.dart_tool/build/generated/$packageName/$schemaPath');
-  if (!file.existsSync()) {
-    stdout.write('Could not run migration for target ${generateTargets.first}. Did you run the build script?');
-    exit(1);
+  var schema = DatabaseSchema.empty();
+
+  for (var target in generateTargets) {
+    var schemaPath = target.replaceFirst('.dart', '.runner.g.dart');
+    var file = File('.dart_tool/build/generated/$packageName/$schemaPath');
+    if (!file.existsSync()) {
+      print('Could not run migration for target $target. Did you run the build script?');
+      exit(1);
+    }
+
+    var port = ReceivePort();
+    await Isolate.spawnUri(
+      file.absolute.uri,
+      [],
+      port.sendPort,
+      packageConfig: Uri.parse('.packages'),
+    );
+
+    var schemaMap = jsonDecode(await port.first as String);
+    var targetSchema = DatabaseSchema.fromMap(schemaMap as Map<String, dynamic>);
+
+    schema = schema.mergeWith(targetSchema);
   }
-
-  var port = ReceivePort();
-  await Isolate.spawnUri(
-    file.absolute.uri,
-    [],
-    port.sendPort,
-    packageConfig: Uri.parse('.packages'),
-  );
-
-  var schemaMap = jsonDecode(await port.first as String);
-  var schema = DatabaseSchema.fromMap(schemaMap as Map<String, dynamic>);
 
   if (dbName == null && Platform.environment['DB_NAME'] == null) {
     stdout.write('Select a database to update: ');
