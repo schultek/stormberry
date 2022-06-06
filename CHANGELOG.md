@@ -1,3 +1,9 @@
+# 0.7.0
+
+- Added `@AutoIncrement()` annotation for auto incrementing values
+- Added support for multiple schemas when using the migration tool
+- Fixed escaping of strings
+
 # 0.6.4
 
 - Fix data encoding
