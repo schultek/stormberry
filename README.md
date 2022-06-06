@@ -113,6 +113,21 @@ TABLE "books" (
 );
 ```
 
+You can also make any field **auto-increment** by using the `@AutoIncrement()` annotation. Auto-increment fields
+must be of type **int**.
+
+```dart
+@Model()
+abstract class Book {
+  @PrimaryKey()
+  @AutoIncrement()
+  int get id;
+  
+  @AutoIncrement()
+  int get someOtherValue;
+}
+```
+
 ### Relations
 
 When using relational database systems, you model your data using relations, namely one-to-one, 
