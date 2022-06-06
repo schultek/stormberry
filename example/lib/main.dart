@@ -13,6 +13,12 @@ Future<void> main() async {
 
   db.debugPrint = true;
 
+  await db.companies.insertOne(CompanyInsertRequest(
+    id: 'abc',
+    name: 'Minga',
+    addresses: [],
+  ));
+
   await db.accounts.insertOne(AccountInsertRequest(
     id: '123',
     firstName: 'Test',
@@ -20,12 +26,6 @@ Future<void> main() async {
     location: LatLng(1, 2),
     billingAddress: BillingAddress(name: 'Test User', street: 'SomeRoad 1', city: 'New York', postcode: '123'),
     companyId: 'abc',
-  ));
-
-  await db.companies.insertOne(CompanyInsertRequest(
-    id: 'abc',
-    name: 'Minga',
-    addresses: [],
   ));
 
   var account = await db.accounts.queryUserView('123');

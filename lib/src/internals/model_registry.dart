@@ -1,6 +1,6 @@
+import 'dart:convert';
+
 import 'package:postgres/postgres.dart';
-// ignore: implementation_imports
-import 'package:postgres/src/text_codec.dart';
 
 import '../core/annotations.dart';
 
@@ -56,38 +56,36 @@ class ModelRegistry {
   T decode<T>(dynamic value) {
     if (value.runtimeType == T) {
       return value as T;
+    } else if (converters[T] != null) {
+      return converters[T]!.decode(value) as T;
     } else {
-      if (converters[T] != null) {
-        return converters[T]!.decode(value) as T;
-      } else {
-        throw ConverterException(
-          'Cannot decode value $value of type ${value.runtimeType} to type $T. Unknown type. Did you forgot to include the class or register a custom type converter?',
-        );
-      }
+      throw ConverterException(
+        'Cannot decode value $value of type ${value.runtimeType} to type $T: Unknown type.\n'
+        'Did you forgot to include the class or register a custom type converter?',
+      );
     }
   }
 
-  String encode(dynamic value, {bool escape = true}) {
-    if (value == null) return 'null';
+  String encode(dynamic value) {
     try {
-      var encoded = PostgresTextEncoder().convert(value, escapeStrings: escape);
-      if (!escape) return encoded;
-      if (value is Map) return "'${encoded.replaceAll("'", "''")}'";
-      return value is List || value is PgPoint ? "'$encoded'" : encoded;
-    } catch (_) {
-      try {
-        if (converters[value.runtimeType] != null) {
-          return encode(converters[value.runtimeType]!.encode(value), escape: escape);
-        } else if (value is List) {
-          return encode(value.map((v) => encode(v, escape: false)).toList(), escape: escape);
-        } else {
-          throw const ConverterException('');
-        }
-      } catch (_) {
-        throw ConverterException(
-          'Cannot encode value $value of type ${value.runtimeType}. Unknown type. Did you forgot to include the class or register a custom type converter?',
-        );
-      }
+      return PostgresTextEncoder2().convert(convert(value));
+    } catch (e) {
+      throw ConverterException(
+        'Cannot encode value $value of type ${value.runtimeType}: $e.\n'
+        'Did you forgot to include the class or register a custom type converter?',
+      );
+    }
+  }
+
+  dynamic convert(dynamic value) {
+    if (converters[value.runtimeType] != null) {
+      return converters[value.runtimeType]!.encode(value);
+    } else if (value is List) {
+      return value.map(convert).toList();
+    } else if (value is Map) {
+      return value.map((k, v) => MapEntry(k, convert(v)));
+    } else {
+      return value;
     }
   }
 }
@@ -153,5 +151,141 @@ class TypedMap {
       return null;
     }
     return getMap<K, V>(key, decode);
+  }
+}
+
+enum QuoteStyle { single, double, none }
+
+class PostgresTextEncoder2 {
+  String convert(dynamic value, {QuoteStyle quotes = QuoteStyle.single}) {
+    if (value == null) {
+      return 'null';
+    } else if (value is bool) {
+      return _encodeBoolean(value);
+    } else if (value is num) {
+      return _encodeNumber(value);
+    } else if (value is String) {
+      return _encodeString(value, quotes);
+    } else if (value is DateTime) {
+      return _encodeDateTime(value, quotes, isDateOnly: false);
+    } else if (value is PgPoint) {
+      return _encodePoint(value, quotes);
+    } else if (value is Map) {
+      return _encodeJSON(value, quotes);
+    } else if (value is List) {
+      return _encodeList(value, quotes);
+    }
+
+    throw PostgreSQLException("Could not infer type of value '$value'.");
+  }
+
+  String _encodeString(String text, QuoteStyle quotes) {
+    if (quotes == QuoteStyle.single) {
+      text = text.replaceAll("'", "''").replaceAll(r'\', r'\\').replaceAll('@', '@@');
+      text = "'$text'";
+      if (text.contains(r'\')) {
+        text = ' E$text';
+      }
+    } else if (quotes == QuoteStyle.double) {
+      text = text.replaceAll(r'\', r'\\').replaceAll('"', r'\"');
+      text = '"$text"';
+    }
+
+    return text;
+  }
+
+  String _encodeNumber(num value, {bool asInt = false}) {
+    if (value.isNaN) {
+      return "'nan'";
+    }
+
+    if (value.isInfinite) {
+      return value.isNegative ? "'-infinity'" : "'infinity'";
+    }
+
+    if (asInt) {
+      return value.toInt().toString();
+    } else {
+      return value.toString();
+    }
+  }
+
+  String _encodeBoolean(bool value) {
+    return value ? 'TRUE' : 'FALSE';
+  }
+
+  String _encodeDateTime(DateTime value, QuoteStyle quotes, {bool isDateOnly = false}) {
+    var string = value.toIso8601String();
+
+    if (isDateOnly) {
+      string = string.split('T').first;
+    } else {
+      if (!value.isUtc) {
+        final timezoneHourOffset = value.timeZoneOffset.inHours;
+        final timezoneMinuteOffset = value.timeZoneOffset.inMinutes % 60;
+
+        var hourComponent = timezoneHourOffset.abs().toString().padLeft(2, '0');
+        final minuteComponent = timezoneMinuteOffset.abs().toString().padLeft(2, '0');
+
+        if (timezoneHourOffset >= 0) {
+          hourComponent = '+$hourComponent';
+        } else {
+          hourComponent = '-$hourComponent';
+        }
+
+        final timezoneString = [hourComponent, minuteComponent].join(':');
+        string = [string, timezoneString].join('');
+      }
+    }
+
+    if (string.substring(0, 1) == '-') {
+      string = '${string.substring(1)} BC';
+    } else if (string.substring(0, 1) == '+') {
+      string = string.substring(1);
+    }
+
+    return _encodeString(string, quotes);
+  }
+
+  String _encodeJSON(dynamic value, QuoteStyle quotes) {
+    return _encodeString(json.encode(value), quotes);
+  }
+
+  String _encodePoint(PgPoint value, QuoteStyle quotes) {
+    return _encodeString('(${_encodeNumber(value.latitude)},${_encodeNumber(value.longitude)})', quotes);
+  }
+
+  String _sharedType(List values) {
+    List<String> types(dynamic value) => [
+          if (value is String) 'string',
+          if (value is int) 'int',
+          if (value is double) 'double',
+          if (value is num) 'num',
+          'json',
+        ];
+
+    return values.fold<Iterable<String>>(types(values.first), (t, value) {
+      var vt = types(value);
+      return t.where((s) => vt.contains(s));
+    }).first;
+  }
+
+  String _encodeList(List value, QuoteStyle quotes) {
+    if (value.isEmpty) {
+      return _encodeString('{}', quotes);
+    }
+
+    final type = _sharedType(value);
+    late Iterable<String> encoded;
+
+    if (type == 'string') {
+      encoded = value.map((s) => _encodeString(s.toString(), QuoteStyle.double));
+    } else if (type == 'int' || type == 'double' || type == 'num') {
+      encoded = value.map((s) => _encodeNumber(s as num, asInt: type == 'int'));
+    } else {
+      encoded = value.map((s) => _encodeJSON(s, QuoteStyle.double));
+    }
+
+    return _encodeString('{${encoded.join(',')}}', quotes);
   }
 }
