@@ -95,6 +95,12 @@ class PrimaryKey {
   const PrimaryKey();
 }
 
+/// Used to annotate a field as an auto increment value
+/// Can only be applied to an integer field
+class AutoIncrement {
+  const AutoIncrement();
+}
+
 /// Extend this to define a custom action
 abstract class Action<T> {
   const Action();

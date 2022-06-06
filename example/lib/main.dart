@@ -19,8 +19,7 @@ Future<void> main() async {
     addresses: [],
   ));
 
-  await db.accounts.insertOne(AccountInsertRequest(
-    id: '123',
+  var accountId = await db.accounts.insertOne(AccountInsertRequest(
     firstName: 'Test',
     lastName: 'User',
     location: LatLng(1, 2),
@@ -28,7 +27,7 @@ Future<void> main() async {
     companyId: 'abc',
   ));
 
-  var account = await db.accounts.queryUserView('123');
+  var account = await db.accounts.queryUserView(accountId);
 
   print(account!.id);
 

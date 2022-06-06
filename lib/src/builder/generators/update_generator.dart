@@ -58,6 +58,12 @@ class UpdateGenerator {
     }
 
     var hasPrimaryKey = table.primaryKeyColumn != null;
+    var setColumns = table.columns.whereType<NamedColumnBuilder>().where((c) =>
+        (hasPrimaryKey ? c != table.primaryKeyColumn : c is FieldColumnBuilder) &&
+        (c is! FieldColumnBuilder || !c.isAutoIncrement));
+    var updateColumns = table.columns
+        .whereType<NamedColumnBuilder>()
+        .where((c) => table.primaryKeyColumn == c || c is! FieldColumnBuilder || !c.isAutoIncrement);
 
     return '''
         @override
@@ -65,9 +71,9 @@ class UpdateGenerator {
           if (requests.isEmpty) return;
           await db.query("""
             UPDATE "${table.tableName}"
-            SET ${(hasPrimaryKey ? table.columns.whereType<NamedColumnBuilder>().where((c) => c != table.primaryKeyColumn) : table.columns.whereType<FieldColumnBuilder>()).map((c) => '"${c.columnName}" = COALESCE(UPDATED."${c.columnName}"::${c.sqlType}, "${table.tableName}"."${c.columnName}")').join(', ')}
-            FROM ( VALUES \${requests.map((r) => '( ${table.columns.whereType<NamedColumnBuilder>().map((c) => '\${registry.encode(r.${c.paramName})}').join(', ')} )').join(', ')} )
-            AS UPDATED(${table.columns.whereType<NamedColumnBuilder>().map((c) => '"${c.columnName}"').join(', ')})
+            SET ${setColumns.map((c) => '"${c.columnName}" = COALESCE(UPDATED."${c.columnName}"::${c.sqlType}, "${table.tableName}"."${c.columnName}")').join(', ')}
+            FROM ( VALUES \${requests.map((r) => '( ${updateColumns.map((c) => '\${registry.encode(r.${c.paramName})}').join(', ')} )').join(', ')} )
+            AS UPDATED(${updateColumns.map((c) => '"${c.columnName}"').join(', ')})
             WHERE ${hasPrimaryKey ? '"${table.tableName}"."${table.primaryKeyColumn!.columnName}" = UPDATED."${table.primaryKeyColumn!.columnName}"' : table.columns.whereType<ForeignColumnBuilder>().map((c) => '"${table.tableName}"."${c.columnName}" = UPDATED."${c.columnName}"').join(' AND ')}
           """);
           ${deepUpdates.isNotEmpty ? deepUpdates.join() : ''}
@@ -81,11 +87,13 @@ class UpdateGenerator {
 
     for (var column in table.columns) {
       if (column is FieldColumnBuilder) {
-        requestFields.add(MapEntry(
-          column.parameter.type.getDisplayString(withNullability: false) +
-              (column == table.primaryKeyColumn ? '' : '?'),
-          column.paramName,
-        ));
+        if (column == table.primaryKeyColumn || !column.isAutoIncrement) {
+          requestFields.add(MapEntry(
+            column.parameter.type.getDisplayString(withNullability: false) +
+                (column == table.primaryKeyColumn ? '' : '?'),
+            column.paramName,
+          ));
+        }
       } else if (column is ReferenceColumnBuilder && column.linkBuilder.primaryKeyColumn == null) {
         if (column.linkBuilder.columns
             .where((c) => c is ForeignColumnBuilder && c.linkBuilder != table && !c.isNullable)

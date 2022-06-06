@@ -13,8 +13,9 @@ class ViewGenerator {
       var viewName = view.viewName;
 
       if (table.primaryKeyColumn != null) {
+        var paramType = table.primaryKeyColumn!.dartType;
         var paramName = table.primaryKeyColumn!.paramName;
-        var signature = 'Future<$viewClassName?> query$viewName(String $paramName)';
+        var signature = 'Future<$viewClassName?> query$viewName($paramType $paramName)';
         if (abstract) {
           str.writeln('$signature;');
         } else {

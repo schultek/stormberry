@@ -34,22 +34,22 @@ abstract class ColumnBuilder {
   bool get isList;
 
   Map<String, dynamic> toMap();
+}
 
-  String getSqlType(DartType type) {
-    if (type.isDartCoreString) {
-      return 'text';
-    } else if (type.isDartCoreInt) {
-      return 'int8';
-    } else if (type.isDartCoreNum || type.isDartCoreDouble) {
-      return 'float8';
-    } else if (type.isDartCoreBool) {
-      return 'bool';
-    } else if (type.element?.name == 'DateTime') {
-      return 'timestamp';
-    } else if (type.element?.name == 'PgPoint') {
-      return 'point';
-    } else {
-      return 'jsonb';
-    }
+String getSqlType(DartType type) {
+  if (type.isDartCoreString) {
+    return 'text';
+  } else if (type.isDartCoreInt) {
+    return 'int8';
+  } else if (type.isDartCoreNum || type.isDartCoreDouble) {
+    return 'float8';
+  } else if (type.isDartCoreBool) {
+    return 'bool';
+  } else if (type.element?.name == 'DateTime') {
+    return 'timestamp';
+  } else if (type.element?.name == 'PgPoint') {
+    return 'point';
+  } else {
+    return 'jsonb';
   }
 }

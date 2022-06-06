@@ -29,7 +29,8 @@ export 'models.schema.g.dart';
 ])
 abstract class Account {
   @PrimaryKey()
-  String get id;
+  @AutoIncrement()
+  int get id;
 
   // Fields
   String get firstName;

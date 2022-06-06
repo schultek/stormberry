@@ -12,6 +12,7 @@ import 'column/reference_column_builder.dart';
 import 'index_builder.dart';
 import 'join_table_builder.dart';
 import 'stormberry_builder.dart';
+import 'utils.dart';
 import 'view_builder.dart';
 
 class TableBuilder {

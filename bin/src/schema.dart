@@ -94,8 +94,10 @@ class ColumnSchema {
   final String name;
   final String type;
   final bool isNullable;
+  final bool isAutoIncrement;
 
-  const ColumnSchema(this.name, {required this.type, this.isNullable = false});
+  const ColumnSchema(this.name, {required this.type, this.isNullable = false, bool? isAutoIncrement})
+      : isAutoIncrement = isAutoIncrement ?? (type == 'serial');
 
   factory ColumnSchema.fromMap(String name, Map<String, dynamic> map) {
     return ColumnSchema(

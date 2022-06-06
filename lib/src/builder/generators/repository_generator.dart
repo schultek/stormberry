@@ -31,10 +31,11 @@ class RepositoryGenerator {
     var repoName = '${table.element.name}Repository';
 
     var keyType = table.primaryKeyColumn?.dartType;
+    var hasKeyAutoInc = table.primaryKeyColumn?.isAutoIncrement ?? false;
 
     return '''
       abstract class $repoName implements ModelRepository, 
-        ModelRepositoryInsert<${table.element.name}InsertRequest>, 
+        ${hasKeyAutoInc ? 'Keyed' : ''}ModelRepositoryInsert<${table.element.name}InsertRequest>, 
         ModelRepositoryUpdate<${table.element.name}UpdateRequest>
         ${keyType != null ? ', ModelRepositoryDelete<$keyType>' : ''} {
         factory $repoName._(Database db) = _$repoName;
@@ -43,7 +44,7 @@ class RepositoryGenerator {
       }
       
       class _$repoName extends BaseRepository with 
-        RepositoryInsertMixin<${table.element.name}InsertRequest>, 
+        ${hasKeyAutoInc ? 'Keyed' : ''}RepositoryInsertMixin<${table.element.name}InsertRequest>, 
         RepositoryUpdateMixin<${table.element.name}UpdateRequest>
         ${keyType != null ? ', RepositoryDeleteMixin<$keyType>' : ''} 
         implements $repoName {

@@ -17,29 +17,29 @@ final registry = ModelRegistry({
 abstract class AccountRepository
     implements
         ModelRepository,
-        ModelRepositoryInsert<AccountInsertRequest>,
+        KeyedModelRepositoryInsert<AccountInsertRequest>,
         ModelRepositoryUpdate<AccountUpdateRequest>,
-        ModelRepositoryDelete<String> {
+        ModelRepositoryDelete<int> {
   factory AccountRepository._(Database db) = _AccountRepository;
 
-  Future<UserAccountView?> queryUserView(String id);
+  Future<UserAccountView?> queryUserView(int id);
   Future<List<UserAccountView>> queryUserViews([QueryParams? params]);
-  Future<AdminAccountView?> queryAdminView(String id);
+  Future<AdminAccountView?> queryAdminView(int id);
   Future<List<AdminAccountView>> queryAdminViews([QueryParams? params]);
-  Future<CompanyAccountView?> queryCompanyView(String id);
+  Future<CompanyAccountView?> queryCompanyView(int id);
   Future<List<CompanyAccountView>> queryCompanyViews([QueryParams? params]);
 }
 
 class _AccountRepository extends BaseRepository
     with
-        RepositoryInsertMixin<AccountInsertRequest>,
+        KeyedRepositoryInsertMixin<AccountInsertRequest>,
         RepositoryUpdateMixin<AccountUpdateRequest>,
-        RepositoryDeleteMixin<String>
+        RepositoryDeleteMixin<int>
     implements AccountRepository {
   _AccountRepository(Database db) : super(db: db);
 
   @override
-  Future<UserAccountView?> queryUserView(String id) {
+  Future<UserAccountView?> queryUserView(int id) {
     return queryOne(id, UserAccountViewQueryable());
   }
 
@@ -49,7 +49,7 @@ class _AccountRepository extends BaseRepository
   }
 
   @override
-  Future<AdminAccountView?> queryAdminView(String id) {
+  Future<AdminAccountView?> queryAdminView(int id) {
     return queryOne(id, AdminAccountViewQueryable());
   }
 
@@ -59,7 +59,7 @@ class _AccountRepository extends BaseRepository
   }
 
   @override
-  Future<CompanyAccountView?> queryCompanyView(String id) {
+  Future<CompanyAccountView?> queryCompanyView(int id) {
     return queryOne(id, CompanyAccountViewQueryable());
   }
 
@@ -69,24 +69,28 @@ class _AccountRepository extends BaseRepository
   }
 
   @override
-  Future<void> insert(Database db, List<AccountInsertRequest> requests) async {
-    if (requests.isEmpty) return;
+  Future<List<int>> insert(Database db, List<AccountInsertRequest> requests) async {
+    if (requests.isEmpty) return [];
+    var rows = await db.query(requests.map((r) => "SELECT nextval('accounts_id_seq') as \"id\"").join('\nUNION ALL\n'));
+    var autoIncrements = rows.map((r) => r.toColumnMap()).toList();
+
     await db.query("""
           INSERT INTO "accounts" ( "id", "first_name", "last_name", "location", "company_id" )
-          VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.firstName)}, ${registry.encode(r.lastName)}, ${registry.encode(r.location)}, ${registry.encode(r.companyId)} )').join(', ')}
-          ON CONFLICT ( "id" ) DO UPDATE SET "first_name" = EXCLUDED."first_name", "last_name" = EXCLUDED."last_name", "location" = EXCLUDED."location", "company_id" = EXCLUDED."company_id"
+          VALUES ${requests.map((r) => '( ${registry.encode(autoIncrements[requests.indexOf(r)]['id'])}, ${registry.encode(r.firstName)}, ${registry.encode(r.lastName)}, ${registry.encode(r.location)}, ${registry.encode(r.companyId)} )').join(', ')}
         """);
     await _BillingAddressRepository(db).insert(
         db,
         requests.where((r) => r.billingAddress != null).map((r) {
           return BillingAddressInsertRequest(
-              accountId: r.id,
+              accountId: registry.decode(autoIncrements[requests.indexOf(r)]['id']),
               companyId: null,
               city: r.billingAddress!.city,
               postcode: r.billingAddress!.postcode,
               name: r.billingAddress!.name,
               street: r.billingAddress!.street);
         }).toList());
+
+    return autoIncrements.map<int>((m) => registry.decode(m['id'])).toList();
   }
 
   @override
@@ -112,7 +116,7 @@ class _AccountRepository extends BaseRepository
   }
 
   @override
-  Future<void> delete(Database db, List<String> keys) async {
+  Future<void> delete(Database db, List<int> keys) async {
     if (keys.isEmpty) return;
     await db.query("""
           DELETE FROM "accounts"
@@ -137,10 +141,11 @@ class _BillingAddressRepository extends BaseRepository
   @override
   Future<void> insert(Database db, List<BillingAddressInsertRequest> requests) async {
     if (requests.isEmpty) return;
+
     await db.query("""
           INSERT INTO "billing_addresses" ( "account_id", "company_id", "city", "postcode", "name", "street" )
           VALUES ${requests.map((r) => '( ${registry.encode(r.accountId)}, ${registry.encode(r.companyId)}, ${registry.encode(r.city)}, ${registry.encode(r.postcode)}, ${registry.encode(r.name)}, ${registry.encode(r.street)} )').join(', ')}
-          ON CONFLICT ( "account_id" ) DO UPDATE SET "city" = EXCLUDED."city", "postcode" = EXCLUDED."postcode", "name" = EXCLUDED."name", "street" = EXCLUDED."street"
+ON CONFLICT ( "account_id" ) DO UPDATE SET "city" = EXCLUDED."city", "postcode" = EXCLUDED."postcode", "name" = EXCLUDED."name", "street" = EXCLUDED."street"
         """);
   }
 
@@ -202,10 +207,11 @@ class _CompanyRepository extends BaseRepository
   @override
   Future<void> insert(Database db, List<CompanyInsertRequest> requests) async {
     if (requests.isEmpty) return;
+
     await db.query("""
           INSERT INTO "companies" ( "id", "name" )
           VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)} )').join(', ')}
-          ON CONFLICT ( "id" ) DO UPDATE SET "name" = EXCLUDED."name"
+ON CONFLICT ( "id" ) DO UPDATE SET "name" = EXCLUDED."name"
         """);
     await _BillingAddressRepository(db).insert(
         db,
@@ -281,10 +287,11 @@ class _InvoiceRepository extends BaseRepository
   @override
   Future<void> insert(Database db, List<InvoiceInsertRequest> requests) async {
     if (requests.isEmpty) return;
+
     await db.query("""
           INSERT INTO "invoices" ( "account_id", "company_id", "id", "title", "invoice_id" )
           VALUES ${requests.map((r) => '( ${registry.encode(r.accountId)}, ${registry.encode(r.companyId)}, ${registry.encode(r.id)}, ${registry.encode(r.title)}, ${registry.encode(r.invoiceId)} )').join(', ')}
-          ON CONFLICT ( "id" ) DO UPDATE SET "account_id" = EXCLUDED."account_id", "company_id" = EXCLUDED."company_id", "title" = EXCLUDED."title", "invoice_id" = EXCLUDED."invoice_id"
+ON CONFLICT ( "id" ) DO UPDATE SET "account_id" = EXCLUDED."account_id", "company_id" = EXCLUDED."company_id", "title" = EXCLUDED."title", "invoice_id" = EXCLUDED."invoice_id"
         """);
   }
 
@@ -293,7 +300,7 @@ class _InvoiceRepository extends BaseRepository
     if (requests.isEmpty) return;
     await db.query("""
             UPDATE "invoices"
-            SET "account_id" = COALESCE(UPDATED."account_id"::text, "invoices"."account_id"), "company_id" = COALESCE(UPDATED."company_id"::text, "invoices"."company_id"), "title" = COALESCE(UPDATED."title"::text, "invoices"."title"), "invoice_id" = COALESCE(UPDATED."invoice_id"::text, "invoices"."invoice_id")
+            SET "account_id" = COALESCE(UPDATED."account_id"::int8, "invoices"."account_id"), "company_id" = COALESCE(UPDATED."company_id"::text, "invoices"."company_id"), "title" = COALESCE(UPDATED."title"::text, "invoices"."title"), "invoice_id" = COALESCE(UPDATED."invoice_id"::text, "invoices"."invoice_id")
             FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.accountId)}, ${registry.encode(r.companyId)}, ${registry.encode(r.id)}, ${registry.encode(r.title)}, ${registry.encode(r.invoiceId)} )').join(', ')} )
             AS UPDATED("account_id", "company_id", "id", "title", "invoice_id")
             WHERE "invoices"."id" = UPDATED."id"
@@ -355,10 +362,11 @@ class _PartyRepository extends BaseRepository
   @override
   Future<void> insert(Database db, List<PartyInsertRequest> requests) async {
     if (requests.isEmpty) return;
+
     await db.query("""
           INSERT INTO "parties" ( "sponsor_id", "id", "name", "date" )
           VALUES ${requests.map((r) => '( ${registry.encode(r.sponsorId)}, ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.date)} )').join(', ')}
-          ON CONFLICT ( "id" ) DO UPDATE SET "sponsor_id" = EXCLUDED."sponsor_id", "name" = EXCLUDED."name", "date" = EXCLUDED."date"
+ON CONFLICT ( "id" ) DO UPDATE SET "sponsor_id" = EXCLUDED."sponsor_id", "name" = EXCLUDED."name", "date" = EXCLUDED."date"
         """);
   }
 
@@ -386,13 +394,7 @@ class _PartyRepository extends BaseRepository
 
 class AccountInsertRequest {
   AccountInsertRequest(
-      {required this.id,
-      required this.firstName,
-      required this.lastName,
-      required this.location,
-      this.billingAddress,
-      this.companyId});
-  String id;
+      {required this.firstName, required this.lastName, required this.location, this.billingAddress, this.companyId});
   String firstName;
   String lastName;
   LatLng location;
@@ -408,7 +410,7 @@ class BillingAddressInsertRequest {
       required this.postcode,
       required this.name,
       required this.street});
-  String? accountId;
+  int? accountId;
   String? companyId;
   String city;
   String postcode;
@@ -426,7 +428,7 @@ class CompanyInsertRequest {
 class InvoiceInsertRequest {
   InvoiceInsertRequest(
       {this.accountId, this.companyId, required this.id, required this.title, required this.invoiceId});
-  String? accountId;
+  int? accountId;
   String? companyId;
   String id;
   String title;
@@ -444,7 +446,7 @@ class PartyInsertRequest {
 class AccountUpdateRequest {
   AccountUpdateRequest(
       {required this.id, this.firstName, this.lastName, this.location, this.billingAddress, this.companyId});
-  String id;
+  int id;
   String? firstName;
   String? lastName;
   LatLng? location;
@@ -454,7 +456,7 @@ class AccountUpdateRequest {
 
 class BillingAddressUpdateRequest {
   BillingAddressUpdateRequest({this.accountId, this.companyId, this.city, this.postcode, this.name, this.street});
-  String? accountId;
+  int? accountId;
   String? companyId;
   String? city;
   String? postcode;
@@ -471,7 +473,7 @@ class CompanyUpdateRequest {
 
 class InvoiceUpdateRequest {
   InvoiceUpdateRequest({this.accountId, this.companyId, required this.id, this.title, this.invoiceId});
-  String? accountId;
+  int? accountId;
   String? companyId;
   String id;
   String? title;
@@ -486,12 +488,12 @@ class PartyUpdateRequest {
   int? date;
 }
 
-class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, String> {
+class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> {
   @override
   String get keyName => 'id';
 
   @override
-  String encodeKey(String key) => registry.encode(key);
+  String encodeKey(int key) => registry.encode(key);
 
   @override
   String get tableName => 'user_accounts_view';
@@ -522,7 +524,7 @@ class UserAccountView {
       this.company,
       required this.parties});
 
-  final String id;
+  final int id;
   final String firstName;
   final String lastName;
   final LatLng location;
@@ -532,12 +534,12 @@ class UserAccountView {
   final List<GuestPartyView> parties;
 }
 
-class AdminAccountViewQueryable extends KeyedViewQueryable<AdminAccountView, String> {
+class AdminAccountViewQueryable extends KeyedViewQueryable<AdminAccountView, int> {
   @override
   String get keyName => 'id';
 
   @override
-  String encodeKey(String key) => registry.encode(key);
+  String encodeKey(int key) => registry.encode(key);
 
   @override
   String get tableName => 'admin_accounts_view';
@@ -568,7 +570,7 @@ class AdminAccountView {
       this.company,
       required this.parties});
 
-  final String id;
+  final int id;
   final String firstName;
   final String lastName;
   final LatLng location;
@@ -578,12 +580,12 @@ class AdminAccountView {
   final List<GuestPartyView> parties;
 }
 
-class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView, String> {
+class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView, int> {
   @override
   String get keyName => 'id';
 
   @override
-  String encodeKey(String key) => registry.encode(key);
+  String encodeKey(int key) => registry.encode(key);
 
   @override
   String get tableName => 'company_accounts_view';
@@ -608,7 +610,7 @@ class CompanyAccountView {
       required this.location,
       required this.parties});
 
-  final String id;
+  final int id;
   final String firstName;
   final String lastName;
   final LatLng location;

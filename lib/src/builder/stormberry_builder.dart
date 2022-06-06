@@ -6,7 +6,6 @@ import 'package:build/build.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:source_gen/source_gen.dart';
 
-import '../core/annotations.dart';
 import 'generators/join_json_generator.dart';
 import 'generators/repository_generator.dart';
 import 'generators/table_json_generator.dart';
@@ -14,10 +13,6 @@ import 'join_table_builder.dart';
 import 'table_builder.dart';
 import 'utils.dart';
 import 'view_builder.dart';
-
-const tableChecker = TypeChecker.fromRuntime(Model);
-const typeConverterChecker = TypeChecker.fromRuntime(TypeConverter);
-const primaryKeyChecker = TypeChecker.fromRuntime(PrimaryKey);
 
 class BuilderState {
   Set<Uri> imports = {};
@@ -51,9 +46,8 @@ class StormberryBuilder implements Builder {
         var outputId = inputId.changeExtension(key);
         await buildStep.writeAsString(outputId, outputMap[key]!);
       }
-    } catch (e, st) {
-      print(e);
-      print(st);
+    } catch (e) {
+      print('\x1B[31mFailed to build database schema:\n\n$e\x1B[0m\n');
     }
   }
 
@@ -111,7 +105,7 @@ class StormberryBuilder implements Builder {
     ''');
 
     map['.runner.g.dart'] = DartFormatter(pageWidth: 120).format('''
-      import 'dart:isolate';
+      import 'dart:isolate'; 
       import 'package:stormberry/src/helpers/json_schema.dart';
       import 'package:stormberry/stormberry.dart';
       

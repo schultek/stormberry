@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:collection/collection.dart';
@@ -7,7 +8,7 @@ import '../core/database.dart';
 import '../core/query_params.dart';
 import 'model_registry.dart';
 
-typedef Runnable = Future<void> Function();
+typedef Runnable<T> = FutureOr<T> Function();
 
 abstract class ModelRepository {
   Future<T> query<T, U>(Query<T, U> query, U params);
@@ -17,6 +18,11 @@ abstract class ModelRepository {
 abstract class ModelRepositoryInsert<InsertRequest> {
   Future<void> insertOne(InsertRequest request);
   Future<void> insertMany(List<InsertRequest> requests);
+}
+
+abstract class KeyedModelRepositoryInsert<InsertRequest> {
+  Future<int> insertOne(InsertRequest request);
+  Future<List<int>> insertMany(List<InsertRequest> requests);
 }
 
 abstract class ModelRepositoryUpdate<UpdateRequest> {
@@ -56,6 +62,15 @@ mixin RepositoryInsertMixin<InsertRequest> on BaseRepository implements ModelRep
   Future<void> insertMany(List<InsertRequest> requests) => transaction(() => insert(_db, requests));
 }
 
+mixin KeyedRepositoryInsertMixin<InsertRequest> on BaseRepository implements KeyedModelRepositoryInsert<InsertRequest> {
+  Future<List<int>> insert(Database db, List<InsertRequest> requests);
+
+  @override
+  Future<int> insertOne(InsertRequest request) => transaction(() => insert(_db, [request])).then((r) => r.first);
+  @override
+  Future<List<int>> insertMany(List<InsertRequest> requests) => transaction(() => insert(_db, requests));
+}
+
 abstract class BaseRepository implements ModelRepository {
   final Database _db;
 
@@ -75,7 +90,7 @@ abstract class BaseRepository implements ModelRepository {
     return query.apply(_db, params);
   }
 
-  Future<void> transaction<T>(Runnable runnable) {
+  Future<T> transaction<T>(Runnable<T> runnable) {
     return _db.runTransaction(runnable);
   }
 

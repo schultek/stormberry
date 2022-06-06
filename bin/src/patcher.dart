@@ -37,18 +37,29 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
         ...table.columns.added.map((c) {
           return 'ADD COLUMN "${c.name}" ${c.type} ${c.isNullable ? 'NULL' : 'NOT NULL'}';
         }),
-        ...table.columns.modified.map((c) {
-          var update = c.prev.type != c.newly.type
-              ? 'SET DATA TYPE ${c.newly.type} USING ${c.newly.name}::${c.newly.type}'
-              : '${c.newly.isNullable ? 'DROP' : 'SET'} NOT NULL';
-          return 'ALTER COLUMN "${c.prev.name}" $update';
+        ...table.columns.modified.expand((c) sync* {
+          if (c.prev.type != 'serial' && c.newly.type == 'serial') {
+            yield 'ALTER COLUMN \"${c.prev.name}\" SET DATA TYPE int8 USING ${c.newly.name}::int8';
+            yield "ALTER COLUMN \"${c.prev.name}\" SET DEFAULT nextval('${table.name}_${c.newly.name}_seq')";
+          } else {
+            var update = c.prev.type != c.newly.type
+                ? 'SET DATA TYPE ${c.newly.type} USING ${c.newly.name}::${c.newly.type}'
+                : '${c.newly.isNullable ? 'DROP' : 'SET'} NOT NULL';
+            yield 'ALTER COLUMN "${c.prev.name}" $update';
+          }
         }),
       ];
 
+      for (var c in table.columns.modified.where((c) => c.prev.type != 'serial' && c.newly.type == 'serial')) {
+        await db.query('''
+          CREATE SEQUENCE IF NOT EXISTS ${table.name}_${c.newly.name}_seq OWNED BY "public"."${table.name}"."${c.newly.name}";
+        ''');
+      }
+
       await db.query("""
-          ALTER TABLE "${table.name}"
-          ${updatedColumns.join(",\n")}
-        """);
+        ALTER TABLE "${table.name}"
+        ${updatedColumns.join(",\n")}
+      """);
     }
   }
 

@@ -1,3 +1,4 @@
+import '../column/column_builder.dart';
 import '../join_table_builder.dart';
 
 class JoinJsonGenerator {
@@ -5,10 +6,10 @@ class JoinJsonGenerator {
     return {
       'columns': {
         join.first.getForeignKeyName(): {
-          'type': join.first.primaryKeyColumn!.sqlType,
+          'type': getSqlType(join.first.primaryKeyParameter!.type),
         },
         join.second.getForeignKeyName(): {
-          'type': join.second.primaryKeyColumn!.sqlType,
+          'type': getSqlType(join.second.primaryKeyParameter!.type),
         },
       },
       'constraints': [

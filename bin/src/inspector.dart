@@ -21,10 +21,12 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
       var columnName = columnMap['column_name'] as String;
       var columnType = columnMap['udt_name'] as String;
       var columnIsNullable = columnMap['is_nullable'];
+      var columnIsAutoIncrement = (columnMap['column_default'] as String?)?.startsWith('nextval') ?? false;
       tableScheme.columns[columnName] = ColumnSchema(
         columnName,
-        type: columnType,
+        type: columnIsAutoIncrement && columnType == 'int8' ? 'serial' : columnType,
         isNullable: columnIsNullable == 'YES',
+        isAutoIncrement: columnIsAutoIncrement,
       );
     }
   }
