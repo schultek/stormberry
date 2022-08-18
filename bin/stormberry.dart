@@ -7,12 +7,14 @@ import 'package:stormberry/stormberry.dart';
 import 'package:yaml/yaml.dart';
 
 import 'src/differentiator.dart';
+import 'src/output.dart';
 import 'src/patcher.dart';
 import 'src/schema.dart';
 
 Future<void> main(List<String> args) async {
   bool dryRun = args.contains('--dry-run');
   String? dbName = args.where((a) => a.startsWith('-db=')).map((a) => a.split('=')[1]).firstOrNull;
+  String? output = args.where((a) => a.startsWith('-o=')).map((a) => a.split('=')[1]).firstOrNull;
   bool applyChanges = args.contains('--apply-changes');
 
   var pubspecYaml = File('pubspec.yaml');
@@ -94,38 +96,58 @@ Future<void> main(List<String> args) async {
       await db.close();
       exit(1);
     } else {
-      await db.startTransaction();
+      if (output == null) {
+        await db.startTransaction();
 
-      String? answerApplyChanges;
-      if (!applyChanges) {
-        stdout.write('Do you want to apply these changes? (yes/no): ');
-        answerApplyChanges = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
-      }
+        String? answerApplyChanges;
+        if (!applyChanges) {
+          stdout.write('Do you want to apply these changes? (yes/no): ');
+          answerApplyChanges = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
+        }
 
-      if (applyChanges || answerApplyChanges == 'yes') {
-        print('Database schema changed, applying updates now:');
+        if (applyChanges || answerApplyChanges == 'yes') {
+          print('Database schema changed, applying updates now:');
 
-        try {
-          db.debugPrint = true;
-          await patchSchema(db, diff);
-        } catch (_) {
+          try {
+            db.debugPrint = true;
+            await patchSchema(db, diff);
+          } catch (_) {
+            db.cancelTransaction();
+          }
+        } else {
           db.cancelTransaction();
         }
+
+        var updateWasSuccessFull = await db.finishTransaction();
+
+        print('========================');
+        if (updateWasSuccessFull) {
+          print('---\nDATABASE UPDATE SUCCESSFUL');
+        } else {
+          print('---\nALL CHANGES REVERTED, EXITING');
+        }
+
+        await db.close();
+        exit(updateWasSuccessFull ? 0 : 1);
       } else {
-        db.cancelTransaction();
+        await db.close();
+        var dir = Directory(output);
+
+        String? answerApplyChanges;
+        if (!applyChanges) {
+          stdout.write('Do you want to write these migrations to ${dir.path}? (yes/no): ');
+          answerApplyChanges = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
+        }
+
+        if (applyChanges || answerApplyChanges == 'yes') {
+
+          if (!dir.existsSync()) {
+            dir.createSync(recursive: true);
+          }
+
+          await outputSchema(dir, diff);
+        }
       }
-
-      var updateWasSuccessFull = await db.finishTransaction();
-
-      print('========================');
-      if (updateWasSuccessFull) {
-        print('---\nDATABASE UPDATE SUCCESSFUL');
-      } else {
-        print('---\nALL CHANGES REVERTED, EXITING');
-      }
-
-      await db.close();
-      exit(updateWasSuccessFull ? 0 : 1);
     }
   } else {
     print('NO CHANGES, ALL DONE');
