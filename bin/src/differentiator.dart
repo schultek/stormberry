@@ -46,20 +46,6 @@ Future<DatabaseSchemaDiff> getSchemaDiff(Database db, DatabaseSchema dbSchema) a
         tableDiff.constraints.added.add(newConstraint);
       }
 
-      for (var extTrigger in extTable.triggers) {
-        var newTrigger = newTable.triggers.where((t) => t == extTrigger).firstOrNull;
-
-        if (newTrigger != null) {
-          newTable.triggers.remove(newTrigger);
-        } else {
-          tableDiff.triggers.removed.add(extTrigger);
-        }
-      }
-
-      for (var newTrigger in newTable.triggers) {
-        tableDiff.triggers.added.add(newTrigger);
-      }
-
       for (var extIndex in extTable.indexes) {
         var newIndex = newTable.indexes.where((t) => t == extIndex).firstOrNull;
 

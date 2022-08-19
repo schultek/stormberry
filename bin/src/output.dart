@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:stormberry/stormberry.dart';
 import 'package:path/path.dart' as path;
 import 'differentiator.dart';
 import 'schema.dart';

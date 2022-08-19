@@ -12,7 +12,7 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
     var tableMap = row.toColumnMap();
     var tableName = tableMap['table_name'] as String;
 
-    var tableScheme = TableSchema(tableName, columns: {}, constraints: [], triggers: [], indexes: []);
+    var tableScheme = TableSchema(tableName, columns: {}, constraints: [], indexes: []);
     schema.tables[tableName] = tableScheme;
 
     var columns = await db.query("SELECT * FROM information_schema.columns WHERE table_name = '$tableName'");
@@ -76,29 +76,6 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
       var tableName = constraintMap['src_table'];
       schema.tables[tableName]?.constraints.add(constraint);
     }
-  }
-
-  var triggers = await db.query("""
-      SELECT t.trigger_name, t.event_object_table, t.action_statement, t.action_orientation, t.action_timing, 
-        array_to_json(ARRAY_AGG(t.event_manipulation)) as events, 
-        array_to_json(ARRAY_AGG(tuc.event_object_column)) as columns
-      FROM information_schema.triggers t
-      LEFT JOIN information_schema.triggered_update_columns tuc 
-        ON t.trigger_name = tuc.trigger_name AND t.event_manipulation = 'UPDATE'
-      GROUP BY t.trigger_name, t.event_object_table, t.action_statement, t.action_orientation, t.action_timing
-    """);
-  for (var row in triggers) {
-    var triggerMap = row.toColumnMap();
-    var tableName = triggerMap['event_object_table'] as String;
-    var statement = triggerMap['action_statement'] as String;
-    var match = RegExp(r'^EXECUTE FUNCTION ([\w_]+)\((.*)\)$').firstMatch(statement)!;
-
-    schema.tables[tableName]?.triggers.add(TableTrigger(
-      triggerMap['trigger_name'] as String,
-      triggerMap['columns'].firstWhere((c) => c != null) as String,
-      match.group(1)!,
-      match.group(2)!.split(', ').map((a) => a.substring(1, a.length - 1)).toList(),
-    ));
   }
 
   var indexes = await db.query(r"""

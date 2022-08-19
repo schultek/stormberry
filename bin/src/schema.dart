@@ -70,14 +70,12 @@ class TableSchema {
   final String name;
   final Map<String, ColumnSchema> columns;
   final List<TableConstraint> constraints;
-  final List<TableTrigger> triggers;
   final List<TableIndex> indexes;
 
   const TableSchema(
     this.name, {
     this.columns = const {},
     this.constraints = const [],
-    this.triggers = const [],
     this.indexes = const [],
   });
 
@@ -85,7 +83,6 @@ class TableSchema {
         name,
         columns: {...columns},
         constraints: [...constraints],
-        triggers: [...triggers],
         indexes: [...indexes],
       );
 }

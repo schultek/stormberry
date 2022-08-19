@@ -39,7 +39,7 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
         }),
         ...table.columns.modified.expand((c) sync* {
           if (c.prev.type != 'serial' && c.newly.type == 'serial') {
-            yield 'ALTER COLUMN \"${c.prev.name}\" SET DATA TYPE int8 USING ${c.newly.name}::int8';
+            yield 'ALTER COLUMN "${c.prev.name}" SET DATA TYPE int8 USING ${c.newly.name}::int8';
             yield "ALTER COLUMN \"${c.prev.name}\" SET DEFAULT nextval('${table.name}_${c.newly.name}_seq')";
           } else {
             var update = c.prev.type != c.newly.type
@@ -122,15 +122,6 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
   }
 
   for (var table in diff.tables.added) {
-    for (var trigger in table.triggers) {
-      await db.query("""
-          CREATE TRIGGER "${trigger.name}" 
-          AFTER DELETE OR UPDATE OF "${trigger.column}" ON "${table.name}"
-          FOR EACH ROW
-          EXECUTE FUNCTION ${trigger.function}(${trigger.args.map((a) => "'$a'").join(", ")});
-        """);
-    }
-
     for (var index in table.indexes) {
       await db.query('CREATE ${index.statement(table.name)}');
     }
@@ -221,12 +212,6 @@ Future<void> removeUnused(Database db, DatabaseSchemaDiff diff) async {
   }
 
   for (var table in diff.tables.removed) {
-    for (var trigger in table.triggers) {
-      await db.query('''
-          DROP TRIGGER "${trigger.name}" ON "${table.name}"
-        ''');
-    }
-
     for (var index in table.indexes) {
       await db.query('DROP INDEX "__${index.name}"');
     }
