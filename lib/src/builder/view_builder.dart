@@ -1,6 +1,7 @@
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
+import 'package:source_gen/source_gen.dart';
 
 import '../../internals.dart';
 import '../core/case_style.dart';
@@ -178,5 +179,59 @@ class ViewBuilder {
     }
 
     return columns;
+  }
+
+  String? get targetAnnotation {
+    if (annotation != null && !annotation!.getField('annotation')!.isNull) {
+      return '@' + annotation!.getField('annotation')!.toSource();
+    }
+    return null;
+  }
+}
+
+extension ObjectSource on DartObject {
+  String toSource() {
+    var reader = ConstantReader(this);
+
+    if (reader.isLiteral) {
+      if (reader.isString) {
+        return "'${reader.literalValue}'";
+      }
+      return reader.literalValue!.toString();
+    }
+
+    var rev = reader.revive();
+
+    var str = '';
+    if (rev.source.fragment.isNotEmpty) {
+      str = rev.source.fragment;
+
+      if (rev.accessor.isNotEmpty) {
+        str += '.${rev.accessor}';
+      }
+      str += '(';
+      var isFirst = true;
+
+      for (var p in rev.positionalArguments) {
+        if (!isFirst) {
+          str += ', ';
+        }
+        isFirst = false;
+        str += p.toSource();
+      }
+
+      for (var p in rev.namedArguments.entries) {
+        if (!isFirst) {
+          str += ', ';
+        }
+        isFirst = false;
+        str += '${p.key}: ${p.value.toSource()}';
+      }
+
+      str += ')';
+    } else {
+      str = rev.accessor;
+    }
+    return str;
   }
 }

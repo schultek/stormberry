@@ -66,6 +66,7 @@ class ViewGenerator {
         ${view.entityName} decode(TypedMap map) => ${view.className}(${view.columns.map((c) => '${c.paramName}: ${_getInitializer(c)}').join(',')});
       }
       
+      ${view.targetAnnotation ?? ''}
       class ${view.className}${implementsBase ? ' implements ${view.table.element.name}' : ''} {
         ${view.className}(${view.columns.isEmpty ? '' : '{${view.columns.map((c) => '${c.isNullable ? '' : 'required '}this.${c.paramName}').join(', ')}}'});
         

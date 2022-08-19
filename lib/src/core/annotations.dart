@@ -14,7 +14,8 @@ class Model {
 class View {
   final String name;
   final List<Field> fields;
-  const View([this.name = '', this.fields = const []]);
+  final dynamic annotation;
+  const View([this.name = '', this.fields = const [], this.annotation]);
 }
 
 /// Used to define fields of [View]s
