@@ -120,16 +120,6 @@ void printDiff(DatabaseSchemaDiff diff) {
       print("-- CONSTRAINT ON ${table.name} ${constr.toString().replaceAll(RegExp("[\n\\s]+"), " ")}");
     }
 
-    for (var trigger in table.triggers.added) {
-      print('++ TRIGGER ${trigger.name} ON ${table.name}.${trigger.column} '
-          "EXECUTE ${trigger.function}(${trigger.args.join(", ")})");
-    }
-
-    for (var trigger in table.triggers.removed) {
-      print('-- TRIGGER ${trigger.name} ON ${table.name}.${trigger.column} '
-          "EXECUTE ${trigger.function}(${trigger.args.join(", ")})");
-    }
-
     for (var index in table.indexes.added) {
       print("++ ${index.statement(table.name).replaceAll(RegExp("[\n\\s]+"), " ")}");
     }
@@ -168,13 +158,12 @@ class TableSchemaDiff {
   String name;
   Diff<ColumnSchema, Change<ColumnSchema>> columns = Diff();
   Diff<TableConstraint, void> constraints = Diff();
-  Diff<TableTrigger, void> triggers = Diff();
   Diff<TableIndex, void> indexes = Diff();
 
   TableSchemaDiff(this.name);
 
   bool get hasChanges =>
-      columns.hasChanges() || constraints.hasChanges() || triggers.hasChanges() || indexes.hasChanges();
+      columns.hasChanges() || constraints.hasChanges() || indexes.hasChanges();
 }
 
 class Diff<T, U> {

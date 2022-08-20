@@ -56,13 +56,11 @@ abstract class ListTransformer extends Transformer {
   @override
   String transform(String column, String table) {
     var w = where(column, table);
-    return '''
-    array_to_json(ARRAY ((
-      SELECT ${select(column, table) ?? '*'} 
-      FROM jsonb_array_elements("$column".data) AS "$column"
-      ${w != null ? 'WHERE $w' : ''}
-    )) ) AS "$column"
-    ''';
+    return 'array_to_json(ARRAY ((\n'
+        '  SELECT ${select(column, table) ?? '*'}\n'
+        '  FROM jsonb_array_elements("$column".data) AS "$column"\n'
+        '${w != null ? '  WHERE $w\n' : ''}'
+        ')) ) AS "$column"';
   }
 }
 

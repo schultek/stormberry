@@ -13,12 +13,6 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
   }
 
   for (var table in diff.tables.modified) {
-    for (var trigger in table.triggers.removed) {
-      await db.query('''
-          DROP TRIGGER "${trigger.name}" ON "${table.name}"
-        ''');
-    }
-
     for (var index in table.indexes.removed) {
       await db.query('DROP INDEX "__${index.name}"');
     }
@@ -104,18 +98,7 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
     }
   }
 
-  await _createArrayKeysCheckFunction(db);
-
   for (var table in diff.tables.modified) {
-    for (var trigger in table.triggers.added) {
-      await db.query("""
-          CREATE TRIGGER "${trigger.name}" 
-          AFTER DELETE OR UPDATE OF "${trigger.column}" ON "${table.name}"
-          FOR EACH ROW
-          EXECUTE FUNCTION ${trigger.function}(${trigger.args.map((a) => "'$a'").join(", ")});
-        """);
-    }
-
     for (var index in table.indexes.added) {
       await db.query('CREATE ${index.statement(table.name)}');
     }
@@ -227,46 +210,4 @@ Future<void> removeUnused(Database db, DatabaseSchemaDiff diff) async {
   for (var table in diff.tables.removed) {
     await db.query('DROP TABLE "${table.name}" CASCADE');
   }
-}
-
-Future<void> _createArrayKeysCheckFunction(Database db) async {
-  var tempDebugPrint = db.debugPrint;
-  db.debugPrint = false;
-  await db.query("""
-      CREATE OR REPLACE FUNCTION check_array_keys()
-      RETURNS TRIGGER
-      LANGUAGE plpgsql
-      AS \$function\$
-        DECLARE
-          tableName TEXT;
-          columnName TEXT;
-          keyName TEXT;
-        BEGIN
-          tableName := TG_ARGV[0];
-          columnName := TG_ARGV[1];
-          keyName := TG_ARGV[2];
-
-          IF NEW IS NULL THEN
-            EXECUTE '
-              UPDATE ' || quote_ident(tableName) || '
-              SET ' || quote_ident(columnName) || ' = array_remove('
-                || quote_ident(columnName) || ', \$1.' || quote_ident(keyName)
-              || ')
-              WHERE \$1.' || quote_ident(keyName) || ' = ANY (' || quote_ident(columnName) || ')
-            ' USING OLD;
-          ELSE
-            EXECUTE '
-              UPDATE ' || quote_ident(tableName) || '
-              SET ' || quote_ident(columnName) || ' = array_replace('
-                || quote_ident(columnName) || ', \$1.' || quote_ident(keyName) || ', \$2.' || quote_ident(keyName)
-              || ')
-              WHERE \$1.' || quote_ident(keyName) || ' = ANY (' || quote_ident(columnName) || ')
-            ' USING OLD, NEW;
-          END IF;
-
-          RETURN NULL;
-        END;
-      \$function\$
-    """);
-  db.debugPrint = tempDebugPrint;
 }
