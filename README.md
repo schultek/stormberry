@@ -259,6 +259,25 @@ As mentioned before, when you have two-way relations in your models you must use
 any cyclic dependencies. `stormberry` can't resolve them for you, however it will warn you if it
 detects any when trying to [migrate your database schema](#database-migration-tool).
 
+### Serialization
+
+When using views, you may need serialization capabilities to send them through an api. While stormberry does
+not do serialization by itself, it enables you to use your favorite serialization package through custom annotations.
+
+When specifying a view, add a target annotation to its constructor:
+
+```dart
+@Model(
+  views: [
+    View('SomeView', [/*field modififers*/], MappableClass())
+  ]
+)
+```
+
+This uses the '@MappableClass()' annotation from the [`dart_mappable`](https://pub.dev/packages/dart_mappable) package, 
+which will be placed on the resulting `SomeView` entity class. Check out [this example](https://github.com/schultek/stormberry/tree/develop/test/packages/serialization) to see
+how this can be used to generate serialization extensions for these classes.
+
 ## Indexes
 
 As an advanced configuration you can specify indexes on your table using the `TableIndex` class. 
@@ -404,3 +423,5 @@ The tool supported the following options:
 - `--dry-run`: Logs any changes to the schema without writing to the database, and exists 
   with code 1 if there are any.
 - `--apply-changes`: Apply any changes without asking for confirmation.
+- `-o=<folder>`: Specify an output folder. When used, this will output all migration statements to 
+  `.sql` files in this folder instead of applying them to the database.
