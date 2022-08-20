@@ -24,6 +24,8 @@ class TableBuilder {
   late FieldElement? primaryKeyParameter;
   late List<ViewBuilder> views;
   late List<IndexBuilder> indexes;
+  String? insertRequestAnnotation;
+  String? updateRequestAnnotation;
 
   TableBuilder(this.element, this.annotation, this.state) {
     tableName = _getTableName();
@@ -39,6 +41,14 @@ class TableBuilder {
     indexes = annotation.read('indexes').listValue.map((o) {
       return IndexBuilder(this, o);
     }).toList();
+
+    if (!annotation.read('insertRequestAnnotation').isNull) {
+      insertRequestAnnotation = '@' + annotation.read('insertRequestAnnotation').toSource();
+    }
+
+    if (!annotation.read('updateRequestAnnotation').isNull) {
+      updateRequestAnnotation = '@' + annotation.read('updateRequestAnnotation').toSource();
+    }
   }
 
   String _getTableName({bool singular = false}) {

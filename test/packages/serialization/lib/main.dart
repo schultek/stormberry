@@ -9,4 +9,7 @@ Future<void> main() async {
   var company = DefaultCompanyView(id: '01', member: PublicUserView(id: 'def', name: 'Susan'));
 
   print(company.toJson());
+
+  var request = UserUpdateRequest(id: 'abc', securityNumber: '007');
+  print(request.toJson());
 }

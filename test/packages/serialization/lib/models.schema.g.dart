@@ -147,6 +147,7 @@ ON CONFLICT ( "id" ) DO UPDATE SET "member_id" = EXCLUDED."member_id"
   }
 }
 
+@MappableClass()
 class UserInsertRequest {
   UserInsertRequest({this.companyId, required this.id, required this.name, required this.securityNumber});
   String? companyId;
@@ -161,6 +162,7 @@ class CompanyInsertRequest {
   String memberId;
 }
 
+@MappableClass()
 class UserUpdateRequest {
   UserUpdateRequest({this.companyId, required this.id, this.name, this.securityNumber});
   String? companyId;

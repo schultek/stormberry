@@ -120,6 +120,7 @@ class UpdateGenerator {
     }
 
     return '''
+      ${table.updateRequestAnnotation ?? ''}
       class $requestClassName {
         $requestClassName({${requestFields.map((f) => '${f.key.endsWith('?') ? '' : 'required '}this.${f.value}').join(', ')}});
         ${requestFields.map((f) => '${f.key} ${f.value};').join('\n')}

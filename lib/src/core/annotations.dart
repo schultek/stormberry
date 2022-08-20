@@ -4,9 +4,14 @@ import 'database.dart';
 class Model {
   final List<View> views;
   final List<TableIndex> indexes;
+  final dynamic insertRequestAnnotation;
+  final dynamic updateRequestAnnotation;
+
   const Model({
     this.views = const [],
     this.indexes = const [],
+    this.insertRequestAnnotation,
+    this.updateRequestAnnotation,
   });
 }
 

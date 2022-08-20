@@ -33,9 +33,13 @@ void main() {
 
       var lines = output.split('\n');
 
+      expect(lines, hasLength(5));
+
       expect(lines[0], equals('{"id":"abc","name":"Tom","securityNumber":"12345"}'));
       expect(lines[1], equals('DefaultUserView(id: abc, name: Alex, securityNumber: 12345)'));
       expect(lines[2], equals('{"id":"01","member":{"id":"def","name":"Susan"}}'));
+      expect(lines[3], equals('{"companyId":null,"id":"abc","name":null,"securityNumber":"007"}'));
+      expect(lines[4], equals(''));
 
     }, timeout: Timeout(Duration(seconds: 60)));
   });

@@ -8,6 +8,8 @@ import 'models.schema.g.dart';
 
 var _mappers = <BaseMapper>{
   // class mappers
+  UserInsertRequestMapper._(),
+  UserUpdateRequestMapper._(),
   DefaultUserViewMapper._(),
   PublicUserViewMapper._(),
   DefaultCompanyViewMapper._(),
@@ -17,6 +19,78 @@ var _mappers = <BaseMapper>{
 
 
 // === GENERATED CLASS MAPPERS AND EXTENSIONS ===
+
+class UserInsertRequestMapper extends BaseMapper<UserInsertRequest> {
+  UserInsertRequestMapper._();
+
+  @override Function get decoder => decode;
+  UserInsertRequest decode(dynamic v) => checked(v, (Map<String, dynamic> map) => fromMap(map));
+  UserInsertRequest fromMap(Map<String, dynamic> map) => UserInsertRequest(companyId: Mapper.i.$getOpt(map, 'companyId'), id: Mapper.i.$get(map, 'id'), name: Mapper.i.$get(map, 'name'), securityNumber: Mapper.i.$get(map, 'securityNumber'));
+
+  @override Function get encoder => (UserInsertRequest v) => encode(v);
+  dynamic encode(UserInsertRequest v) => toMap(v);
+  Map<String, dynamic> toMap(UserInsertRequest u) => {'companyId': Mapper.i.$enc(u.companyId, 'companyId'), 'id': Mapper.i.$enc(u.id, 'id'), 'name': Mapper.i.$enc(u.name, 'name'), 'securityNumber': Mapper.i.$enc(u.securityNumber, 'securityNumber')};
+
+  @override String stringify(UserInsertRequest self) => 'UserInsertRequest(companyId: ${Mapper.asString(self.companyId)}, id: ${Mapper.asString(self.id)}, name: ${Mapper.asString(self.name)}, securityNumber: ${Mapper.asString(self.securityNumber)})';
+  @override int hash(UserInsertRequest self) => Mapper.hash(self.companyId) ^ Mapper.hash(self.id) ^ Mapper.hash(self.name) ^ Mapper.hash(self.securityNumber);
+  @override bool equals(UserInsertRequest self, UserInsertRequest other) => Mapper.isEqual(self.companyId, other.companyId) && Mapper.isEqual(self.id, other.id) && Mapper.isEqual(self.name, other.name) && Mapper.isEqual(self.securityNumber, other.securityNumber);
+
+  @override Function get typeFactory => (f) => f<UserInsertRequest>();
+}
+
+extension UserInsertRequestMapperExtension  on UserInsertRequest {
+  String toJson() => Mapper.toJson(this);
+  Map<String, dynamic> toMap() => Mapper.toMap(this);
+  UserInsertRequestCopyWith<UserInsertRequest> get copyWith => UserInsertRequestCopyWith(this, $identity);
+}
+
+abstract class UserInsertRequestCopyWith<$R> {
+  factory UserInsertRequestCopyWith(UserInsertRequest value, Then<UserInsertRequest, $R> then) = _UserInsertRequestCopyWithImpl<$R>;
+  $R call({String? companyId, String? id, String? name, String? securityNumber});
+  $R apply(UserInsertRequest Function(UserInsertRequest) transform);
+}
+
+class _UserInsertRequestCopyWithImpl<$R> extends BaseCopyWith<UserInsertRequest, $R> implements UserInsertRequestCopyWith<$R> {
+  _UserInsertRequestCopyWithImpl(UserInsertRequest value, Then<UserInsertRequest, $R> then) : super(value, then);
+
+  @override $R call({Object? companyId = $none, String? id, String? name, String? securityNumber}) => $then(UserInsertRequest(companyId: or(companyId, $value.companyId), id: id ?? $value.id, name: name ?? $value.name, securityNumber: securityNumber ?? $value.securityNumber));
+}
+
+class UserUpdateRequestMapper extends BaseMapper<UserUpdateRequest> {
+  UserUpdateRequestMapper._();
+
+  @override Function get decoder => decode;
+  UserUpdateRequest decode(dynamic v) => checked(v, (Map<String, dynamic> map) => fromMap(map));
+  UserUpdateRequest fromMap(Map<String, dynamic> map) => UserUpdateRequest(companyId: Mapper.i.$getOpt(map, 'companyId'), id: Mapper.i.$get(map, 'id'), name: Mapper.i.$getOpt(map, 'name'), securityNumber: Mapper.i.$getOpt(map, 'securityNumber'));
+
+  @override Function get encoder => (UserUpdateRequest v) => encode(v);
+  dynamic encode(UserUpdateRequest v) => toMap(v);
+  Map<String, dynamic> toMap(UserUpdateRequest u) => {'companyId': Mapper.i.$enc(u.companyId, 'companyId'), 'id': Mapper.i.$enc(u.id, 'id'), 'name': Mapper.i.$enc(u.name, 'name'), 'securityNumber': Mapper.i.$enc(u.securityNumber, 'securityNumber')};
+
+  @override String stringify(UserUpdateRequest self) => 'UserUpdateRequest(companyId: ${Mapper.asString(self.companyId)}, id: ${Mapper.asString(self.id)}, name: ${Mapper.asString(self.name)}, securityNumber: ${Mapper.asString(self.securityNumber)})';
+  @override int hash(UserUpdateRequest self) => Mapper.hash(self.companyId) ^ Mapper.hash(self.id) ^ Mapper.hash(self.name) ^ Mapper.hash(self.securityNumber);
+  @override bool equals(UserUpdateRequest self, UserUpdateRequest other) => Mapper.isEqual(self.companyId, other.companyId) && Mapper.isEqual(self.id, other.id) && Mapper.isEqual(self.name, other.name) && Mapper.isEqual(self.securityNumber, other.securityNumber);
+
+  @override Function get typeFactory => (f) => f<UserUpdateRequest>();
+}
+
+extension UserUpdateRequestMapperExtension  on UserUpdateRequest {
+  String toJson() => Mapper.toJson(this);
+  Map<String, dynamic> toMap() => Mapper.toMap(this);
+  UserUpdateRequestCopyWith<UserUpdateRequest> get copyWith => UserUpdateRequestCopyWith(this, $identity);
+}
+
+abstract class UserUpdateRequestCopyWith<$R> {
+  factory UserUpdateRequestCopyWith(UserUpdateRequest value, Then<UserUpdateRequest, $R> then) = _UserUpdateRequestCopyWithImpl<$R>;
+  $R call({String? companyId, String? id, String? name, String? securityNumber});
+  $R apply(UserUpdateRequest Function(UserUpdateRequest) transform);
+}
+
+class _UserUpdateRequestCopyWithImpl<$R> extends BaseCopyWith<UserUpdateRequest, $R> implements UserUpdateRequestCopyWith<$R> {
+  _UserUpdateRequestCopyWithImpl(UserUpdateRequest value, Then<UserUpdateRequest, $R> then) : super(value, then);
+
+  @override $R call({Object? companyId = $none, String? id, Object? name = $none, Object? securityNumber = $none}) => $then(UserUpdateRequest(companyId: or(companyId, $value.companyId), id: id ?? $value.id, name: or(name, $value.name), securityNumber: or(securityNumber, $value.securityNumber)));
+}
 
 class DefaultUserViewMapper extends BaseMapper<DefaultUserView> {
   DefaultUserViewMapper._();

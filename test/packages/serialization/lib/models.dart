@@ -5,10 +5,14 @@ export 'package:dart_mappable/dart_mappable.dart';
 export 'models.schema.g.dart';
 export 'models.mapper.g.dart';
 
-@Model(views: [
-  View('Default', [], MappableClass()),
-  View('Public', [Field.hidden('securityNumber')], MappableClass()),
-])
+@Model(
+  views: [
+    View('Default', [], MappableClass()),
+    View('Public', [Field.hidden('securityNumber')], MappableClass()),
+  ],
+  insertRequestAnnotation: MappableClass(),
+  updateRequestAnnotation: MappableClass(),
+)
 abstract class User {
   @PrimaryKey()
   String get id;
