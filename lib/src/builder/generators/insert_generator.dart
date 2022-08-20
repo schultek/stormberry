@@ -94,20 +94,20 @@ class InsertGenerator {
         var conflictColumns = table.columns
             .whereType<NamedColumnBuilder>()
             .where((c) => c != table.primaryKeyColumn && (c is! FieldColumnBuilder || !c.isAutoIncrement));
-        onConflictClause = '\nON CONFLICT ( "${table.primaryKeyColumn!.columnName}" ) DO UPDATE SET '
-            '${conflictColumns.map((c) => '"${c.columnName}" = EXCLUDED."${c.columnName}"').join(', ')}';
+        onConflictClause = '\n\'ON CONFLICT ( "${table.primaryKeyColumn!.columnName}" ) DO UPDATE SET '
+            '${conflictColumns.map((c) => '"${c.columnName}" = EXCLUDED."${c.columnName}"').join(', ')}\'';
       }
     } else if (table.columns.where((c) => c is ForeignColumnBuilder && c.isUnique).length == 1) {
       var foreignColumn = table.columns.whereType<ForeignColumnBuilder>().first;
       var conflictColumns = table.columns.whereType<FieldColumnBuilder>().where((c) => !c.isAutoIncrement);
-      onConflictClause = '\nON CONFLICT ( "${foreignColumn.columnName}" ) DO UPDATE SET '
-          '${conflictColumns.map((c) => '"${c.columnName}" = EXCLUDED."${c.columnName}"').join(', ')}';
+      onConflictClause = '\n\'ON CONFLICT ( "${foreignColumn.columnName}" ) DO UPDATE SET '
+          '${conflictColumns.map((c) => '"${c.columnName}" = EXCLUDED."${c.columnName}"').join(', ')}\'';
     } else if (table.columns.where((c) => c is ForeignColumnBuilder && c.isUnique).length > 1) {
       var conflictColumns = table.columns.whereType<FieldColumnBuilder>().where((c) => !c.isAutoIncrement);
       conflictKeyStatement =
           'var conflictKey = requests.isEmpty ? null : ${table.columns.whereType<ForeignColumnBuilder>().map((c) => 'requests.first.${c.paramName} != null ? ${c.isUnique ? "'${c.columnName}'" : 'mull'} : ').join()} null;';
-      onConflictClause = "\n\${conflictKey != null ? 'ON CONFLICT (\"\$conflictKey\" ) DO UPDATE SET "
-          "${conflictColumns.map((c) => '"${c.columnName}" = EXCLUDED."${c.columnName}"').join(', ')}' : ''}";
+      onConflictClause = "\n'\${conflictKey != null ? 'ON CONFLICT (\"\$conflictKey\" ) DO UPDATE SET "
+          "${conflictColumns.map((c) => '"${c.columnName}" = EXCLUDED."${c.columnName}"').join(', ')}' : ''}'";
     }
 
     var insertColumns = table.columns.whereType<NamedColumnBuilder>();
@@ -118,10 +118,10 @@ class InsertGenerator {
         if (requests.isEmpty) return${keyReturnStatement != null ? ' []' : ''};
         ${autoIncrementStatement ?? ''}
         ${conflictKeyStatement ?? ''}
-        await db.query("""
-          INSERT INTO "${table.tableName}" ( ${insertColumns.map((c) => '"${c.columnName}"').join(', ')} )
-          VALUES \${requests.map((r) => '( ${insertColumns.map((c) => c is FieldColumnBuilder && c.isAutoIncrement ? '\${registry.encode(autoIncrements[requests.indexOf(r)][\'${c.columnName}\'])}' : '\${registry.encode(r.${c.paramName})}').join(', ')} )').join(', ')}${onConflictClause ?? ''}
-        """);
+        await db.query(
+          'INSERT INTO "${table.tableName}" ( ${insertColumns.map((c) => '"${c.columnName}"').join(', ')} )\\n'
+          'VALUES \${requests.map((r) => '( ${insertColumns.map((c) => c is FieldColumnBuilder && c.isAutoIncrement ? '\${registry.encode(autoIncrements[requests.indexOf(r)][\'${c.columnName}\'])}' : '\${registry.encode(r.${c.paramName})}').join(', ')} )').join(', ')}\\n'${onConflictClause ?? ''},
+        );
         ${deepInserts.isNotEmpty ? deepInserts.join() : ''}
         ${keyReturnStatement ?? ''}
       }

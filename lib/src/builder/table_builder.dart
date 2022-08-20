@@ -38,6 +38,10 @@ class TableBuilder {
       return ViewBuilder(this, o);
     }).toList();
 
+    if (views.isEmpty) {
+      views.add(ViewBuilder(this, null));
+    }
+
     indexes = annotation.read('indexes').listValue.map((o) {
       return IndexBuilder(this, o);
     }).toList();

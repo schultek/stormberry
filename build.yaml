@@ -18,3 +18,9 @@ post_process_builders:
   output_cleanup:
     import: "package:stormberry/builder.dart"
     builder_factory: "outputCleanup"
+targets:
+  $default:
+    builders:
+      stormberry:
+        generate_for:
+          - test/generation_test.dart

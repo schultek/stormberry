@@ -9,10 +9,10 @@ class DeleteGenerator {
       @override
       Future<void> delete(Database db, List<$keyType> keys) async {
         if (keys.isEmpty) return;
-        await db.query("""
-          DELETE FROM "${table.tableName}"
-          WHERE "${table.tableName}"."${table.primaryKeyColumn!.columnName}" IN ( \${keys.map((k) => registry.encode(k)).join(',')} )
-        """);
+        await db.query(
+          'DELETE FROM "${table.tableName}"\\n'
+          'WHERE "${table.tableName}"."${table.primaryKeyColumn!.columnName}" IN ( \${keys.map((k) => registry.encode(k)).join(',')} )',
+        );
       }
     ''';
   }

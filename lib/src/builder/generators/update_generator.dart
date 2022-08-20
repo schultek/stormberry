@@ -69,13 +69,13 @@ class UpdateGenerator {
         @override
         Future<void> update(Database db, List<${table.element.name}UpdateRequest> requests) async {
           if (requests.isEmpty) return;
-          await db.query("""
-            UPDATE "${table.tableName}"
-            SET ${setColumns.map((c) => '"${c.columnName}" = COALESCE(UPDATED."${c.columnName}"::${c.sqlType}, "${table.tableName}"."${c.columnName}")').join(', ')}
-            FROM ( VALUES \${requests.map((r) => '( ${updateColumns.map((c) => '\${registry.encode(r.${c.paramName})}').join(', ')} )').join(', ')} )
-            AS UPDATED(${updateColumns.map((c) => '"${c.columnName}"').join(', ')})
-            WHERE ${hasPrimaryKey ? '"${table.tableName}"."${table.primaryKeyColumn!.columnName}" = UPDATED."${table.primaryKeyColumn!.columnName}"' : table.columns.whereType<ForeignColumnBuilder>().map((c) => '"${table.tableName}"."${c.columnName}" = UPDATED."${c.columnName}"').join(' AND ')}
-          """);
+          await db.query(
+            'UPDATE "${table.tableName}"\\n'
+            'SET ${setColumns.map((c) => '"${c.columnName}" = COALESCE(UPDATED."${c.columnName}"::${c.sqlType}, "${table.tableName}"."${c.columnName}")').join(', ')}\\n'
+            'FROM ( VALUES \${requests.map((r) => '( ${updateColumns.map((c) => '\${registry.encode(r.${c.paramName})}').join(', ')} )').join(', ')} )\\n'
+            'AS UPDATED(${updateColumns.map((c) => '"${c.columnName}"').join(', ')})\\n'
+            'WHERE ${hasPrimaryKey ? '"${table.tableName}"."${table.primaryKeyColumn!.columnName}" = UPDATED."${table.primaryKeyColumn!.columnName}"' : table.columns.whereType<ForeignColumnBuilder>().map((c) => '"${table.tableName}"."${c.columnName}" = UPDATED."${c.columnName}"').join(' AND ')}',
+          );
           ${deepUpdates.isNotEmpty ? deepUpdates.join() : ''}
         }
       ''';
