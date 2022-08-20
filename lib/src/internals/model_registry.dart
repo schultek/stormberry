@@ -54,17 +54,15 @@ class ModelRegistry {
   ModelRegistry(Map<Type, TypeConverter> converters) : converters = {..._baseConverters, ...converters};
 
   T decode<T>(dynamic value) {
-    if (converters[T] != null) {
+    if (value is T) {
+      return value;
+    } else if (converters[T] != null) {
       return converters[T]!.decode(value) as T;
     } else {
-      try {
-        return value as T;
-      } catch (_) {
-        throw ConverterException(
-          'Cannot decode value $value of type ${value.runtimeType} to type $T: Unknown type.\n'
-          'Did you forgot to include the class or register a custom type converter?',
-        );
-      }
+      throw ConverterException(
+        'Cannot decode value $value of type ${value.runtimeType} to type $T: Unknown type.\n'
+        'Did you forgot to include the class or register a custom type converter?',
+      );
     }
   }
 
