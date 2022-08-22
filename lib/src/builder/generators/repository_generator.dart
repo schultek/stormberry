@@ -10,7 +10,7 @@ class RepositoryGenerator {
   String generateRepositories(BuilderState state) {
     return '''
     extension Repositories on Database {
-      ${state.builders.values.map((b) => '  ${b.element.name}Repository get ${CaseStyle.camelCase.transform(b.tableName)} => ${b.element.name}Repository._(this);\n').join()}
+      ${state.builders.values.map((b) => '  ${b.element.name}Repository get ${CaseStyle.camelCase.transform(b.className)} => ${b.element.name}Repository._(this);\n').join()}
     }
     
     final registry = ModelRegistry({
