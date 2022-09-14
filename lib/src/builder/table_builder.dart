@@ -20,6 +20,7 @@ class TableBuilder {
   ConstantReader annotation;
   BuilderState state;
 
+  late String className;
   late String tableName;
   late FieldElement? primaryKeyParameter;
   late List<ViewBuilder> views;
@@ -29,6 +30,7 @@ class TableBuilder {
 
   TableBuilder(this.element, this.annotation, this.state) {
     tableName = _getTableName();
+    className = _getClassName();
 
     primaryKeyParameter = element.fields
         .where((p) => primaryKeyChecker.hasAnnotationOf(p) || primaryKeyChecker.hasAnnotationOf(p.getter ?? p))
@@ -56,6 +58,14 @@ class TableBuilder {
   }
 
   String _getTableName({bool singular = false}) {
+    if (!annotation.read('tableName').isNull) {
+      return annotation.read('tableName').stringValue;
+    }
+
+    return _getClassName(singular: singular);
+  }
+
+  String _getClassName({bool singular = false}) {
     var name = element.name;
     if (!singular) {
       if (element.name.endsWith('s')) {
