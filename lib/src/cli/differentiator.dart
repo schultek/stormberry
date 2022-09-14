@@ -1,5 +1,5 @@
 import 'package:collection/collection.dart';
-import 'package:stormberry/stormberry.dart';
+import '../../stormberry.dart';
 
 import 'inspector.dart';
 import 'schema.dart';
@@ -162,8 +162,7 @@ class TableSchemaDiff {
 
   TableSchemaDiff(this.name);
 
-  bool get hasChanges =>
-      columns.hasChanges() || constraints.hasChanges() || indexes.hasChanges();
+  bool get hasChanges => columns.hasChanges() || constraints.hasChanges() || indexes.hasChanges();
 }
 
 class Diff<T, U> {

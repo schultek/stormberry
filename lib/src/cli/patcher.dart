@@ -1,4 +1,4 @@
-import 'package:stormberry/stormberry.dart';
+import '../../stormberry.dart';
 
 import 'differentiator.dart';
 import 'schema.dart';
