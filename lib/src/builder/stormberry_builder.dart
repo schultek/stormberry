@@ -76,7 +76,7 @@ class StormberryBuilder implements Builder {
       }
 
       for (var element in typeConverters) {
-        var typeClassName = (element.element as ClassElement).thisType.superclass!.typeArguments[0].element2!.name!;
+        var typeClassName = (element.element as ClassElement).thisType.superclass!.typeArguments[0].element!.name!;
         var converterClassName = element.element.name!;
         var sqlType = element.annotation.objectValue.getField('type')?.toStringValue();
         state.typeConverters[typeClassName] = MapEntry(converterClassName, sqlType);

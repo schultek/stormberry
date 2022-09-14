@@ -31,9 +31,7 @@ class _PrimitiveTypeConverter<T> implements TypeConverter<T> {
 class _DateTimeConverter implements TypeConverter<DateTime> {
   @override
   DateTime decode(dynamic d) {
-    if (d is DateTime) {
-      return d;
-    } else if (d is String) {
+    if (d is String) {
       return DateTime.parse(d);
     } else if (d is num) {
       return DateTime.fromMillisecondsSinceEpoch(d.round());

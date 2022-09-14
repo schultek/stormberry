@@ -45,9 +45,9 @@ String getSqlType(DartType type) {
     return 'float8';
   } else if (type.isDartCoreBool) {
     return 'bool';
-  } else if (type.element2?.name == 'DateTime') {
+  } else if (type.element?.name == 'DateTime') {
     return 'timestamp';
-  } else if (type.element2?.name == 'PgPoint') {
+  } else if (type.element?.name == 'PgPoint') {
     return 'point';
   } else {
     return 'jsonb';

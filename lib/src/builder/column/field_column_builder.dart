@@ -45,7 +45,7 @@ class FieldColumnBuilder extends ColumnBuilder with NamedColumnBuilder {
       return 'serial';
     }
     var type = isList ? '_' : '';
-    var convertedType = state.typeConverters[dataType.element2?.name]?.value;
+    var convertedType = state.typeConverters[dataType.element?.name]?.value;
     if (convertedType != null) {
       type += convertedType;
     } else {
