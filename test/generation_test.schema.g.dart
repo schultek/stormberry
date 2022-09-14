@@ -6,6 +6,7 @@ import 'generation_test.dart';
 extension Repositories on Database {
   UserRepository get users => UserRepository._(this);
   AccountRepository get accounts => AccountRepository._(this);
+  LegacyAccountRepository get customTableName => LegacyAccountRepository._(this);
 }
 
 final registry = ModelRegistry({});
@@ -136,6 +137,69 @@ class _AccountRepository extends BaseRepository
   }
 }
 
+abstract class LegacyAccountRepository
+    implements
+        ModelRepository,
+        ModelRepositoryInsert<LegacyAccountInsertRequest>,
+        ModelRepositoryUpdate<LegacyAccountUpdateRequest>,
+        ModelRepositoryDelete<String> {
+  factory LegacyAccountRepository._(Database db) = _LegacyAccountRepository;
+
+  Future<LegacyAccount?> queryLegacyAccount(String id);
+  Future<List<LegacyAccount>> queryLegacyAccounts([QueryParams? params]);
+}
+
+class _LegacyAccountRepository extends BaseRepository
+    with
+        RepositoryInsertMixin<LegacyAccountInsertRequest>,
+        RepositoryUpdateMixin<LegacyAccountUpdateRequest>,
+        RepositoryDeleteMixin<String>
+    implements LegacyAccountRepository {
+  _LegacyAccountRepository(Database db) : super(db: db);
+
+  @override
+  Future<LegacyAccount?> queryLegacyAccount(String id) {
+    return queryOne(id, LegacyAccountQueryable());
+  }
+
+  @override
+  Future<List<LegacyAccount>> queryLegacyAccounts([QueryParams? params]) {
+    return queryMany(LegacyAccountQueryable(), params);
+  }
+
+  @override
+  Future<void> insert(Database db, List<LegacyAccountInsertRequest> requests) async {
+    if (requests.isEmpty) return;
+
+    await db.query(
+      'INSERT INTO "customTableName" ( "id" )\n'
+      'VALUES ${requests.map((r) => '( ${registry.encode(r.id)} )').join(', ')}\n'
+      'ON CONFLICT ( "id" ) DO UPDATE SET ',
+    );
+  }
+
+  @override
+  Future<void> update(Database db, List<LegacyAccountUpdateRequest> requests) async {
+    if (requests.isEmpty) return;
+    await db.query(
+      'UPDATE "customTableName"\n'
+      'SET \n'
+      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.id)} )').join(', ')} )\n'
+      'AS UPDATED("id")\n'
+      'WHERE "customTableName"."id" = UPDATED."id"',
+    );
+  }
+
+  @override
+  Future<void> delete(Database db, List<String> keys) async {
+    if (keys.isEmpty) return;
+    await db.query(
+      'DELETE FROM "customTableName"\n'
+      'WHERE "customTableName"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )',
+    );
+  }
+}
+
 class UserInsertRequest {
   UserInsertRequest({required this.id, required this.name});
   String id;
@@ -147,6 +211,11 @@ class AccountInsertRequest {
   String id;
 }
 
+class LegacyAccountInsertRequest {
+  LegacyAccountInsertRequest({required this.id});
+  String id;
+}
+
 class UserUpdateRequest {
   UserUpdateRequest({required this.id, this.name});
   String id;
@@ -155,6 +224,11 @@ class UserUpdateRequest {
 
 class AccountUpdateRequest {
   AccountUpdateRequest({required this.id});
+  String id;
+}
+
+class LegacyAccountUpdateRequest {
+  LegacyAccountUpdateRequest({required this.id});
   String id;
 }
 
@@ -204,5 +278,29 @@ class SuperSecretAccountViewQueryable extends KeyedViewQueryable<SuperSecretAcco
 class SuperSecretAccountView {
   SuperSecretAccountView({required this.id});
 
+  final String id;
+}
+
+class LegacyAccountQueryable extends KeyedViewQueryable<LegacyAccount, String> {
+  @override
+  String get keyName => 'id';
+
+  @override
+  String encodeKey(String key) => registry.encode(key);
+
+  @override
+  String get tableName => 'custom_table_name_view';
+
+  @override
+  String get tableAlias => 'customTableName';
+
+  @override
+  LegacyAccount decode(TypedMap map) => LegacyAccountView(id: map.get('id', registry.decode));
+}
+
+class LegacyAccountView implements LegacyAccount {
+  LegacyAccountView({required this.id});
+
+  @override
   final String id;
 }
