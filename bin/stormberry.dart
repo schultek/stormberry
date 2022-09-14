@@ -62,7 +62,7 @@ Future<void> main(List<String> args) async {
       file.absolute.uri,
       [],
       port.sendPort,
-      packageConfig: Uri.parse('.packages'),
+      packageConfig: Uri.parse('.dart_tool/package_config.json'),
     );
 
     var schemaMap = jsonDecode(await port.first as String);
