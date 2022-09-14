@@ -39,7 +39,7 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
         }),
         ...table.columns.modified.expand((c) sync* {
           if (c.prev.type != 'serial' && c.newly.type == 'serial') {
-            yield 'ALTER COLUMN \"${c.prev.name}\" SET DATA TYPE int8 USING ${c.newly.name}::int8';
+            yield 'ALTER COLUMN "${c.prev.name}" SET DATA TYPE int8 USING ${c.newly.name}::int8';
             yield "ALTER COLUMN \"${c.prev.name}\" SET DEFAULT nextval('${table.name}_${c.newly.name}_seq')";
           } else {
             var update = c.prev.type != c.newly.type

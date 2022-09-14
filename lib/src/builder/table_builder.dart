@@ -63,7 +63,7 @@ class TableBuilder {
 
   void prepareColumns() {
     final allFields =
-        element.fields.followedBy(element.allSupertypes.expand((t) => t.isDartCoreObject ? [] : t.element.fields));
+        element.fields.followedBy(element.allSupertypes.expand((t) => t.isDartCoreObject ? [] : t.element2.fields));
 
     for (var param in allFields) {
       if (columns.any((c) => c.parameter == param)) {
@@ -73,10 +73,10 @@ class TableBuilder {
       var isList = param.type.isDartCoreList;
       var dataType = isList ? (param.type as InterfaceType).typeArguments[0] : param.type;
 
-      if (!state.builders.containsKey(dataType.element)) {
+      if (!state.builders.containsKey(dataType.element2)) {
         columns.add(FieldColumnBuilder(param, this, state));
       } else {
-        var otherBuilder = state.builders[dataType.element]!;
+        var otherBuilder = state.builders[dataType.element2]!;
 
         var selfHasKey = primaryKeyParameter != null;
         var otherHasKey = otherBuilder.primaryKeyParameter != null;
@@ -139,7 +139,7 @@ class TableBuilder {
     // TODO add binding
     return element.fields.where((p) {
       var pType = p.type.isDartCoreList ? (p.type as InterfaceType).typeArguments[0] : p.type;
-      return pType.element == param.enclosingElement;
+      return pType.element2 == param.enclosingElement3;
     }).firstOrNull;
   }
 

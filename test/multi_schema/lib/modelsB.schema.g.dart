@@ -28,10 +28,10 @@ class _ModelBRepository extends BaseRepository
   @override
   Future<void> insert(Database db, List<ModelBInsertRequest> requests) async {
     if (requests.isEmpty) return;
+
     await db.query("""
           INSERT INTO "model_bs" ( "data" )
           VALUES ${requests.map((r) => '( ${registry.encode(r.data)} )').join(', ')}
-          
         """);
   }
 
