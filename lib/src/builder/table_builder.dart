@@ -133,7 +133,7 @@ class TableBuilder {
 
           ReferencingColumnBuilder otherColumn;
 
-          if (selfHasKey && (otherParam == null || !otherParam.type.isDartCoreList)) {
+          if (selfHasKey && otherParam != null && !otherParam.type.isDartCoreList) {
             otherColumn = ForeignColumnBuilder(otherParam, this, otherBuilder, state);
             var insertIndex = otherBuilder.columns.lastIndexWhere((c) => c is ForeignColumnBuilder) + 1;
             otherBuilder.columns.insert(insertIndex, otherColumn);

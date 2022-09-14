@@ -6,6 +6,7 @@ abstract class User {
   String get id;
 
   String get name;
+  Account get account;
 }
 
 @Model(views: [View('SuperSecret')])

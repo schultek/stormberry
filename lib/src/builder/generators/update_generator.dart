@@ -105,7 +105,7 @@ class UpdateGenerator {
                 (column == table.primaryKeyColumn ? '' : '?'),
             column.paramName));
       } else if (column is ForeignColumnBuilder) {
-        var fieldNullSuffix = column.isNullable ? '?' : '';
+        var fieldNullSuffix = column == table.primaryKeyColumn ? '' : '?';
         String fieldType;
         if (column.linkBuilder.primaryKeyColumn == null) {
           fieldType = column.linkBuilder.element.name;

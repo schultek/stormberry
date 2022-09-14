@@ -45,9 +45,9 @@ class _UserRepository extends BaseRepository
     if (requests.isEmpty) return;
 
     await db.query(
-      'INSERT INTO "users" ( "id", "name" )\n'
-      'VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)} )').join(', ')}\n'
-      'ON CONFLICT ( "id" ) DO UPDATE SET "name" = EXCLUDED."name"',
+      'INSERT INTO "users" ( "id", "name", "account_id" )\n'
+      'VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.accountId)} )').join(', ')}\n'
+      'ON CONFLICT ( "id" ) DO UPDATE SET "name" = EXCLUDED."name", "account_id" = EXCLUDED."account_id"',
     );
   }
 
@@ -56,9 +56,9 @@ class _UserRepository extends BaseRepository
     if (requests.isEmpty) return;
     await db.query(
       'UPDATE "users"\n'
-      'SET "name" = COALESCE(UPDATED."name"::text, "users"."name")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)} )').join(', ')} )\n'
-      'AS UPDATED("id", "name")\n'
+      'SET "name" = COALESCE(UPDATED."name"::text, "users"."name"), "account_id" = COALESCE(UPDATED."account_id"::text, "users"."account_id")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.accountId)} )').join(', ')} )\n'
+      'AS UPDATED("id", "name", "account_id")\n'
       'WHERE "users"."id" = UPDATED."id"',
     );
   }
@@ -137,9 +137,10 @@ class _AccountRepository extends BaseRepository
 }
 
 class UserInsertRequest {
-  UserInsertRequest({required this.id, required this.name});
+  UserInsertRequest({required this.id, required this.name, required this.accountId});
   String id;
   String name;
+  String accountId;
 }
 
 class AccountInsertRequest {
@@ -148,9 +149,10 @@ class AccountInsertRequest {
 }
 
 class UserUpdateRequest {
-  UserUpdateRequest({required this.id, this.name});
+  UserUpdateRequest({required this.id, this.name, this.accountId});
   String id;
   String? name;
+  String? accountId;
 }
 
 class AccountUpdateRequest {
@@ -172,16 +174,21 @@ class UserQueryable extends KeyedViewQueryable<User, String> {
   String get tableAlias => 'users';
 
   @override
-  User decode(TypedMap map) => UserView(id: map.get('id', registry.decode), name: map.get('name', registry.decode));
+  User decode(TypedMap map) => UserView(
+      id: map.get('id', registry.decode),
+      name: map.get('name', registry.decode),
+      account: map.get('account', AccountQueryable().decoder));
 }
 
 class UserView implements User {
-  UserView({required this.id, required this.name});
+  UserView({required this.id, required this.name, required this.account});
 
   @override
   final String id;
   @override
   final String name;
+  @override
+  final Account account;
 }
 
 class SuperSecretAccountViewQueryable extends KeyedViewQueryable<SuperSecretAccountView, String> {
@@ -204,5 +211,29 @@ class SuperSecretAccountViewQueryable extends KeyedViewQueryable<SuperSecretAcco
 class SuperSecretAccountView {
   SuperSecretAccountView({required this.id});
 
+  final String id;
+}
+
+class AccountQueryable extends KeyedViewQueryable<Account, String> {
+  @override
+  String get keyName => 'id';
+
+  @override
+  String encodeKey(String key) => registry.encode(key);
+
+  @override
+  String get tableName => 'accounts_view';
+
+  @override
+  String get tableAlias => 'accounts';
+
+  @override
+  Account decode(TypedMap map) => AccountView(id: map.get('id', registry.decode));
+}
+
+class AccountView implements Account {
+  AccountView({required this.id});
+
+  @override
   final String id;
 }
