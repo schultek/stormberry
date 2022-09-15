@@ -20,13 +20,17 @@ class TableBuilder {
   ConstantReader annotation;
   BuilderState state;
 
+  late String className;
   late String tableName;
   late FieldElement? primaryKeyParameter;
   late List<ViewBuilder> views;
   late List<IndexBuilder> indexes;
+  String? insertRequestAnnotation;
+  String? updateRequestAnnotation;
 
   TableBuilder(this.element, this.annotation, this.state) {
     tableName = _getTableName();
+    className = _getClassName();
 
     primaryKeyParameter = element.fields
         .where((p) => primaryKeyChecker.hasAnnotationOf(p) || primaryKeyChecker.hasAnnotationOf(p.getter ?? p))
@@ -36,12 +40,32 @@ class TableBuilder {
       return ViewBuilder(this, o);
     }).toList();
 
+    if (views.isEmpty) {
+      views.add(ViewBuilder(this, null));
+    }
+
     indexes = annotation.read('indexes').listValue.map((o) {
       return IndexBuilder(this, o);
     }).toList();
+
+    if (!annotation.read('insertRequestAnnotation').isNull) {
+      insertRequestAnnotation = '@' + annotation.read('insertRequestAnnotation').toSource();
+    }
+
+    if (!annotation.read('updateRequestAnnotation').isNull) {
+      updateRequestAnnotation = '@' + annotation.read('updateRequestAnnotation').toSource();
+    }
   }
 
   String _getTableName({bool singular = false}) {
+    if (!annotation.read('tableName').isNull) {
+      return annotation.read('tableName').stringValue;
+    }
+
+    return _getClassName(singular: singular);
+  }
+
+  String _getClassName({bool singular = false}) {
     var name = element.name;
     if (!singular) {
       if (element.name.endsWith('s')) {
@@ -119,7 +143,7 @@ class TableBuilder {
 
           ReferencingColumnBuilder otherColumn;
 
-          if (selfHasKey && (otherParam == null || !otherParam.type.isDartCoreList)) {
+          if (selfHasKey && otherParam != null && !otherParam.type.isDartCoreList) {
             otherColumn = ForeignColumnBuilder(otherParam, this, otherBuilder, state);
             var insertIndex = otherBuilder.columns.lastIndexWhere((c) => c is ForeignColumnBuilder) + 1;
             otherBuilder.columns.insert(insertIndex, otherColumn);

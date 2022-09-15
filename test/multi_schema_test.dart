@@ -8,15 +8,15 @@ void main() {
       var proc = await Process.start(
         'dart',
         'run build_runner build --delete-conflicting-outputs'.split(' '),
-        workingDirectory: 'test/multi_schema',
+        workingDirectory: 'test/packages/multi_schema',
       );
 
       proc.stdout.listen((e) => stdout.add(e));
 
       expect(await proc.exitCode, equals(0));
 
-      var schemaA = File('test/multi_schema/lib/modelsA.schema.g.dart');
-      var schemaB = File('test/multi_schema/lib/modelsB.schema.g.dart');
+      var schemaA = File('test/packages/multi_schema/lib/modelsA.schema.g.dart');
+      var schemaB = File('test/packages/multi_schema/lib/modelsB.schema.g.dart');
 
       expect(schemaA.existsSync(), equals(true));
       expect(schemaB.existsSync(), equals(true));
@@ -25,8 +25,8 @@ void main() {
     test('Migrating schemas', () async {
       var proc = await Process.start(
         'dart',
-        'run stormberry --apply-changes'.split(' '),
-        workingDirectory: 'test/multi_schema',
+        'run stormberry migrate --apply-changes'.split(' '),
+        workingDirectory: 'test/packages/multi_schema',
         environment: {
           'DB_HOST': 'localhost',
           'DB_PORT': '2222',

@@ -70,14 +70,12 @@ class TableSchema {
   final String name;
   final Map<String, ColumnSchema> columns;
   final List<TableConstraint> constraints;
-  final List<TableTrigger> triggers;
   final List<TableIndex> indexes;
 
   const TableSchema(
     this.name, {
     this.columns = const {},
     this.constraints = const [],
-    this.triggers = const [],
     this.indexes = const [],
   });
 
@@ -85,7 +83,6 @@ class TableSchema {
         name,
         columns: {...columns},
         constraints: [...constraints],
-        triggers: [...triggers],
         indexes: [...indexes],
       );
 }
@@ -139,9 +136,7 @@ class PrimaryKeyConstraint extends TableConstraint {
 
   @override
   String toString() {
-    return '''
-      PRIMARY KEY ( "$column" )
-    ''';
+    return 'PRIMARY KEY ( "$column" )';
   }
 
   @override
@@ -167,11 +162,9 @@ class ForeignKeyConstraint extends TableConstraint {
 
   @override
   String toString() {
-    return '''
-      FOREIGN KEY ( "$srcColumn" ) 
-      REFERENCES $table ( "$column" ) 
-      ON DELETE ${_ac(onDelete)} ON UPDATE ${_ac(onUpdate)}
-    ''';
+    return 'FOREIGN KEY ( "$srcColumn" ) '
+        'REFERENCES $table ( "$column" ) '
+        'ON DELETE ${_ac(onDelete)} ON UPDATE ${_ac(onUpdate)}';
   }
 
   String _ac(ForeignKeyAction action) {
@@ -203,9 +196,7 @@ class UniqueConstraint extends TableConstraint {
 
   @override
   String toString() {
-    return '''
-      UNIQUE ( "$column" )
-    ''';
+    return 'UNIQUE ( "$column" )';
   }
 
   @override
@@ -250,11 +241,9 @@ extension TableIndexParser on TableIndex {
   }
 
   String statement(String tableName) {
-    return """
-      ${unique ? 'UNIQUE' : ''} INDEX "__$name" 
-      ON "$tableName" USING ${algorithm.toString().split(".")[1]} ( $joinedColumns ) 
-      ${condition != null ? 'WHERE $condition' : ''}
-    """;
+    return '${unique ? 'UNIQUE' : ''} INDEX "__$name" '
+        'ON "$tableName" USING ${algorithm.toString().split(".")[1]} ( $joinedColumns ) '
+        '${condition != null ? 'WHERE $condition' : ''}';
   }
 }
 

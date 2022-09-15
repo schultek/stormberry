@@ -61,6 +61,8 @@ class StormberryBuilder implements Builder {
   Map<String, String> generate(List<LibraryElement> libraries, BuildStep buildStep) {
     BuilderState state = BuilderState(options);
 
+    state.imports.add(Uri.parse('package:stormberry/internals.dart'));
+
     for (var library in libraries) {
       if (library.isInSdk) {
         continue;
@@ -99,8 +101,7 @@ class StormberryBuilder implements Builder {
 
     map['.output.g.dart'] = DartFormatter(pageWidth: 120).format('''
       // ignore_for_file: prefer_relative_imports
-      import 'package:stormberry/internals.dart';
-      ${state.imports.map((i) => "import '$i';").join('\n')}
+      ${writeImports(state.imports, buildStep.inputId)}
       ${RepositoryGenerator().generateRepositories(state)}
     ''');
 

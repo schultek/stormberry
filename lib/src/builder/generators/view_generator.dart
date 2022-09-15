@@ -9,27 +9,26 @@ class ViewGenerator {
     var str = StringBuffer();
 
     for (var view in table.views) {
-      var viewClassName = view.className;
       var viewName = view.viewName;
 
       if (table.primaryKeyColumn != null) {
         var paramType = table.primaryKeyColumn!.dartType;
         var paramName = table.primaryKeyColumn!.paramName;
-        var signature = 'Future<$viewClassName?> query$viewName($paramType $paramName)';
+        var signature = 'Future<${view.entityName}?> query$viewName($paramType $paramName)';
         if (abstract) {
           str.writeln('$signature;');
         } else {
           str.writeln(
-            '@override $signature {\nreturn queryOne($paramName, ${view.className}Queryable());\n}',
+            '@override $signature {\nreturn queryOne($paramName, ${view.entityName}Queryable());\n}',
           );
         }
       }
 
-      var signature = 'Future<List<$viewClassName>> query${viewName}s([QueryParams? params])';
+      var signature = 'Future<List<${view.entityName}>> query${viewName}s([QueryParams? params])';
       if (abstract) {
         str.writeln('$signature;');
       } else {
-        str.writeln('@override $signature {\nreturn queryMany(${view.className}Queryable(), params);\n}');
+        str.writeln('@override $signature {\nreturn queryMany(${view.entityName}Queryable(), params);\n}');
       }
     }
 
@@ -66,6 +65,7 @@ class ViewGenerator {
         ${view.entityName} decode(TypedMap map) => ${view.className}(${view.columns.map((c) => '${c.paramName}: ${_getInitializer(c)}').join(',')});
       }
       
+      ${view.targetAnnotation ?? ''}
       class ${view.className}${implementsBase ? ' implements ${view.table.element.name}' : ''} {
         ${view.className}(${view.columns.isEmpty ? '' : '{${view.columns.map((c) => '${c.isNullable ? '' : 'required '}this.${c.paramName}').join(', ')}}'});
         

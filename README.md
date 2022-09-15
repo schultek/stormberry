@@ -259,6 +259,25 @@ As mentioned before, when you have two-way relations in your models you must use
 any cyclic dependencies. `stormberry` can't resolve them for you, however it will warn you if it
 detects any when trying to [migrate your database schema](#database-migration-tool).
 
+### Serialization
+
+When using views, you may need serialization capabilities to send them through an api. While stormberry does
+not do serialization by itself, it enables you to use your favorite serialization package through custom annotations.
+
+When specifying a view, add a target annotation to its constructor:
+
+```dart
+@Model(
+  views: [
+    View('SomeView', [/*field modififers*/], MappableClass())
+  ]
+)
+```
+
+This uses the '@MappableClass()' annotation from the [`dart_mappable`](https://pub.dev/packages/dart_mappable) package, 
+which will be placed on the resulting `SomeView` entity class. Check out [this example](https://github.com/schultek/stormberry/tree/develop/test/packages/serialization) to see
+how this can be used to generate serialization extensions for these classes.
+
 ## Indexes
 
 As an advanced configuration you can specify indexes on your table using the `TableIndex` class. 
@@ -373,7 +392,7 @@ await db.users.updateOne(UserUpdateRequest(id: 'abc', name: 'Tom'));
 You can specify a custom query with custom sql by extending the `Query<T, U>` class. 
 You will then need to implement the `Future<T> apply(Database db, U params)` method.
 
-Additionally to the model tabels, you can query the model views to automatically get all resolved 
+Additionally to the model tables, you can query the model views to automatically get all resolved 
 relations without needing to do manual joins. Table names are always plural, e.g. `users` and view 
 names are in the format as `complete_user_view`.
 
@@ -389,7 +408,7 @@ Stormberry comes with a database migration tool, to create or update the schema 
 
 To use this run the following command from the root folder of your project.
 ```
-dart pub run stormberry
+dart pub run stormberry migrate
 ```
 
 In order to connect to your database, provide the following environment variables:
@@ -400,7 +419,10 @@ confirmation before applying the changes or aborting.
 
 The tool supported the following options:
 
-- `-db=<db_name>`: Specify the database name. Tool will ask if not specified.
+- `-h`: Shows the available options.
+- `--db=<db_name>`: Specify the database name. Tool will ask if not specified.
 - `--dry-run`: Logs any changes to the schema without writing to the database, and exists 
   with code 1 if there are any.
 - `--apply-changes`: Apply any changes without asking for confirmation.
+- `-o=<folder>`: Specify an output folder. When used, this will output all migration statements to 
+  `.sql` files in this folder instead of applying them to the database.

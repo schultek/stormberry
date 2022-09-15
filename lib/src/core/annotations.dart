@@ -4,9 +4,16 @@ import 'database.dart';
 class Model {
   final List<View> views;
   final List<TableIndex> indexes;
+  final String? tableName;
+  final dynamic insertRequestAnnotation;
+  final dynamic updateRequestAnnotation;
+
   const Model({
     this.views = const [],
     this.indexes = const [],
+    this.tableName,
+    this.insertRequestAnnotation,
+    this.updateRequestAnnotation,
   });
 }
 
@@ -14,7 +21,8 @@ class Model {
 class View {
   final String name;
   final List<Field> fields;
-  const View([this.name = '', this.fields = const []]);
+  final dynamic annotation;
+  const View([this.name = '', this.fields = const [], this.annotation]);
 }
 
 /// Used to define fields of [View]s
@@ -55,13 +63,11 @@ abstract class ListTransformer extends Transformer {
   @override
   String transform(String column, String table) {
     var w = where(column, table);
-    return '''
-    array_to_json(ARRAY ((
-      SELECT ${select(column, table) ?? '*'} 
-      FROM jsonb_array_elements("$column".data) AS "$column"
-      ${w != null ? 'WHERE $w' : ''}
-    )) ) AS "$column"
-    ''';
+    return 'array_to_json(ARRAY ((\n'
+        '  SELECT ${select(column, table) ?? '*'}\n'
+        '  FROM jsonb_array_elements("$column".data) AS "$column"\n'
+        '${w != null ? '  WHERE $w\n' : ''}'
+        ')) ) AS "$column"';
   }
 }
 

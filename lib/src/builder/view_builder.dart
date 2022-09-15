@@ -1,6 +1,7 @@
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
+import 'package:source_gen/source_gen.dart';
 
 import '../../internals.dart';
 import '../core/case_style.dart';
@@ -34,9 +35,9 @@ class ViewColumn {
     var c = column;
     if (c is LinkedColumnBuilder) {
       if (viewAs != null) {
-        return c.linkBuilder.views.firstWhere((v) => v.name == viewAs!.toLowerCase());
+        return c.linkBuilder.views.firstWhere((v) => v.name.toLowerCase() == viewAs!.toLowerCase());
       } else {
-        return c.linkBuilder.views.firstWhere((v) => v.name.isEmpty);
+        return c.linkBuilder.views.firstWhere((v) => v.isDefaultView);
       }
     }
     return null;
@@ -83,15 +84,18 @@ class ViewBuilder {
 
   ViewBuilder(this.table, this.annotation);
 
-  String get name => annotation?.getField('name')!.toStringValue()!.toLowerCase() ?? '';
+  String get name => annotation?.getField('name')!.toStringValue() ?? '';
+
+  bool get isDefaultView => name.isEmpty;
+
   String get className => CaseStyle.pascalCase
-      .transform(name.isNotEmpty ? '${name}_${table.element.name}_view' : '${table.element.name}_view');
+      .transform('${!isDefaultView ? '${name}_' : ''}${table.element.name}_view');
 
-  String get entityName => name.isEmpty ? table.element.name : className;
+  String get entityName => isDefaultView ? table.element.name : className;
 
-  String get viewName => CaseStyle.pascalCase.transform(name.isNotEmpty ? '${name}_view' : 'view');
+  String get viewName => CaseStyle.pascalCase.transform(isDefaultView ? entityName : '${name}_view');
 
-  String get viewTableName => name.isNotEmpty ? '${name}_${table.tableName}_view' : '${table.tableName}_view';
+  String get viewTableName => CaseStyle.snakeCase.transform('${!isDefaultView ? '${name}_' : ''}${table.tableName}_view');
 
   List<ViewColumn>? _columns;
   List<ViewColumn> get columns => _columns ??= _getViewColumns();
@@ -124,7 +128,7 @@ class ViewBuilder {
         var viewAs = viewField.getField('viewAs')!.toStringValue();
 
         if (viewAs == null && column is LinkedColumnBuilder) {
-          if (!column.linkBuilder.views.any((v) => v.name.isEmpty)) {
+          if (!column.linkBuilder.views.any((v) => v.isDefaultView)) {
             column.linkBuilder.views.add(ViewBuilder(column.linkBuilder, null));
           }
         }
@@ -143,7 +147,7 @@ class ViewBuilder {
                   .whereType<MethodInvocation>()
                   .firstWhere((node) =>
                       node.methodName.name == 'View' &&
-                      (node.argumentList.arguments.first as StringLiteral).stringValue?.toLowerCase() == name)
+                      (node.argumentList.arguments.first as StringLiteral).stringValue?.toLowerCase() == name.toLowerCase())
                   .argumentList
                   .arguments[1];
               if (fields is ListLiteral) {
@@ -168,7 +172,7 @@ class ViewBuilder {
         columns.add(ViewColumn(column, viewAs: viewAs, transformer: transformerCode));
       } else {
         if (column is LinkedColumnBuilder) {
-          if (!column.linkBuilder.views.any((v) => v.name.isEmpty)) {
+          if (!column.linkBuilder.views.any((v) => v.isDefaultView)) {
             column.linkBuilder.views.add(ViewBuilder(column.linkBuilder, null));
           }
         }
@@ -178,5 +182,12 @@ class ViewBuilder {
     }
 
     return columns;
+  }
+
+  String? get targetAnnotation {
+    if (annotation != null && !annotation!.getField('annotation')!.isNull) {
+      return '@' + annotation!.getField('annotation')!.toSource();
+    }
+    return null;
   }
 }

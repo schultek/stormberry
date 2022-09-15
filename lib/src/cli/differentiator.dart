@@ -1,5 +1,5 @@
 import 'package:collection/collection.dart';
-import 'package:stormberry/stormberry.dart';
+import '../../stormberry.dart';
 
 import 'inspector.dart';
 import 'schema.dart';
@@ -44,20 +44,6 @@ Future<DatabaseSchemaDiff> getSchemaDiff(Database db, DatabaseSchema dbSchema) a
 
       for (var newConstraint in newTable.constraints) {
         tableDiff.constraints.added.add(newConstraint);
-      }
-
-      for (var extTrigger in extTable.triggers) {
-        var newTrigger = newTable.triggers.where((t) => t == extTrigger).firstOrNull;
-
-        if (newTrigger != null) {
-          newTable.triggers.remove(newTrigger);
-        } else {
-          tableDiff.triggers.removed.add(extTrigger);
-        }
-      }
-
-      for (var newTrigger in newTable.triggers) {
-        tableDiff.triggers.added.add(newTrigger);
       }
 
       for (var extIndex in extTable.indexes) {
@@ -134,16 +120,6 @@ void printDiff(DatabaseSchemaDiff diff) {
       print("-- CONSTRAINT ON ${table.name} ${constr.toString().replaceAll(RegExp("[\n\\s]+"), " ")}");
     }
 
-    for (var trigger in table.triggers.added) {
-      print('++ TRIGGER ${trigger.name} ON ${table.name}.${trigger.column} '
-          "EXECUTE ${trigger.function}(${trigger.args.join(", ")})");
-    }
-
-    for (var trigger in table.triggers.removed) {
-      print('-- TRIGGER ${trigger.name} ON ${table.name}.${trigger.column} '
-          "EXECUTE ${trigger.function}(${trigger.args.join(", ")})");
-    }
-
     for (var index in table.indexes.added) {
       print("++ ${index.statement(table.name).replaceAll(RegExp("[\n\\s]+"), " ")}");
     }
@@ -182,13 +158,11 @@ class TableSchemaDiff {
   String name;
   Diff<ColumnSchema, Change<ColumnSchema>> columns = Diff();
   Diff<TableConstraint, void> constraints = Diff();
-  Diff<TableTrigger, void> triggers = Diff();
   Diff<TableIndex, void> indexes = Diff();
 
   TableSchemaDiff(this.name);
 
-  bool get hasChanges =>
-      columns.hasChanges() || constraints.hasChanges() || triggers.hasChanges() || indexes.hasChanges();
+  bool get hasChanges => columns.hasChanges() || constraints.hasChanges() || indexes.hasChanges();
 }
 
 class Diff<T, U> {

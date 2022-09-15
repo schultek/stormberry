@@ -23,7 +23,7 @@ Map<String, dynamic> buildViewSchema(Map<String, dynamic> map) {
     map['table_name'] as String,
     map['primary_key_name'] as String?,
     (map['columns'] as List).map((c) => ViewColumnSchema.fromMap(c as Map<String, dynamic>)).toList(),
-  ).replaceAll(RegExp(r'\s+'), ' ');
+  );
 
   var hash = sha1.convert(utf8.encode(definition)).toString();
 
@@ -130,6 +130,6 @@ String buildViewQuery(String tableName, String? primaryKeyName, List<ViewColumnS
   }
 
   return 'SELECT "$tableName".*${joins.map((j) => ', ${j.key}').join()}\n'
-      'FROM "$tableName"\n'
+      'FROM "$tableName"${joins.isNotEmpty ? '\n' : ''}'
       '${joins.map((j) => j.value).join('\n')}';
 }
