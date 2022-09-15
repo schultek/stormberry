@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_relative_imports
 import 'package:stormberry/internals.dart';
-import 'package:serialization_test/models.dart';
+
+import 'models.dart';
 
 extension Repositories on Database {
   UserRepository get users => UserRepository._(this);
@@ -55,32 +56,32 @@ class _UserRepository extends BaseRepository
   Future<void> insert(Database db, List<UserInsertRequest> requests) async {
     if (requests.isEmpty) return;
 
-    await db.query("""
-          INSERT INTO "users" ( "company_id", "id", "name", "security_number" )
-          VALUES ${requests.map((r) => '( ${registry.encode(r.companyId)}, ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.securityNumber)} )').join(', ')}
-ON CONFLICT ( "id" ) DO UPDATE SET "company_id" = EXCLUDED."company_id", "name" = EXCLUDED."name", "security_number" = EXCLUDED."security_number"
-        """);
+    await db.query(
+      'INSERT INTO "users" ( "id", "name", "security_number" )\n'
+      'VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.securityNumber)} )').join(', ')}\n'
+      'ON CONFLICT ( "id" ) DO UPDATE SET "name" = EXCLUDED."name", "security_number" = EXCLUDED."security_number"',
+    );
   }
 
   @override
   Future<void> update(Database db, List<UserUpdateRequest> requests) async {
     if (requests.isEmpty) return;
-    await db.query("""
-            UPDATE "users"
-            SET "company_id" = COALESCE(UPDATED."company_id"::text, "users"."company_id"), "name" = COALESCE(UPDATED."name"::text, "users"."name"), "security_number" = COALESCE(UPDATED."security_number"::text, "users"."security_number")
-            FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.companyId)}, ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.securityNumber)} )').join(', ')} )
-            AS UPDATED("company_id", "id", "name", "security_number")
-            WHERE "users"."id" = UPDATED."id"
-          """);
+    await db.query(
+      'UPDATE "users"\n'
+      'SET "name" = COALESCE(UPDATED."name"::text, "users"."name"), "security_number" = COALESCE(UPDATED."security_number"::text, "users"."security_number")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.securityNumber)} )').join(', ')} )\n'
+      'AS UPDATED("id", "name", "security_number")\n'
+      'WHERE "users"."id" = UPDATED."id"',
+    );
   }
 
   @override
   Future<void> delete(Database db, List<String> keys) async {
     if (keys.isEmpty) return;
-    await db.query("""
-          DELETE FROM "users"
-          WHERE "users"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )
-        """);
+    await db.query(
+      'DELETE FROM "users"\n'
+      'WHERE "users"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )',
+    );
   }
 }
 
@@ -118,39 +119,38 @@ class _CompanyRepository extends BaseRepository
   Future<void> insert(Database db, List<CompanyInsertRequest> requests) async {
     if (requests.isEmpty) return;
 
-    await db.query("""
-          INSERT INTO "companies" ( "id", "member_id" )
-          VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.memberId)} )').join(', ')}
-ON CONFLICT ( "id" ) DO UPDATE SET "member_id" = EXCLUDED."member_id"
-        """);
+    await db.query(
+      'INSERT INTO "companies" ( "id", "member_id" )\n'
+      'VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.memberId)} )').join(', ')}\n'
+      'ON CONFLICT ( "id" ) DO UPDATE SET "member_id" = EXCLUDED."member_id"',
+    );
   }
 
   @override
   Future<void> update(Database db, List<CompanyUpdateRequest> requests) async {
     if (requests.isEmpty) return;
-    await db.query("""
-            UPDATE "companies"
-            SET "member_id" = COALESCE(UPDATED."member_id"::text, "companies"."member_id")
-            FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.memberId)} )').join(', ')} )
-            AS UPDATED("id", "member_id")
-            WHERE "companies"."id" = UPDATED."id"
-          """);
+    await db.query(
+      'UPDATE "companies"\n'
+      'SET "member_id" = COALESCE(UPDATED."member_id"::text, "companies"."member_id")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.memberId)} )').join(', ')} )\n'
+      'AS UPDATED("id", "member_id")\n'
+      'WHERE "companies"."id" = UPDATED."id"',
+    );
   }
 
   @override
   Future<void> delete(Database db, List<String> keys) async {
     if (keys.isEmpty) return;
-    await db.query("""
-          DELETE FROM "companies"
-          WHERE "companies"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )
-        """);
+    await db.query(
+      'DELETE FROM "companies"\n'
+      'WHERE "companies"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )',
+    );
   }
 }
 
 @MappableClass()
 class UserInsertRequest {
-  UserInsertRequest({this.companyId, required this.id, required this.name, required this.securityNumber});
-  String? companyId;
+  UserInsertRequest({required this.id, required this.name, required this.securityNumber});
   String id;
   String name;
   String securityNumber;
@@ -164,17 +164,16 @@ class CompanyInsertRequest {
 
 @MappableClass()
 class UserUpdateRequest {
-  UserUpdateRequest({this.companyId, required this.id, this.name, this.securityNumber});
-  String? companyId;
+  UserUpdateRequest({required this.id, this.name, this.securityNumber});
   String id;
   String? name;
   String? securityNumber;
 }
 
 class CompanyUpdateRequest {
-  CompanyUpdateRequest({required this.id, required this.memberId});
+  CompanyUpdateRequest({required this.id, this.memberId});
   String id;
-  String memberId;
+  String? memberId;
 }
 
 class DefaultUserViewQueryable extends KeyedViewQueryable<DefaultUserView, String> {
