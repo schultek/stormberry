@@ -1,7 +1,7 @@
 # 0.8.0
 
 - Added support for serialization through custom annotations
-- Added support for manual migration output to .sql files
+- Improved migration cli and added support for manual migration output to .sql files
 - Fixed bug with default views and value decoding
 
 # 0.7.0

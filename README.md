@@ -392,7 +392,7 @@ await db.users.updateOne(UserUpdateRequest(id: 'abc', name: 'Tom'));
 You can specify a custom query with custom sql by extending the `Query<T, U>` class. 
 You will then need to implement the `Future<T> apply(Database db, U params)` method.
 
-Additionally to the model tabels, you can query the model views to automatically get all resolved 
+Additionally to the model tables, you can query the model views to automatically get all resolved 
 relations without needing to do manual joins. Table names are always plural, e.g. `users` and view 
 names are in the format as `complete_user_view`.
 
@@ -408,7 +408,7 @@ Stormberry comes with a database migration tool, to create or update the schema 
 
 To use this run the following command from the root folder of your project.
 ```
-dart pub run stormberry
+dart pub run stormberry migrate
 ```
 
 In order to connect to your database, provide the following environment variables:
@@ -419,7 +419,8 @@ confirmation before applying the changes or aborting.
 
 The tool supported the following options:
 
-- `-db=<db_name>`: Specify the database name. Tool will ask if not specified.
+- `-h`: Shows the available options.
+- `--db=<db_name>`: Specify the database name. Tool will ask if not specified.
 - `--dry-run`: Logs any changes to the schema without writing to the database, and exists 
   with code 1 if there are any.
 - `--apply-changes`: Apply any changes without asking for confirmation.

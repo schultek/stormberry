@@ -1,6 +1,6 @@
 name: stormberry
 description: Access your postgres database effortlessly from dart code.
-version: 0.7.0
+version: 0.8.0
 repository: https://github.com/schultek/stormberry
 issue_tracker: https://github.com/schultek/stormberry/issues
 
@@ -19,7 +19,7 @@ dependencies:
 dev_dependencies:
   build_runner: ^2.2.0
   lints: ^2.0.0
-  test: ^1.21.6
+  test: ^1.21.0
 
 environment:
   sdk: '>=2.16.0 <3.0.0'

@@ -25,7 +25,7 @@ void main() {
     test('Migrating schemas', () async {
       var proc = await Process.start(
         'dart',
-        'run stormberry --apply-changes'.split(' '),
+        'run stormberry migrate --apply-changes'.split(' '),
         workingDirectory: 'test/packages/multi_schema',
         environment: {
           'DB_HOST': 'localhost',
