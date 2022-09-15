@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_relative_imports
 import 'package:stormberry/internals.dart';
-import 'package:multi_schema_test/modelsA.dart';
+
+import 'modelsA.dart';
 
 extension Repositories on Database {
   ModelARepository get modelAs => ModelARepository._(this);
@@ -12,7 +13,7 @@ abstract class ModelARepository
     implements ModelRepository, ModelRepositoryInsert<ModelAInsertRequest>, ModelRepositoryUpdate<ModelAUpdateRequest> {
   factory ModelARepository._(Database db) = _ModelARepository;
 
-  Future<List<ViewaModelAView>> queryViewaViews([QueryParams? params]);
+  Future<List<ViewAModelAView>> queryViewAViews([QueryParams? params]);
 }
 
 class _ModelARepository extends BaseRepository
@@ -21,30 +22,30 @@ class _ModelARepository extends BaseRepository
   _ModelARepository(Database db) : super(db: db);
 
   @override
-  Future<List<ViewaModelAView>> queryViewaViews([QueryParams? params]) {
-    return queryMany(ViewaModelAViewQueryable(), params);
+  Future<List<ViewAModelAView>> queryViewAViews([QueryParams? params]) {
+    return queryMany(ViewAModelAViewQueryable(), params);
   }
 
   @override
   Future<void> insert(Database db, List<ModelAInsertRequest> requests) async {
     if (requests.isEmpty) return;
 
-    await db.query("""
-          INSERT INTO "model_as" ( "data" )
-          VALUES ${requests.map((r) => '( ${registry.encode(r.data)} )').join(', ')}
-        """);
+    await db.query(
+      'INSERT INTO "model_as" ( "data" )\n'
+      'VALUES ${requests.map((r) => '( ${registry.encode(r.data)} )').join(', ')}\n',
+    );
   }
 
   @override
   Future<void> update(Database db, List<ModelAUpdateRequest> requests) async {
     if (requests.isEmpty) return;
-    await db.query("""
-            UPDATE "model_as"
-            SET "data" = COALESCE(UPDATED."data"::text, "model_as"."data")
-            FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.data)} )').join(', ')} )
-            AS UPDATED("data")
-            WHERE 
-          """);
+    await db.query(
+      'UPDATE "model_as"\n'
+      'SET "data" = COALESCE(UPDATED."data"::text, "model_as"."data")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.data)} )').join(', ')} )\n'
+      'AS UPDATED("data")\n'
+      'WHERE ',
+    );
   }
 }
 
@@ -58,17 +59,17 @@ class ModelAUpdateRequest {
   String? data;
 }
 
-class ViewaModelAViewQueryable extends ViewQueryable<ViewaModelAView> {
+class ViewAModelAViewQueryable extends ViewQueryable<ViewAModelAView> {
   @override
-  String get tableName => 'viewa_model_as_view';
+  String get tableName => 'view_a_model_as_view';
 
   @override
   String get tableAlias => 'model_as';
 
   @override
-  ViewaModelAView decode(TypedMap map) => ViewaModelAView();
+  ViewAModelAView decode(TypedMap map) => ViewAModelAView();
 }
 
-class ViewaModelAView {
-  ViewaModelAView();
+class ViewAModelAView {
+  ViewAModelAView();
 }
