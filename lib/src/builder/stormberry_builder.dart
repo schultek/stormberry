@@ -99,13 +99,13 @@ class StormberryBuilder implements Builder {
 
     var map = <String, String>{};
 
-    map['.output.g.dart'] = DartFormatter(pageWidth: 120).format('''
+    map['.output.g.dart'] = DartFormatter(pageWidth: options.lineLength).format('''
       // ignore_for_file: prefer_relative_imports
       ${writeImports(state.imports, buildStep.inputId)}
       ${RepositoryGenerator().generateRepositories(state)}
     ''');
 
-    map['.runner.g.dart'] = DartFormatter(pageWidth: 120).format('''
+    map['.runner.g.dart'] = DartFormatter(pageWidth: options.lineLength).format('''
       import 'dart:isolate'; 
       import 'package:stormberry/src/helpers/json_schema.dart';
       import 'package:stormberry/stormberry.dart';
