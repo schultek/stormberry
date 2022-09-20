@@ -6,12 +6,18 @@ import 'package:postgres/postgres.dart';
 class Database {
   bool debugPrint;
 
-  String host;
-  String database;
-  String user;
-  String password;
-  int port;
-  bool useSSL;
+  final String host;
+  final String database;
+  final String user;
+  final String password;
+  final int port;
+  final bool useSSL;
+  final int timeoutInSeconds;
+  final String timeZone;
+  final int queryTimeoutInSeconds;
+  final bool isUnixSocket;
+  final bool allowClearTextPassword;
+  final ReplicationMode replicationMode;
 
   static PostgreSQLConnection? _cachedConnection;
 
@@ -23,6 +29,12 @@ class Database {
     String? user,
     String? password,
     bool? useSSL,
+    this.timeoutInSeconds = 30,
+    this.queryTimeoutInSeconds = 30,
+    this.timeZone = 'UTC',
+    this.isUnixSocket = false,
+    this.allowClearTextPassword = false,
+    this.replicationMode = ReplicationMode.none,
   })  : host = host ?? Platform.environment['DB_HOST_ADDRESS'] ?? '127.0.0.1',
         port = port ?? int.tryParse(Platform.environment['DB_PORT'] ?? '') ?? 5432,
         database = database ?? Platform.environment['DB_NAME'] ?? 'postgres',
@@ -33,7 +45,20 @@ class Database {
   }
 
   PostgreSQLConnection connection() {
-    return PostgreSQLConnection(host, port, database, username: user, password: password, useSSL: useSSL);
+    return PostgreSQLConnection(
+      host,
+      port,
+      database,
+      username: user,
+      password: password,
+      useSSL: useSSL,
+      timeoutInSeconds: timeoutInSeconds,
+      queryTimeoutInSeconds: queryTimeoutInSeconds,
+      timeZone: timeZone,
+      isUnixSocket: isUnixSocket,
+      allowClearTextPassword: allowClearTextPassword,
+      replicationMode: replicationMode,
+    );
   }
 
   String get name => _cachedConnection!.databaseName;
