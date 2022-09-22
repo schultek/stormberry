@@ -17,10 +17,14 @@ const autoIncrementChecker = TypeChecker.fromRuntime(AutoIncrement);
 class GlobalOptions {
   CaseStyle? tableCaseStyle;
   CaseStyle? columnCaseStyle;
+  int lineLength;
 
   GlobalOptions.parse(Map<String, dynamic> options)
-      : tableCaseStyle = CaseStyle.fromString(options['tableCaseStyle'] as String? ?? 'snakeCase'),
-        columnCaseStyle = CaseStyle.fromString(options['columnCaseStyle'] as String? ?? 'snakeCase');
+      : tableCaseStyle = CaseStyle.fromString(
+            options['tableCaseStyle'] as String? ?? options['table_case_style'] as String? ?? 'snakeCase'),
+        columnCaseStyle = CaseStyle.fromString(
+            options['columnCaseStyle'] as String? ?? options['column_case_style'] as String? ?? 'snakeCase'),
+        lineLength = options['lineLength'] as int? ?? options['line_length'] as int? ?? 120;
 }
 
 extension GetNode on Element {
@@ -118,45 +122,37 @@ extension ReaderSource on ConstantReader {
 }
 
 String writeImports(Set<Uri> imports, AssetId input) {
+  List<String> sdk = [], package = [], relative = [];
 
-    List<String> sdk = [], package = [], relative = [];
+  for (var import in imports) {
+    if (import.isScheme('asset')) {
+      var relativePath = path.relative(import.path, from: path.dirname(input.uri.path));
 
-    for (var import in imports) {
-      if (import.isScheme('asset')) {
-        var relativePath =
-        path.relative(import.path, from: path.dirname(input.uri.path));
+      relative.add(relativePath);
+    } else if (import.isScheme('package') &&
+        import.pathSegments.first == input.package &&
+        input.pathSegments.first == 'lib') {
+      var libPath = import.replace(pathSegments: import.pathSegments.skip(1)).path;
 
-        relative.add(relativePath);
-      } else if (import.isScheme('package') &&
-          import.pathSegments.first == input.package &&
-          input.pathSegments.first == 'lib') {
-        var libPath =
-            import.replace(pathSegments: import.pathSegments.skip(1)).path;
+      var inputPath = input.uri.replace(pathSegments: input.uri.pathSegments.skip(1)).path;
 
-        var inputPath = input.uri
-            .replace(pathSegments: input.uri.pathSegments.skip(1))
-            .path;
+      var relativePath = path.relative(libPath, from: path.dirname(inputPath));
 
-        var relativePath =
-        path.relative(libPath, from: path.dirname(inputPath));
-
-        relative.add(relativePath);
-      } else if (import.scheme == 'dart') {
-        sdk.add(import.toString());
-      } else if (import.scheme == 'package') {
-        package.add(import.toString());
-      } else {
-        relative.add(import.toString());
-      }
+      relative.add(relativePath);
+    } else if (import.scheme == 'dart') {
+      sdk.add(import.toString());
+    } else if (import.scheme == 'package') {
+      package.add(import.toString());
+    } else {
+      relative.add(import.toString());
     }
+  }
 
-    sdk.sort();
-    package.sort();
-    relative.sort();
+  sdk.sort();
+  package.sort();
+  relative.sort();
 
-    String joined(List<String> s) => s.isNotEmpty
-        ? '${s.map((s) => "import '$s';").join('\n')}\n\n'
-        : '';
+  String joined(List<String> s) => s.isNotEmpty ? '${s.map((s) => "import '$s';").join('\n')}\n\n' : '';
 
-    return joined(sdk) + joined(package) + joined(relative);
+  return joined(sdk) + joined(package) + joined(relative);
 }
