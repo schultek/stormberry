@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:stormberry/stormberry.dart';
 import 'package:test/test.dart';
 
+enum EnumValue { one, two, three }
+
 @Model()
 abstract class User {
   @PrimaryKey()
@@ -10,6 +12,7 @@ abstract class User {
 
   String get name;
   Account get account;
+  EnumValue get enumValue;
 }
 
 @Model(views: [View('SuperSecret')])
@@ -45,7 +48,8 @@ void main() {
     test('Test custom table name generated code', () async {
       final schema = File('test/generation_test.schema.g.dart');
       final content = await schema.readAsString();
-      expect(content.contains('String get tableAlias => \'customTableName\';'), equals(true));
+      expect(content.contains('String get tableAlias => \'customTableName\';'),
+          equals(true));
     });
   });
 }

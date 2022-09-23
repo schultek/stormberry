@@ -14,7 +14,11 @@ import 'join_table_builder.dart';
 import 'stormberry_builder.dart';
 import 'utils.dart';
 import 'view_builder.dart';
+extension EnumType on DartType {
 
+  bool get isEnum =>
+      TypeChecker.fromRuntime(Enum).isAssignableFromType(this);
+}
 class TableBuilder {
   ClassElement element;
   ConstantReader annotation;
@@ -49,11 +53,11 @@ class TableBuilder {
     }).toList();
 
     if (!annotation.read('insertRequestAnnotation').isNull) {
-      insertRequestAnnotation = '@' + annotation.read('insertRequestAnnotation').toSource();
+      insertRequestAnnotation = '@${annotation.read('insertRequestAnnotation').toSource()}';
     }
 
     if (!annotation.read('updateRequestAnnotation').isNull) {
-      updateRequestAnnotation = '@' + annotation.read('updateRequestAnnotation').toSource();
+      updateRequestAnnotation = '@${annotation.read('updateRequestAnnotation').toSource()}';
     }
   }
 
@@ -85,7 +89,7 @@ class TableBuilder {
       ? columns.whereType<FieldColumnBuilder>().where((c) => c.parameter == primaryKeyParameter).firstOrNull
       : null;
 
-  void prepareColumns() {
+  void prepareColumns(Set<EnumElement> enums) {
     final allFields =
         element.fields.followedBy(element.allSupertypes.expand((t) => t.isDartCoreObject ? [] : t.element.fields));
 
@@ -96,7 +100,9 @@ class TableBuilder {
 
       var isList = param.type.isDartCoreList;
       var dataType = isList ? (param.type as InterfaceType).typeArguments[0] : param.type;
-
+      if (dataType.isEnum){
+        enums.add(dataType.element2 as EnumElement);
+      }
       if (!state.builders.containsKey(dataType.element)) {
         columns.add(FieldColumnBuilder(param, this, state));
       } else {

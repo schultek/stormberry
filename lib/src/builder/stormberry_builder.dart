@@ -9,6 +9,7 @@ import 'package:source_gen/source_gen.dart';
 import 'generators/join_json_generator.dart';
 import 'generators/repository_generator.dart';
 import 'generators/table_json_generator.dart';
+import 'generators/type_converter_generator.dart';
 import 'join_table_builder.dart';
 import 'table_builder.dart';
 import 'utils.dart';
@@ -22,6 +23,8 @@ class BuilderState {
 
   Map<String, MapEntry<String, String?>> typeConverters = {};
   Map<String, String> decoders = {};
+      Set<EnumElement> enums = {};
+
 
   BuilderState(this.options);
 }
@@ -71,9 +74,9 @@ class StormberryBuilder implements Builder {
       var reader = LibraryReader(library);
 
       var typeConverters = reader.annotatedWith(typeConverterChecker);
-      var elements = reader.annotatedWith(tableChecker);
+      var tables = reader.annotatedWith(tableChecker);
 
-      if (elements.isNotEmpty || typeConverters.isNotEmpty) {
+      if (tables.isNotEmpty || typeConverters.isNotEmpty) {
         state.imports.add(library.source.uri);
       }
 
@@ -84,17 +87,20 @@ class StormberryBuilder implements Builder {
         state.typeConverters[typeClassName] = MapEntry(converterClassName, sqlType);
       }
 
-      for (var element in elements) {
-        state.builders[element.element] = TableBuilder(
-          element.element as ClassElement,
-          element.annotation,
+      for (var table in tables) {
+        state.builders[table.element] = TableBuilder(
+          table.element as ClassElement,
+          table.annotation,
           state,
         );
       }
     }
-
     for (var builder in state.builders.values) {
-      builder.prepareColumns();
+      builder.prepareColumns(state.enums);
+    }
+
+    for (final e in state.enums){
+      state.typeConverters[e.name] = MapEntry('_Stormberry${e.name}TypeConverter', 'string');
     }
 
     var map = <String, String>{};
@@ -102,6 +108,8 @@ class StormberryBuilder implements Builder {
     map['.output.g.dart'] = DartFormatter(pageWidth: options.lineLength).format('''
       // ignore_for_file: prefer_relative_imports
       ${writeImports(state.imports, buildStep.inputId)}
+      ${TypeConverterGenerator().generateTypeConverters(state)}
+      
       ${RepositoryGenerator().generateRepositories(state)}
     ''');
 

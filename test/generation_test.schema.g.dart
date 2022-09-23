@@ -3,13 +3,23 @@ import 'package:stormberry/internals.dart';
 
 import 'generation_test.dart';
 
+class _StormberryEnumValueTypeConverter extends TypeConverter<EnumValue> {
+  @override
+  String encode(EnumValue value) => value.name;
+
+  @override
+  EnumValue decode(dynamic value) => EnumValue.values.byName(value as String);
+}
+
 extension Repositories on Database {
   UserRepository get users => UserRepository._(this);
   AccountRepository get accounts => AccountRepository._(this);
   LegacyAccountRepository get legacyAccounts => LegacyAccountRepository._(this);
 }
 
-final registry = ModelRegistry({});
+final registry = ModelRegistry({
+  typeOf<EnumValue>(): _StormberryEnumValueTypeConverter(),
+});
 
 abstract class UserRepository
     implements
@@ -46,9 +56,9 @@ class _UserRepository extends BaseRepository
     if (requests.isEmpty) return;
 
     await db.query(
-      'INSERT INTO "users" ( "id", "name", "account_id" )\n'
-      'VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.accountId)} )').join(', ')}\n'
-      'ON CONFLICT ( "id" ) DO UPDATE SET "name" = EXCLUDED."name", "account_id" = EXCLUDED."account_id"',
+      'INSERT INTO "users" ( "id", "name", "account_id", "enum_value" )\n'
+      'VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.accountId)}, ${registry.encode(r.enumValue)} )').join(', ')}\n'
+      'ON CONFLICT ( "id" ) DO UPDATE SET "name" = EXCLUDED."name", "account_id" = EXCLUDED."account_id", "enum_value" = EXCLUDED."enum_value"',
     );
   }
 
@@ -57,9 +67,9 @@ class _UserRepository extends BaseRepository
     if (requests.isEmpty) return;
     await db.query(
       'UPDATE "users"\n'
-      'SET "name" = COALESCE(UPDATED."name"::text, "users"."name"), "account_id" = COALESCE(UPDATED."account_id"::text, "users"."account_id")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.accountId)} )').join(', ')} )\n'
-      'AS UPDATED("id", "name", "account_id")\n'
+      'SET "name" = COALESCE(UPDATED."name"::text, "users"."name"), "account_id" = COALESCE(UPDATED."account_id"::text, "users"."account_id"), "enum_value" = COALESCE(UPDATED."enum_value"::string, "users"."enum_value")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.accountId)}, ${registry.encode(r.enumValue)} )').join(', ')} )\n'
+      'AS UPDATED("id", "name", "account_id", "enum_value")\n'
       'WHERE "users"."id" = UPDATED."id"',
     );
   }
@@ -201,10 +211,11 @@ class _LegacyAccountRepository extends BaseRepository
 }
 
 class UserInsertRequest {
-  UserInsertRequest({required this.id, required this.name, required this.accountId});
+  UserInsertRequest({required this.id, required this.name, required this.accountId, required this.enumValue});
   String id;
   String name;
   String accountId;
+  EnumValue enumValue;
 }
 
 class AccountInsertRequest {
@@ -218,10 +229,11 @@ class LegacyAccountInsertRequest {
 }
 
 class UserUpdateRequest {
-  UserUpdateRequest({required this.id, this.name, this.accountId});
+  UserUpdateRequest({required this.id, this.name, this.accountId, this.enumValue});
   String id;
   String? name;
   String? accountId;
+  EnumValue? enumValue;
 }
 
 class AccountUpdateRequest {
@@ -251,11 +263,12 @@ class UserQueryable extends KeyedViewQueryable<User, String> {
   User decode(TypedMap map) => UserView(
       id: map.get('id', registry.decode),
       name: map.get('name', registry.decode),
-      account: map.get('account', AccountQueryable().decoder));
+      account: map.get('account', AccountQueryable().decoder),
+      enumValue: map.get('enum_value', registry.decode));
 }
 
 class UserView implements User {
-  UserView({required this.id, required this.name, required this.account});
+  UserView({required this.id, required this.name, required this.account, required this.enumValue});
 
   @override
   final String id;
@@ -263,6 +276,8 @@ class UserView implements User {
   final String name;
   @override
   final Account account;
+  @override
+  final EnumValue enumValue;
 }
 
 class SuperSecretAccountViewQueryable extends KeyedViewQueryable<SuperSecretAccountView, String> {
