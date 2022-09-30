@@ -14,6 +14,7 @@ class RepositoryGenerator {
     }
     
     final registry = ModelRegistry({
+      ${state.enums.map((e) => 'typeOf<${e.name}>(): EnumTypeConverter<${e.name}>(${e.name}.values),').join('\n')}
       ${state.typeConverters.entries.map((e) => 'typeOf<${e.key}>(): ${e.value.key}(),').join('\n')}
     });
     

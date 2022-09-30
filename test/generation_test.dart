@@ -2,8 +2,24 @@ import 'dart:io';
 
 import 'package:stormberry/stormberry.dart';
 import 'package:test/test.dart';
+import 'generation_test.schema.g.dart';
 
 enum EnumValue { one, two, three }
+
+enum CustomEnumValue { one, two, three }
+
+@TypeConverter('int8')
+class CustomEnumConverter extends TypeConverter<CustomEnumValue> {
+  @override
+  dynamic encode(CustomEnumValue value) {
+    return value.index;
+  }
+
+  @override
+  CustomEnumValue decode(dynamic value) {
+    return CustomEnumValue.values[value as int];
+  }
+}
 
 @Model()
 abstract class User {
@@ -13,6 +29,7 @@ abstract class User {
   String get name;
   Account get account;
   EnumValue get enumValue;
+  CustomEnumValue get customEnumValue;
 }
 
 @Model(views: [View('SuperSecret')])
@@ -48,8 +65,17 @@ void main() {
     test('Test custom table name generated code', () async {
       final schema = File('test/generation_test.schema.g.dart');
       final content = await schema.readAsString();
-      expect(content.contains('String get tableAlias => \'customTableName\';'),
-          equals(true));
+      expect(content.contains('String get tableAlias => \'customTableName\';'), equals(true));
+    });
+
+    test('Test Default Enum Value Serialized Correctly', () async {
+      expect(registry.convert(EnumValue.one), equals('one'));
+      expect(registry.decode<EnumValue>('one'), equals(EnumValue.one));
+    });
+
+    test('Test Custom Enum Value Serialized Correctly', () async {
+      expect(registry.convert(CustomEnumValue.one), equals(0));
+      expect(registry.decode<CustomEnumValue>(0), equals(CustomEnumValue.one));
     });
   });
 }

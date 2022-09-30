@@ -9,7 +9,6 @@ import 'package:source_gen/source_gen.dart';
 import 'generators/join_json_generator.dart';
 import 'generators/repository_generator.dart';
 import 'generators/table_json_generator.dart';
-import 'generators/type_converter_generator.dart';
 import 'join_table_builder.dart';
 import 'table_builder.dart';
 import 'utils.dart';
@@ -23,8 +22,7 @@ class BuilderState {
 
   Map<String, MapEntry<String, String?>> typeConverters = {};
   Map<String, String> decoders = {};
-      Set<EnumElement> enums = {};
-
+  Set<EnumElement> enums = {};
 
   BuilderState(this.options);
 }
@@ -99,16 +97,11 @@ class StormberryBuilder implements Builder {
       builder.prepareColumns(state.enums);
     }
 
-    for (final e in state.enums){
-      state.typeConverters[e.name] = MapEntry('_Stormberry${e.name}TypeConverter', 'string');
-    }
-
     var map = <String, String>{};
 
     map['.output.g.dart'] = DartFormatter(pageWidth: options.lineLength).format('''
       // ignore_for_file: prefer_relative_imports
       ${writeImports(state.imports, buildStep.inputId)}
-      ${TypeConverterGenerator().generateTypeConverters(state)}
       
       ${RepositoryGenerator().generateRepositories(state)}
     ''');
