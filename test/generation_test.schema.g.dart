@@ -11,7 +11,6 @@ extension Repositories on Database {
 
 final registry = ModelRegistry({
   typeOf<EnumValue>(): EnumTypeConverter<EnumValue>(EnumValue.values),
-  typeOf<CustomEnumValue>(): EnumTypeConverter<CustomEnumValue>(CustomEnumValue.values),
   typeOf<CustomEnumValue>(): CustomEnumConverter(),
 });
 
