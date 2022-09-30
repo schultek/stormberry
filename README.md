@@ -1,8 +1,7 @@
-
 # Stormberry
 
-Stormberry is a strongly-typed ORM-like code-generation package to provide easy bindings between 
-your dart classes and postgres database. It supports all kinds of relations without any complex 
+Stormberry is a strongly-typed ORM-like code-generation package to provide easy bindings between
+your dart classes and postgres database. It supports all kinds of relations without any complex
 configuration.
 
 # Outline
@@ -20,19 +19,19 @@ configuration.
   - [Actions](#actions)
 - [Database Migration](#database-migration)
 
-> This package is still in active development. If you have any feedback or feature requests, 
+> This package is still in active development. If you have any feedback or feature requests,
 > write me and issue on github.
 
 ## Roadmap
 
 - Documentation
-    - Improve Readme
-    - Improve example
+  - Improve Readme
+  - Improve example
 - Testing & Maintenance
-    - Improve code structure
-    - Write tests
+  - Improve code structure
+  - Write tests
 - Long Term
-    - Be database agnostic (sub-packages)
+  - Be database agnostic (sub-packages)
 
 # Get Started
 
@@ -50,7 +49,7 @@ In your code, specify an abstract class that should act as a table like this:
 abstract class User {
   @PrimaryKey()
   String get id;
-  
+
   String get name;
 }
 ```
@@ -65,7 +64,7 @@ targets:
         generate_for:
           # library that exposes all your table classes
           # modify this if to match your library file
-          - lib/models.dart 
+          - lib/models.dart
 ```
 
 In order to generate the serialization code, run the following command:
@@ -98,7 +97,7 @@ You define a model by using the `@Model()` annotation on an abstract class. This
 abstract class Book {
   @PrimaryKey()
   String get id;
-  
+
   String get title;
 }
 ```
@@ -122,7 +121,7 @@ abstract class Book {
   @PrimaryKey()
   @AutoIncrement()
   int get id;
-  
+
   @AutoIncrement()
   int get someOtherValue;
 }
@@ -130,7 +129,7 @@ abstract class Book {
 
 ### Relations
 
-When using relational database systems, you model your data using relations, namely one-to-one, 
+When using relational database systems, you model your data using relations, namely one-to-one,
 one-to-many, or many-to-many relations.
 
 When you want to specify a relation to another model, you simply use that model as the type of any field.
@@ -142,7 +141,7 @@ When you want to specify a relation to another model, you simply use that model 
 abstract class Author {
   @PrimaryKey()
   String get id;
-  
+
   String get name;
 }
 
@@ -156,28 +155,28 @@ abstract class Book {
 }
 ```
 
-The above code specifies a many-to-one relation between `Book` and `Author`. It is ok to specify 
-a relation only in one of the two models, but you could also specify the `List<Book> get books;` 
-in the `Author` model. 
+The above code specifies a many-to-one relation between `Book` and `Author`. It is ok to specify
+a relation only in one of the two models, but you could also specify the `List<Book> get books;`
+in the `Author` model.
 
-When only one side is specified, `stormberry` will default to a many-to-one or one-to-many relation. 
+When only one side is specified, `stormberry` will default to a many-to-one or one-to-many relation.
 To instead specify a one-to-one relation, simply specify `Book get book;` on the author side.
 
 Generally, the correct relation type is determined by whether you use `List<...>` on one or both sides of the relation.
 Depending on the relation type, it is also mandatory to specify a primary key field.
 
-Notice how when you specify both sides of a relation, querying one of the models would lead to a 
+Notice how when you specify both sides of a relation, querying one of the models would lead to a
 cyclic dependency. You can solve this by using `Views`.
 
 ## Views
 
-For each table you can define a series of `View`s, which you can query for. A view is a modified 
+For each table you can define a series of `View`s, which you can query for. A view is a modified
 subset of fields of the table and resolved relations.
 
 A `View` is helpful, when you have different points in your application where you want to query the
-same model, but with different access demands, like privacy. 
+same model, but with different access demands, like privacy.
 
-As an easy example take a typical `User` model. In the database, you might want to store some public 
+As an easy example take a typical `User` model. In the database, you might want to store some public
 information for a user, like the username, together with some private information, like the address.
 When a user requests its own data, you want to return all available data, public and private. But when
 a user requests the information for another user, you want to only return the public information.
@@ -201,7 +200,7 @@ abstract class User {
 
   String get name;
   String get address;
-  
+
   List<Post> get posts;
 }
 
@@ -216,9 +215,9 @@ abstract class User {
 abstract class Post {
   @PrimaryKey()
   String get id;
-  
+
   String get content;
-  
+
   User get author;
 }
 ```
@@ -255,7 +254,7 @@ class InfoPostView {
 }
 ```
 
-As mentioned before, when you have two-way relations in your models you must use `View`s to resolve 
+As mentioned before, when you have two-way relations in your models you must use `View`s to resolve
 any cyclic dependencies. `stormberry` can't resolve them for you, however it will warn you if it
 detects any when trying to [migrate your database schema](#database-migration-tool).
 
@@ -274,13 +273,13 @@ When specifying a view, add a target annotation to its constructor:
 )
 ```
 
-This uses the '@MappableClass()' annotation from the [`dart_mappable`](https://pub.dev/packages/dart_mappable) package, 
+This uses the '@MappableClass()' annotation from the [`dart_mappable`](https://pub.dev/packages/dart_mappable) package,
 which will be placed on the resulting `SomeView` entity class. Check out [this example](https://github.com/schultek/stormberry/tree/develop/test/packages/serialization) to see
 how this can be used to generate serialization extensions for these classes.
 
 ## Indexes
 
-As an advanced configuration you can specify indexes on your table using the `TableIndex` class. 
+As an advanced configuration you can specify indexes on your table using the `TableIndex` class.
 You can add indexes to your `@Model()` annotation like this:
 
 ```dart
@@ -306,7 +305,7 @@ type. Implement a custom type converter like this:
 ```dart
 @TypeConverter('point')
 class LatLngConverter extends TypeConverter<LatLng> {
-  
+
   @override
   dynamic encode(LatLng value) => PgPoint(value.latitude, value.longitude);
 
@@ -331,7 +330,7 @@ point object.
 
 # Usage
 
-When running the build using `dart pub run build_runner build`, `stormberry` will 
+When running the build using `dart pub run build_runner build`, `stormberry` will
 generate a `Repository` for each model which you can use to query, insert, update or delete data
 related to this model.
 
@@ -376,9 +375,9 @@ methods:
 - `Future<void> deleteOne(String id)`
 - `Future<void> updateMany(List<String> ids)`
 
-Each method has a single and multi variant. `UserInsertRequest` and `UserUpdateRequest` are 
+Each method has a single and multi variant. `UserInsertRequest` and `UserUpdateRequest` are
 special generated classes that enable type-safe inserts and updates while respecting data relations
-and key constraints. 
+and key constraints.
 
 With this, `stormberry` also supports partial updates of a model. You could for example just update
 the name of a user while keeping the other fields untouched like this:
@@ -389,17 +388,17 @@ await db.users.updateOne(UserUpdateRequest(id: 'abc', name: 'Tom'));
 
 ## Queries
 
-You can specify a custom query with custom sql by extending the `Query<T, U>` class. 
+You can specify a custom query with custom sql by extending the `Query<T, U>` class.
 You will then need to implement the `Future<T> apply(Database db, U params)` method.
 
-Additionally to the model tables, you can query the model views to automatically get all resolved 
-relations without needing to do manual joins. Table names are always plural, e.g. `users` and view 
+Additionally to the model tables, you can query the model views to automatically get all resolved
+relations without needing to do manual joins. Table names are always plural, e.g. `users` and view
 names are in the format as `complete_user_view`.
 
 ## Actions
 
-You can also specify custom `Action`s to perform on your table. 
-Similar to the queries, you extend the `Action<T>` class and implement the 
+You can also specify custom `Action`s to perform on your table.
+Similar to the queries, you extend the `Action<T>` class and implement the
 `Future<void> apply(Database db, T request)` method.
 
 # Database Migration
@@ -407,12 +406,19 @@ Similar to the queries, you extend the `Action<T>` class and implement the
 Stormberry comes with a database migration tool, to create or update the schema of your database.
 
 To use this run the following command from the root folder of your project.
+
 ```
 dart pub run stormberry migrate
 ```
 
 In order to connect to your database, provide the following environment variables:
-`DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD` and `DB_SSL`.
+
+- `DB_HOST_ADDRESS` (default: `127.0.0.1`)
+- `DB_PORT` (default: `5432`)
+- `DB_NAME` (default: `postgres`)
+- `DB_USERNAME` (default: `postgres`)
+- `DB_PASSWORD` (default: `root`)
+- `DB_SSL` (default: `true`).
 
 The tool will analyze the database schema and log any needed changes. It then asks for
 confirmation before applying the changes or aborting.
@@ -421,8 +427,8 @@ The tool supported the following options:
 
 - `-h`: Shows the available options.
 - `--db=<db_name>`: Specify the database name. Tool will ask if not specified.
-- `--dry-run`: Logs any changes to the schema without writing to the database, and exists 
+- `--dry-run`: Logs any changes to the schema without writing to the database, and exists
   with code 1 if there are any.
 - `--apply-changes`: Apply any changes without asking for confirmation.
-- `-o=<folder>`: Specify an output folder. When used, this will output all migration statements to 
+- `-o=<folder>`: Specify an output folder. When used, this will output all migration statements to
   `.sql` files in this folder instead of applying them to the database.
