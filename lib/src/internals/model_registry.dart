@@ -16,6 +16,17 @@ final _baseConverters = <Type, TypeConverter>{
   typeOf<DateTime>(): _DateTimeConverter(),
 };
 
+class EnumTypeConverter<T extends Enum> extends TypeConverter<T> {
+  const EnumTypeConverter(this.values);
+  final List<T> values;
+
+  @override
+  String encode(T value) => value.name;
+
+  @override
+  T decode(dynamic value) => values.byName(value as String);
+}
+
 class _PrimitiveTypeConverter<T> implements TypeConverter<T> {
   const _PrimitiveTypeConverter(this.decoder);
   final T Function(dynamic value) decoder;
