@@ -1,3 +1,8 @@
+# 0.9.0
+
+- Added support for enum serialization in models (by [@TimWhiting](https://github.com/TimWhiting))
+- Api and documentation fixes
+
 # 0.8.0
 
 - Added support for serialization through custom annotations
