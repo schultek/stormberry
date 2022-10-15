@@ -1,7 +1,6 @@
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
-import 'package:source_gen/source_gen.dart';
 
 import '../../internals.dart';
 import '../core/case_style.dart';
@@ -186,7 +185,7 @@ class ViewBuilder {
 
   String? get targetAnnotation {
     if (annotation != null && !annotation!.getField('annotation')!.isNull) {
-      return '@' + annotation!.getField('annotation')!.toSource();
+      return '@${annotation!.getField('annotation')!.toSource()}';
     }
     return null;
   }

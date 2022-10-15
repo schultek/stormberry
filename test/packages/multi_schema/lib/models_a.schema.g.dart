@@ -1,7 +1,7 @@
 // ignore_for_file: prefer_relative_imports
 import 'package:stormberry/internals.dart';
 
-import 'modelsA.dart';
+import 'models_a.dart';
 
 extension Repositories on Database {
   ModelARepository get modelAs => ModelARepository._(this);

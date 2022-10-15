@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:stormberry/stormberry.dart';
+import '../../stormberry.dart';
 
 class DatabaseSchema {
   final Map<String, TableSchema> tables;
