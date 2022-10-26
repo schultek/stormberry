@@ -115,7 +115,7 @@ class TableBuilder {
         var selfIsList = param.type.isDartCoreList;
         var otherIsList = otherParam != null ? otherParam.type.isDartCoreList : otherHasKey && !selfIsList;
 
-        if (!otherHasKey && otherIsList) {
+        if (selfHasKey && !otherHasKey && otherIsList) {
           throw UnsupportedError('Model ${otherBuilder.element.name} cannot have a many to '
               '${selfIsList ? 'many' : 'one'} relation to model ${element.name} without specifying a primary key.\n'
               'Either define a primary key for ${otherBuilder.element.name} or change the relation by changing field '
