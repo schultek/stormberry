@@ -14,11 +14,11 @@ import 'join_table_builder.dart';
 import 'stormberry_builder.dart';
 import 'utils.dart';
 import 'view_builder.dart';
-extension EnumType on DartType {
 
-  bool get isEnum =>
-      TypeChecker.fromRuntime(Enum).isAssignableFromType(this);
+extension EnumType on DartType {
+  bool get isEnum => TypeChecker.fromRuntime(Enum).isAssignableFromType(this);
 }
+
 class TableBuilder {
   ClassElement element;
   ConstantReader annotation;
@@ -100,7 +100,7 @@ class TableBuilder {
 
       var isList = param.type.isDartCoreList;
       var dataType = isList ? (param.type as InterfaceType).typeArguments[0] : param.type;
-      if (dataType.isEnum){
+      if (dataType.isEnum) {
         enums.add(dataType.element2 as EnumElement);
       }
       if (!state.builders.containsKey(dataType.element)) {
@@ -112,12 +112,20 @@ class TableBuilder {
         var otherHasKey = otherBuilder.primaryKeyParameter != null;
 
         var otherParam = otherBuilder.findMatchingParam(param);
-        var isBothList = param.type.isDartCoreList && (otherParam?.type.isDartCoreList ?? false);
+        var selfIsList = param.type.isDartCoreList;
+        var otherIsList = otherParam != null ? otherParam.type.isDartCoreList : otherHasKey && !selfIsList;
+
+        if (!otherHasKey && otherIsList) {
+          throw UnsupportedError('Model ${otherBuilder.element.name} cannot have a many to '
+              '${selfIsList ? 'many' : 'one'} relation to model ${element.name} without specifying a primary key.\n'
+              'Either define a primary key for ${otherBuilder.element.name} or change the relation by changing field '
+              '"${otherParam!.getDisplayString(withNullability: true)}" to have a non-list type.');
+        }
 
         if (!selfHasKey && !otherHasKey) {
           // Json column
           columns.add(FieldColumnBuilder(param, this, state));
-        } else if (selfHasKey && otherHasKey && isBothList) {
+        } else if (selfHasKey && otherHasKey && selfIsList && otherIsList) {
           // Many to Many
 
           var joinBuilder = JoinTableBuilder(this, otherBuilder, state);
@@ -139,7 +147,8 @@ class TableBuilder {
           columns.add(selfColumn);
         } else {
           ReferencingColumnBuilder selfColumn;
-          if (otherHasKey && !param.type.isDartCoreList) {
+
+          if (otherHasKey && !selfIsList) {
             selfColumn = ForeignColumnBuilder(param, otherBuilder, this, state);
           } else {
             selfColumn = ReferenceColumnBuilder(param, otherBuilder, this, state);
@@ -149,7 +158,7 @@ class TableBuilder {
 
           ReferencingColumnBuilder otherColumn;
 
-          if (selfHasKey && otherParam != null && !otherParam.type.isDartCoreList) {
+          if (selfHasKey && !otherIsList) {
             otherColumn = ForeignColumnBuilder(otherParam, this, otherBuilder, state);
             var insertIndex = otherBuilder.columns.lastIndexWhere((c) => c is ForeignColumnBuilder) + 1;
             otherBuilder.columns.insert(insertIndex, otherColumn);
