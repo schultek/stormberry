@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_relative_imports
 import 'package:stormberry/internals.dart';
-import 'package:stormberry_example/models.dart';
+
+import 'models.dart';
 
 extension Repositories on Database {
   AccountRepository get accounts => AccountRepository._(this);
@@ -74,10 +75,10 @@ class _AccountRepository extends BaseRepository
     var rows = await db.query(requests.map((r) => "SELECT nextval('accounts_id_seq') as \"id\"").join('\nUNION ALL\n'));
     var autoIncrements = rows.map((r) => r.toColumnMap()).toList();
 
-    await db.query("""
-          INSERT INTO "accounts" ( "id", "first_name", "last_name", "location", "company_id" )
-          VALUES ${requests.map((r) => '( ${registry.encode(autoIncrements[requests.indexOf(r)]['id'])}, ${registry.encode(r.firstName)}, ${registry.encode(r.lastName)}, ${registry.encode(r.location)}, ${registry.encode(r.companyId)} )').join(', ')}
-        """);
+    await db.query(
+      'INSERT INTO "accounts" ( "id", "first_name", "last_name", "location", "company_id" )\n'
+      'VALUES ${requests.map((r) => '( ${registry.encode(autoIncrements[requests.indexOf(r)]['id'])}, ${registry.encode(r.firstName)}, ${registry.encode(r.lastName)}, ${registry.encode(r.location)}, ${registry.encode(r.companyId)} )').join(', ')}\n',
+    );
     await _BillingAddressRepository(db).insert(
         db,
         requests.where((r) => r.billingAddress != null).map((r) {
@@ -96,13 +97,13 @@ class _AccountRepository extends BaseRepository
   @override
   Future<void> update(Database db, List<AccountUpdateRequest> requests) async {
     if (requests.isEmpty) return;
-    await db.query("""
-            UPDATE "accounts"
-            SET "first_name" = COALESCE(UPDATED."first_name"::text, "accounts"."first_name"), "last_name" = COALESCE(UPDATED."last_name"::text, "accounts"."last_name"), "location" = COALESCE(UPDATED."location"::point, "accounts"."location"), "company_id" = COALESCE(UPDATED."company_id"::text, "accounts"."company_id")
-            FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.firstName)}, ${registry.encode(r.lastName)}, ${registry.encode(r.location)}, ${registry.encode(r.companyId)} )').join(', ')} )
-            AS UPDATED("id", "first_name", "last_name", "location", "company_id")
-            WHERE "accounts"."id" = UPDATED."id"
-          """);
+    await db.query(
+      'UPDATE "accounts"\n'
+      'SET "first_name" = COALESCE(UPDATED."first_name"::text, "accounts"."first_name"), "last_name" = COALESCE(UPDATED."last_name"::text, "accounts"."last_name"), "location" = COALESCE(UPDATED."location"::point, "accounts"."location"), "company_id" = COALESCE(UPDATED."company_id"::text, "accounts"."company_id")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.firstName)}, ${registry.encode(r.lastName)}, ${registry.encode(r.location)}, ${registry.encode(r.companyId)} )').join(', ')} )\n'
+      'AS UPDATED("id", "first_name", "last_name", "location", "company_id")\n'
+      'WHERE "accounts"."id" = UPDATED."id"',
+    );
     await _BillingAddressRepository(db).update(
         db,
         requests.where((r) => r.billingAddress != null).map((r) {
@@ -118,10 +119,10 @@ class _AccountRepository extends BaseRepository
   @override
   Future<void> delete(Database db, List<int> keys) async {
     if (keys.isEmpty) return;
-    await db.query("""
-          DELETE FROM "accounts"
-          WHERE "accounts"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )
-        """);
+    await db.query(
+      'DELETE FROM "accounts"\n'
+      'WHERE "accounts"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )',
+    );
   }
 }
 
@@ -131,6 +132,8 @@ abstract class BillingAddressRepository
         ModelRepositoryInsert<BillingAddressInsertRequest>,
         ModelRepositoryUpdate<BillingAddressUpdateRequest> {
   factory BillingAddressRepository._(Database db) = _BillingAddressRepository;
+
+  Future<List<BillingAddress>> queryBillingAddresss([QueryParams? params]);
 }
 
 class _BillingAddressRepository extends BaseRepository
@@ -139,26 +142,31 @@ class _BillingAddressRepository extends BaseRepository
   _BillingAddressRepository(Database db) : super(db: db);
 
   @override
+  Future<List<BillingAddress>> queryBillingAddresss([QueryParams? params]) {
+    return queryMany(BillingAddressQueryable(), params);
+  }
+
+  @override
   Future<void> insert(Database db, List<BillingAddressInsertRequest> requests) async {
     if (requests.isEmpty) return;
 
-    await db.query("""
-          INSERT INTO "billing_addresses" ( "account_id", "company_id", "city", "postcode", "name", "street" )
-          VALUES ${requests.map((r) => '( ${registry.encode(r.accountId)}, ${registry.encode(r.companyId)}, ${registry.encode(r.city)}, ${registry.encode(r.postcode)}, ${registry.encode(r.name)}, ${registry.encode(r.street)} )').join(', ')}
-ON CONFLICT ( "account_id" ) DO UPDATE SET "city" = EXCLUDED."city", "postcode" = EXCLUDED."postcode", "name" = EXCLUDED."name", "street" = EXCLUDED."street"
-        """);
+    await db.query(
+      'INSERT INTO "billing_addresses" ( "account_id", "company_id", "city", "postcode", "name", "street" )\n'
+      'VALUES ${requests.map((r) => '( ${registry.encode(r.accountId)}, ${registry.encode(r.companyId)}, ${registry.encode(r.city)}, ${registry.encode(r.postcode)}, ${registry.encode(r.name)}, ${registry.encode(r.street)} )').join(', ')}\n'
+      'ON CONFLICT ( "account_id" ) DO UPDATE SET "city" = EXCLUDED."city", "postcode" = EXCLUDED."postcode", "name" = EXCLUDED."name", "street" = EXCLUDED."street"',
+    );
   }
 
   @override
   Future<void> update(Database db, List<BillingAddressUpdateRequest> requests) async {
     if (requests.isEmpty) return;
-    await db.query("""
-            UPDATE "billing_addresses"
-            SET "city" = COALESCE(UPDATED."city"::text, "billing_addresses"."city"), "postcode" = COALESCE(UPDATED."postcode"::text, "billing_addresses"."postcode"), "name" = COALESCE(UPDATED."name"::text, "billing_addresses"."name"), "street" = COALESCE(UPDATED."street"::text, "billing_addresses"."street")
-            FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.accountId)}, ${registry.encode(r.companyId)}, ${registry.encode(r.city)}, ${registry.encode(r.postcode)}, ${registry.encode(r.name)}, ${registry.encode(r.street)} )').join(', ')} )
-            AS UPDATED("account_id", "company_id", "city", "postcode", "name", "street")
-            WHERE "billing_addresses"."account_id" = UPDATED."account_id" AND "billing_addresses"."company_id" = UPDATED."company_id"
-          """);
+    await db.query(
+      'UPDATE "billing_addresses"\n'
+      'SET "city" = COALESCE(UPDATED."city"::text, "billing_addresses"."city"), "postcode" = COALESCE(UPDATED."postcode"::text, "billing_addresses"."postcode"), "name" = COALESCE(UPDATED."name"::text, "billing_addresses"."name"), "street" = COALESCE(UPDATED."street"::text, "billing_addresses"."street")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.accountId)}, ${registry.encode(r.companyId)}, ${registry.encode(r.city)}, ${registry.encode(r.postcode)}, ${registry.encode(r.name)}, ${registry.encode(r.street)} )').join(', ')} )\n'
+      'AS UPDATED("account_id", "company_id", "city", "postcode", "name", "street")\n'
+      'WHERE "billing_addresses"."account_id" = UPDATED."account_id" AND "billing_addresses"."company_id" = UPDATED."company_id"',
+    );
   }
 }
 
@@ -208,11 +216,11 @@ class _CompanyRepository extends BaseRepository
   Future<void> insert(Database db, List<CompanyInsertRequest> requests) async {
     if (requests.isEmpty) return;
 
-    await db.query("""
-          INSERT INTO "companies" ( "id", "name" )
-          VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)} )').join(', ')}
-ON CONFLICT ( "id" ) DO UPDATE SET "name" = EXCLUDED."name"
-        """);
+    await db.query(
+      'INSERT INTO "companies" ( "id", "name" )\n'
+      'VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)} )').join(', ')}\n'
+      'ON CONFLICT ( "id" ) DO UPDATE SET "name" = EXCLUDED."name"',
+    );
     await _BillingAddressRepository(db).insert(
         db,
         requests.expand((r) {
@@ -229,13 +237,13 @@ ON CONFLICT ( "id" ) DO UPDATE SET "name" = EXCLUDED."name"
   @override
   Future<void> update(Database db, List<CompanyUpdateRequest> requests) async {
     if (requests.isEmpty) return;
-    await db.query("""
-            UPDATE "companies"
-            SET "name" = COALESCE(UPDATED."name"::text, "companies"."name")
-            FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)} )').join(', ')} )
-            AS UPDATED("id", "name")
-            WHERE "companies"."id" = UPDATED."id"
-          """);
+    await db.query(
+      'UPDATE "companies"\n'
+      'SET "name" = COALESCE(UPDATED."name"::text, "companies"."name")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)} )').join(', ')} )\n'
+      'AS UPDATED("id", "name")\n'
+      'WHERE "companies"."id" = UPDATED."id"',
+    );
     await _BillingAddressRepository(db).update(
         db,
         requests.where((r) => r.addresses != null).expand((r) {
@@ -247,10 +255,10 @@ ON CONFLICT ( "id" ) DO UPDATE SET "name" = EXCLUDED."name"
   @override
   Future<void> delete(Database db, List<String> keys) async {
     if (keys.isEmpty) return;
-    await db.query("""
-          DELETE FROM "companies"
-          WHERE "companies"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )
-        """);
+    await db.query(
+      'DELETE FROM "companies"\n'
+      'WHERE "companies"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )',
+    );
   }
 }
 
@@ -288,32 +296,32 @@ class _InvoiceRepository extends BaseRepository
   Future<void> insert(Database db, List<InvoiceInsertRequest> requests) async {
     if (requests.isEmpty) return;
 
-    await db.query("""
-          INSERT INTO "invoices" ( "account_id", "company_id", "id", "title", "invoice_id" )
-          VALUES ${requests.map((r) => '( ${registry.encode(r.accountId)}, ${registry.encode(r.companyId)}, ${registry.encode(r.id)}, ${registry.encode(r.title)}, ${registry.encode(r.invoiceId)} )').join(', ')}
-ON CONFLICT ( "id" ) DO UPDATE SET "account_id" = EXCLUDED."account_id", "company_id" = EXCLUDED."company_id", "title" = EXCLUDED."title", "invoice_id" = EXCLUDED."invoice_id"
-        """);
+    await db.query(
+      'INSERT INTO "invoices" ( "account_id", "company_id", "id", "title", "invoice_id" )\n'
+      'VALUES ${requests.map((r) => '( ${registry.encode(r.accountId)}, ${registry.encode(r.companyId)}, ${registry.encode(r.id)}, ${registry.encode(r.title)}, ${registry.encode(r.invoiceId)} )').join(', ')}\n'
+      'ON CONFLICT ( "id" ) DO UPDATE SET "account_id" = EXCLUDED."account_id", "company_id" = EXCLUDED."company_id", "title" = EXCLUDED."title", "invoice_id" = EXCLUDED."invoice_id"',
+    );
   }
 
   @override
   Future<void> update(Database db, List<InvoiceUpdateRequest> requests) async {
     if (requests.isEmpty) return;
-    await db.query("""
-            UPDATE "invoices"
-            SET "account_id" = COALESCE(UPDATED."account_id"::int8, "invoices"."account_id"), "company_id" = COALESCE(UPDATED."company_id"::text, "invoices"."company_id"), "title" = COALESCE(UPDATED."title"::text, "invoices"."title"), "invoice_id" = COALESCE(UPDATED."invoice_id"::text, "invoices"."invoice_id")
-            FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.accountId)}, ${registry.encode(r.companyId)}, ${registry.encode(r.id)}, ${registry.encode(r.title)}, ${registry.encode(r.invoiceId)} )').join(', ')} )
-            AS UPDATED("account_id", "company_id", "id", "title", "invoice_id")
-            WHERE "invoices"."id" = UPDATED."id"
-          """);
+    await db.query(
+      'UPDATE "invoices"\n'
+      'SET "account_id" = COALESCE(UPDATED."account_id"::int8, "invoices"."account_id"), "company_id" = COALESCE(UPDATED."company_id"::text, "invoices"."company_id"), "title" = COALESCE(UPDATED."title"::text, "invoices"."title"), "invoice_id" = COALESCE(UPDATED."invoice_id"::text, "invoices"."invoice_id")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.accountId)}, ${registry.encode(r.companyId)}, ${registry.encode(r.id)}, ${registry.encode(r.title)}, ${registry.encode(r.invoiceId)} )').join(', ')} )\n'
+      'AS UPDATED("account_id", "company_id", "id", "title", "invoice_id")\n'
+      'WHERE "invoices"."id" = UPDATED."id"',
+    );
   }
 
   @override
   Future<void> delete(Database db, List<String> keys) async {
     if (keys.isEmpty) return;
-    await db.query("""
-          DELETE FROM "invoices"
-          WHERE "invoices"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )
-        """);
+    await db.query(
+      'DELETE FROM "invoices"\n'
+      'WHERE "invoices"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )',
+    );
   }
 }
 
@@ -363,32 +371,32 @@ class _PartyRepository extends BaseRepository
   Future<void> insert(Database db, List<PartyInsertRequest> requests) async {
     if (requests.isEmpty) return;
 
-    await db.query("""
-          INSERT INTO "parties" ( "sponsor_id", "id", "name", "date" )
-          VALUES ${requests.map((r) => '( ${registry.encode(r.sponsorId)}, ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.date)} )').join(', ')}
-ON CONFLICT ( "id" ) DO UPDATE SET "sponsor_id" = EXCLUDED."sponsor_id", "name" = EXCLUDED."name", "date" = EXCLUDED."date"
-        """);
+    await db.query(
+      'INSERT INTO "parties" ( "sponsor_id", "id", "name", "date" )\n'
+      'VALUES ${requests.map((r) => '( ${registry.encode(r.sponsorId)}, ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.date)} )').join(', ')}\n'
+      'ON CONFLICT ( "id" ) DO UPDATE SET "sponsor_id" = EXCLUDED."sponsor_id", "name" = EXCLUDED."name", "date" = EXCLUDED."date"',
+    );
   }
 
   @override
   Future<void> update(Database db, List<PartyUpdateRequest> requests) async {
     if (requests.isEmpty) return;
-    await db.query("""
-            UPDATE "parties"
-            SET "sponsor_id" = COALESCE(UPDATED."sponsor_id"::text, "parties"."sponsor_id"), "name" = COALESCE(UPDATED."name"::text, "parties"."name"), "date" = COALESCE(UPDATED."date"::int8, "parties"."date")
-            FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.sponsorId)}, ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.date)} )').join(', ')} )
-            AS UPDATED("sponsor_id", "id", "name", "date")
-            WHERE "parties"."id" = UPDATED."id"
-          """);
+    await db.query(
+      'UPDATE "parties"\n'
+      'SET "sponsor_id" = COALESCE(UPDATED."sponsor_id"::text, "parties"."sponsor_id"), "name" = COALESCE(UPDATED."name"::text, "parties"."name"), "date" = COALESCE(UPDATED."date"::int8, "parties"."date")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.sponsorId)}, ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.date)} )').join(', ')} )\n'
+      'AS UPDATED("sponsor_id", "id", "name", "date")\n'
+      'WHERE "parties"."id" = UPDATED."id"',
+    );
   }
 
   @override
   Future<void> delete(Database db, List<String> keys) async {
     if (keys.isEmpty) return;
-    await db.query("""
-          DELETE FROM "parties"
-          WHERE "parties"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )
-        """);
+    await db.query(
+      'DELETE FROM "parties"\n'
+      'WHERE "parties"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )',
+    );
   }
 }
 
