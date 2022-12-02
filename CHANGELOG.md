@@ -1,3 +1,8 @@
+# 0.9.1
+
+- Fixed bug with one-to-many relations.
+- Added `DB_SOCKET` environment connection variable.
+
 # 0.9.0
 
 - Added support for enum serialization in models (by [@TimWhiting](https://github.com/TimWhiting))

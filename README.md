@@ -418,7 +418,8 @@ In order to connect to your database, provide the following environment variable
 - `DB_NAME` (default: `postgres`)
 - `DB_USERNAME` (default: `postgres`)
 - `DB_PASSWORD` (default: `root`)
-- `DB_SSL` (default: `true`).
+- `DB_SSL` (default: `true`)
+- `DB_SOCKET` (default: `false`)
 
 The tool will analyze the database schema and log any needed changes. It then asks for
 confirmation before applying the changes or aborting.

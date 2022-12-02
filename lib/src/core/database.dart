@@ -32,7 +32,7 @@ class Database {
     this.timeoutInSeconds = 30,
     this.queryTimeoutInSeconds = 30,
     this.timeZone = 'UTC',
-    this.isUnixSocket = false,
+    bool? isUnixSocket,
     this.allowClearTextPassword = false,
     this.replicationMode = ReplicationMode.none,
   })  : host = host ?? Platform.environment['DB_HOST_ADDRESS'] ?? '127.0.0.1',
@@ -40,7 +40,9 @@ class Database {
         database = database ?? Platform.environment['DB_NAME'] ?? 'postgres',
         user = user ?? Platform.environment['DB_USERNAME'] ?? 'postgres',
         password = password ?? Platform.environment['DB_PASSWORD'] ?? 'root',
-        useSSL = useSSL ?? Platform.environment['DB_SSL']?.startsWith('true') ?? true {
+        useSSL = useSSL ?? (Platform.environment['DB_SSL'] != 'false'),
+        isUnixSocket = isUnixSocket ?? (Platform.environment['DB_SOCKET'] == 'true')
+  {
     _cachedConnection ??= connection();
   }
 
