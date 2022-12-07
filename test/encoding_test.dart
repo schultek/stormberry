@@ -37,7 +37,7 @@ void main() {
 
       expect(registry.encode({'a': "test's"}), equals("'{\"a\":\"test''s\"}'"));
 
-      expect(registry.encode(Data("tes@t's", 42)), equals("'{\"a\":\"tes@@t''s\",\"b\":42}'"));
+      expect(registry.encode(Data("tes@t's", 42)), equals("'{\"a\":\"tes@t''s\",\"b\":42}'"));
 
       expect(
         registry.encode([Data("te\nst's", 42)]),

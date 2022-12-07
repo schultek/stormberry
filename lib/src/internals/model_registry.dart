@@ -192,7 +192,7 @@ class PostgresTextEncoder2 {
 
   String _encodeString(String text, QuoteStyle quotes) {
     if (quotes == QuoteStyle.single) {
-      text = text.replaceAll("'", "''").replaceAll(r'\', r'\\').replaceAll('@', '@@');
+      text = text.replaceAll("'", "''").replaceAll(r'\', r'\\');
       text = "'$text'";
       if (text.contains(r'\')) {
         text = ' E$text';
