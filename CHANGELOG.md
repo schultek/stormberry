@@ -1,3 +1,7 @@
+# 0.9.2
+
+- Fixed bug with email encoding.
+
 # 0.9.1
 
 - Fixed bug with one-to-many relations.

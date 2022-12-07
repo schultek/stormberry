@@ -31,7 +31,7 @@ void main() {
     test('properly escapes strings', () async {
       expect(registry.encode('test abc'), equals("'test abc'"));
 
-      expect(registry.encode("te@st 'abc'"), equals("'te@@st ''abc'''"));
+      expect(registry.encode("te@st 'abc'"), equals("'te@st ''abc'''"));
 
       expect(registry.encode(['abc', "test's"]), equals("'{\"abc\",\"test''s\"}'"));
 
