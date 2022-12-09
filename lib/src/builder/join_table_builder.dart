@@ -14,6 +14,6 @@ class JoinTableBuilder {
     this.first = sorted.first;
     this.second = sorted.last;
 
-    tableName = state.options.tableCaseStyle.transform('${first.tableName}-${second.tableName}');
+    tableName = state.schema.options.tableCaseStyle.transform('${first.tableName}-${second.tableName}');
   }
 }

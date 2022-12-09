@@ -1,99 +1,39 @@
 import 'database.dart';
+import 'transformer.dart';
 
 /// Used to annotate a class as a database model
 class Model {
-  final List<View> views;
   final List<TableIndex> indexes;
   final String? tableName;
-  final dynamic insertRequestAnnotation;
-  final dynamic updateRequestAnnotation;
+  final dynamic annotateWith;
 
   const Model({
-    this.views = const [],
     this.indexes = const [],
     this.tableName,
-    this.insertRequestAnnotation,
-    this.updateRequestAnnotation,
+    this.annotateWith,
   });
 }
 
-/// Used to define views for classes annotated with [Model]
-class View {
-  final String name;
-  final List<Field> fields;
-  final dynamic annotation;
-  const View([this.name = '', this.fields = const [], this.annotation]);
-}
-
-/// Used to define fields of [View]s
-class Field {
+class ChangedIn {
   final String name;
 
-  final bool isHidden;
-  final String? viewAs;
-  final Transformer? transformer;
-
-  const Field(this.name, {this.viewAs, this.isHidden = false, this.transformer});
-
-  const Field.hidden(this.name)
-      : isHidden = true,
-        viewAs = null,
-        transformer = null;
-  const Field.view(this.name, {required String as})
-      : isHidden = false,
-        viewAs = as,
-        transformer = null;
-  const Field.transform(this.name, this.transformer)
-      : isHidden = false,
-        viewAs = null;
+  const ChangedIn(this.name);
 }
 
-abstract class Transformer {
-  const Transformer();
-
-  String transform(String column, String table);
+class HiddenIn extends ChangedIn {
+  const HiddenIn(String name) : super(name);
 }
 
-abstract class ListTransformer extends Transformer {
-  const ListTransformer();
+class ViewedIn extends ChangedIn {
+  final String as;
 
-  String? select(String column, String table) => null;
-  String? where(String column, String table) => null;
-
-  @override
-  String transform(String column, String table) {
-    var w = where(column, table);
-    return 'array_to_json(ARRAY ((\n'
-        '  SELECT ${select(column, table) ?? '*'}\n'
-        '  FROM jsonb_array_elements("$column".data) AS "$column"\n'
-        '${w != null ? '  WHERE $w\n' : ''}'
-        ')) ) AS "$column"';
-  }
+  const ViewedIn(String name, {required this.as}) : super(name);
 }
 
-class FilterByField extends FilterByValue {
-  final String _value;
+class TransformedIn extends ChangedIn {
+  final Transformer by;
 
-  const FilterByField(String key, String operand, this._value) : super(key, operand);
-
-  @override
-  String value(String column, String table) {
-    return '$table.$_value';
-  }
-}
-
-abstract class FilterByValue extends ListTransformer {
-  final String key;
-  final String operand;
-
-  const FilterByValue(this.key, this.operand);
-
-  String value(String column, String table);
-
-  @override
-  String? where(String column, String table) {
-    return "($column -> '$key') $operand to_jsonb (${value(column, table)})";
-  }
+  const TransformedIn(String name, {required this.by}) : super(name);
 }
 
 /// Used to annotate a field as the primary key of the table
@@ -117,16 +57,6 @@ abstract class Action<T> {
 abstract class Query<T, U> {
   const Query();
   Future<T> apply(Database db, U params);
-}
-
-/// Extend this to define a custom type converter
-class TypeConverter<T> {
-  /// The sql type to be converted
-  final String? type;
-  const TypeConverter([this.type]);
-
-  dynamic encode(T value) => throw UnimplementedError();
-  T decode(dynamic value) => throw UnimplementedError();
 }
 
 /// Used to define indexes on a table

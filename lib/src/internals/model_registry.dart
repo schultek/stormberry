@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:postgres/postgres.dart';
 
-import '../core/annotations.dart';
+import '../core/converter.dart';
 
 Type typeOf<T>() => T;
 
@@ -17,7 +17,7 @@ final _baseConverters = <Type, TypeConverter>{
 };
 
 class EnumTypeConverter<T extends Enum> extends TypeConverter<T> {
-  const EnumTypeConverter(this.values);
+  const EnumTypeConverter(this.values) : super('text');
   final List<T> values;
 
   @override
@@ -27,19 +27,19 @@ class EnumTypeConverter<T extends Enum> extends TypeConverter<T> {
   T decode(dynamic value) => values.byName(value as String);
 }
 
-class _PrimitiveTypeConverter<T> implements TypeConverter<T> {
-  const _PrimitiveTypeConverter(this.decoder);
+class _PrimitiveTypeConverter<T> extends TypeConverter<T> {
+  const _PrimitiveTypeConverter(this.decoder) : super('');
   final T Function(dynamic value) decoder;
 
   @override
   dynamic encode(T value) => value;
   @override
   T decode(dynamic value) => decoder(value);
-  @override
-  String? get type => throw UnimplementedError();
 }
 
-class _DateTimeConverter implements TypeConverter<DateTime> {
+class _DateTimeConverter extends TypeConverter<DateTime> {
+  _DateTimeConverter() : super('');
+
   @override
   DateTime decode(dynamic d) {
     if (d is String) {
@@ -54,32 +54,28 @@ class _DateTimeConverter implements TypeConverter<DateTime> {
 
   @override
   String encode(DateTime self) => self.toUtc().toIso8601String();
-
-  @override
-  String? get type => throw UnimplementedError();
 }
 
 class ModelRegistry {
-  final Map<Type, TypeConverter> converters;
 
-  ModelRegistry(Map<Type, TypeConverter> converters) : converters = {..._baseConverters, ...converters};
+  ModelRegistry();
 
   T decode<T>(dynamic value) {
     if (value is T) {
       return value;
-    } else if (converters[T] != null) {
-      return converters[T]!.decode(value) as T;
+    } else if (_baseConverters[T] != null) {
+      return _baseConverters[T]!.decode(value) as T;
     } else {
       throw ConverterException(
         'Cannot decode value $value of type ${value.runtimeType} to type $T: Unknown type.\n'
-        'Did you forgot to include the class or register a custom type converter?',
+        'Did you forgot to include the class or specify a custom type converter?',
       );
     }
   }
 
-  String encode(dynamic value) {
+  String encode(dynamic value, [TypeConverter? converter]) {
     try {
-      return PostgresTextEncoder2().convert(convert(value));
+      return PostgresTextEncoder2().convert(convert(value, converter));
     } catch (e) {
       throw ConverterException(
         'Cannot encode value $value of type ${value.runtimeType}: $e.\n'
@@ -88,9 +84,11 @@ class ModelRegistry {
     }
   }
 
-  dynamic convert(dynamic value) {
-    if (converters[value.runtimeType] != null) {
-      return converters[value.runtimeType]!.encode(value);
+  dynamic convert(dynamic value, [TypeConverter? converter]) {
+    if (converter != null && converter.canEncodeValue(value)) {
+      return converter.encode(value);
+    } else if (_baseConverters[value.runtimeType] != null) {
+      return _baseConverters[value.runtimeType]!.encode(value);
     } else if (value is List) {
       return value.map(convert).toList();
     } else if (value is Map) {

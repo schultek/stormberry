@@ -1,6 +1,10 @@
 import 'package:stormberry/stormberry.dart';
 
-import 'models.dart';
+import 'account.dart';
+import 'address.dart';
+import 'company.dart';
+import 'latlng.dart';
+
 
 Future<void> main() async {
   var db = Database(

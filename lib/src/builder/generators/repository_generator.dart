@@ -7,16 +7,13 @@ import 'update_generator.dart';
 import 'view_generator.dart';
 
 class RepositoryGenerator {
-  String generateRepositories(BuilderState state) {
+  String generateRepositories(AssetState state) {
     return '''
     extension Repositories on Database {
       ${state.builders.values.map((b) => '  ${b.element.name}Repository get ${CaseStyle.camelCase.transform(b.className)} => ${b.element.name}Repository._(this);\n').join()}
     }
     
-    final registry = ModelRegistry({
-      ${state.enums.where((e) => !state.typeConverters.containsKey(e.name)).map((e) => 'typeOf<${e.name}>(): EnumTypeConverter<${e.name}>(${e.name}.values),').join('\n')}
-      ${state.typeConverters.entries.map((e) => 'typeOf<${e.key}>(): ${e.value.key}(),').join('\n')}
-    });
+    final registry = ModelRegistry();
     
     ${state.builders.values.map((t) => generateRepository(t)).join()}
     

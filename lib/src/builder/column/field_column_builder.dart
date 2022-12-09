@@ -1,3 +1,4 @@
+import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
@@ -16,13 +17,37 @@ class FieldColumnBuilder extends ColumnBuilder with NamedColumnBuilder {
 
   FieldColumnBuilder(this.parameter, TableBuilder parentBuilder, BuilderState state) : super(parentBuilder, state) {
     isAutoIncrement = (autoIncrementChecker.firstAnnotationOf(parameter) ??
-            autoIncrementChecker.firstAnnotationOf(parameter.getter ?? parameter)) !=
+        autoIncrementChecker.firstAnnotationOf(parameter.getter ?? parameter)) !=
         null;
 
     if (isAutoIncrement && !parameter.type.isDartCoreInt) {
       throw 'The following field is annotated with @AutoIncrement() but has an unallowed type:\n'
-          '  - "${parameter.getDisplayString(withNullability: true)}" in class "${parentBuilder.element.getDisplayString(withNullability: true)}"\n'
+          '  - "${parameter.getDisplayString(withNullability: true)}" in class "${parentBuilder.element
+          .getDisplayString(withNullability: true)}"\n'
           'A field annotated with @AutoIncrement() must be of type int.';
+    }
+  }
+
+  @override
+  void checkConverter() {
+    if (converter != null) {
+      var type = converter!.type as InterfaceType;
+      var converterType = type.superclass!.typeArguments[0];
+
+      if (dataType != converterType) {
+        throw 'The following field is annotated with @UseConverter(...) with a custom converter '
+            'that has a different type than the field:\n'
+            '  - Field "${parameter.getDisplayString(withNullability: true)}" in class "${parentBuilder.element.getDisplayString(withNullability: true)}"\n'
+            '  - Converter "${converter!.toSource()}" with type "$converterType"';
+      }
+    }
+  }
+
+  @override
+  void checkModifiers() {
+    if (modifiers.isNotEmpty) {
+      print('Column field was annotated with "${modifiers.first.toSource()}", which is not supported.\n'
+          '  - ${parameter.getDisplayString(withNullability: true)}');
     }
   }
 
@@ -45,9 +70,10 @@ class FieldColumnBuilder extends ColumnBuilder with NamedColumnBuilder {
       return 'serial';
     }
     var type = isList ? '_' : '';
-    var convertedType = state.typeConverters[dataType.element?.name]?.value;
-    if (convertedType != null) {
-      type += convertedType;
+
+    var converterSqlType = converter?.getField('type')?.toStringValue();
+    if (converterSqlType != null) {
+      type += converterSqlType;
     } else {
       type += getSqlType(dataType);
     }
@@ -58,7 +84,7 @@ class FieldColumnBuilder extends ColumnBuilder with NamedColumnBuilder {
   String get paramName => parameter.name;
 
   @override
-  String get columnName => state.options.columnCaseStyle.transform(parameter.name);
+  String get columnName => state.schema.options.columnCaseStyle.transform(parameter.name);
 
   @override
   bool get isNullable => parameter.type.nullabilitySuffix != NullabilitySuffix.none;

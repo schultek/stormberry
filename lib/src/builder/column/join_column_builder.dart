@@ -5,7 +5,7 @@ import '../stormberry_builder.dart';
 import '../table_builder.dart';
 import 'column_builder.dart';
 
-class JoinColumnBuilder extends ColumnBuilder with LinkedColumnBuilder {
+class JoinColumnBuilder extends ColumnBuilder with RelationalColumnBuilder, LinkedColumnBuilder {
   @override
   FieldElement parameter;
   @override
@@ -15,7 +15,12 @@ class JoinColumnBuilder extends ColumnBuilder with LinkedColumnBuilder {
   late JoinColumnBuilder referencedColumn;
 
   JoinColumnBuilder(this.parameter, this.linkBuilder, this.joinBuilder, TableBuilder parentBuilder, BuilderState state)
-      : super(parentBuilder, state);
+      : super(parentBuilder, state) {
+    if (converter != null) {
+      print('Relational field was annotated with @UseConverter(...), which is not supported.\n'
+          '  - ${parameter.getDisplayString(withNullability: true)}');
+    }
+  }
 
   @override
   bool get isList => true;

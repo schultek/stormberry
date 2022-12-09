@@ -5,13 +5,15 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:path/path.dart' as path;
-import '../../internals.dart';
+import '../../stormberry.dart';
 import '../core/case_style.dart';
 
 const tableChecker = TypeChecker.fromRuntime(Model);
 const typeConverterChecker = TypeChecker.fromRuntime(TypeConverter);
 const primaryKeyChecker = TypeChecker.fromRuntime(PrimaryKey);
 const autoIncrementChecker = TypeChecker.fromRuntime(AutoIncrement);
+const changedInChecker = TypeChecker.fromRuntime(ChangedIn);
+const useConverterChecker = TypeChecker.fromRuntime(UseConverter);
 
 /// The global builder options from the build.yaml file
 class GlobalOptions {

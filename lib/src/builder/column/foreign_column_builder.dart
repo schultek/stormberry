@@ -6,7 +6,7 @@ import '../stormberry_builder.dart';
 import '../table_builder.dart';
 import 'column_builder.dart';
 
-class ForeignColumnBuilder extends ColumnBuilder with ReferencingColumnBuilder, NamedColumnBuilder {
+class ForeignColumnBuilder extends ColumnBuilder with RelationalColumnBuilder, ReferencingColumnBuilder, NamedColumnBuilder {
   @override
   FieldElement? parameter;
   @override

@@ -6,8 +6,11 @@ import 'src/builder/stormberry_builder.dart';
 
 export 'src/core/case_style.dart' show CaseStyle, TextTransform;
 
-/// Entry point for the builder
-StormberryBuilder buildSchema(BuilderOptions options) => StormberryBuilder(options);
+Builder analyzeSchema(BuilderOptions options) => StormberryBuilder(options);
+
+Builder buildSchema(BuilderOptions options) => SchemaBuilder();
+
+Builder buildRunner(BuilderOptions options) => RunnerBuilder();
 
 Builder buildOutput(BuilderOptions options) => OutputBuilder(options);
 
@@ -20,14 +23,12 @@ class OutputBuilder implements Builder {
   FutureOr<void> build(BuildStep buildStep) async {
     var inputId = buildStep.inputId;
 
-    var outputId = AssetId(inputId.package, inputId.path.replaceFirst('.output.g.dart', '.schema.g.dart'));
+    var outputId = AssetId(inputId.package, inputId.path.replaceFirst('.output.dart', '.schema.dart'));
     await buildStep.writeAsString(outputId, buildStep.readAsString(inputId));
   }
 
   @override
   Map<String, List<String>> get buildExtensions => {
-        '.output.g.dart': ['.schema.g.dart']
+        '.output.dart': ['.schema.dart']
       };
 }
-
-PostProcessBuilder outputCleanup(BuilderOptions options) => const FileDeletingBuilder(['.output.g.dart']);

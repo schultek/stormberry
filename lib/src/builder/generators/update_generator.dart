@@ -1,8 +1,10 @@
+import '../../core/case_style.dart';
 import '../column/column_builder.dart';
 import '../column/field_column_builder.dart';
 import '../column/foreign_column_builder.dart';
 import '../column/reference_column_builder.dart';
 import '../table_builder.dart';
+import '../utils.dart';
 
 class UpdateGenerator {
   String generateUpdateMethod(TableBuilder table) {
@@ -29,7 +31,7 @@ class UpdateGenerator {
         }
 
         var deepUpdate = '''
-          await _${column.linkBuilder.element.name}Repository(db).update(db, requests.where((r) => r.${column.paramName} != null).map((r) {
+          await db.${CaseStyle.camelCase.transform(column.linkBuilder.className)}.updateMany(requests.where((r) => r.${column.paramName} != null).map((r) {
             return ${column.linkBuilder.element.name}UpdateRequest(${requestParams.join(', ')});
           }).toList());
         ''';
@@ -48,7 +50,7 @@ class UpdateGenerator {
         }
 
         var deepUpdate = '''
-          await _${column.linkBuilder.element.name}Repository(db).update(db, requests.where((r) => r.${column.paramName} != null).expand((r) {
+          await db.${CaseStyle.camelCase.transform(column.linkBuilder.className)}.updateMany(requests.where((r) => r.${column.paramName} != null).expand((r) {
             return r.${column.paramName}!.map((rr) => ${column.linkBuilder.element.name}UpdateRequest(${requestParams.join(', ')}));
           }).toList());
         ''';
@@ -65,6 +67,22 @@ class UpdateGenerator {
         .whereType<NamedColumnBuilder>()
         .where((c) => table.primaryKeyColumn == c || c is! FieldColumnBuilder || !c.isAutoIncrement);
 
+    String toUpdateValue(NamedColumnBuilder c) {
+      return '\${registry.encode(r.${c.paramName}${c.converter != null ? ', ${c.converter!.toSource()}' : ''})}';
+    }
+
+    String whereClause;
+
+    if (hasPrimaryKey) {
+      whereClause =
+          '"${table.tableName}"."${table.primaryKeyColumn!.columnName}" = UPDATED."${table.primaryKeyColumn!.columnName}"';
+    } else {
+      whereClause = table.columns
+          .whereType<ForeignColumnBuilder>()
+          .map((c) => '"${table.tableName}"."${c.columnName}" = UPDATED."${c.columnName}"')
+          .join(' AND ');
+    }
+
     return '''
         @override
         Future<void> update(Database db, List<${table.element.name}UpdateRequest> requests) async {
@@ -72,9 +90,9 @@ class UpdateGenerator {
           await db.query(
             'UPDATE "${table.tableName}"\\n'
             'SET ${setColumns.map((c) => '"${c.columnName}" = COALESCE(UPDATED."${c.columnName}"::${c.sqlType}, "${table.tableName}"."${c.columnName}")').join(', ')}\\n'
-            'FROM ( VALUES \${requests.map((r) => '( ${updateColumns.map((c) => '\${registry.encode(r.${c.paramName})}').join(', ')} )').join(', ')} )\\n'
+            'FROM ( VALUES \${requests.map((r) => '( ${updateColumns.map(toUpdateValue).join(', ')} )').join(', ')} )\\n'
             'AS UPDATED(${updateColumns.map((c) => '"${c.columnName}"').join(', ')})\\n'
-            'WHERE ${hasPrimaryKey ? '"${table.tableName}"."${table.primaryKeyColumn!.columnName}" = UPDATED."${table.primaryKeyColumn!.columnName}"' : table.columns.whereType<ForeignColumnBuilder>().map((c) => '"${table.tableName}"."${c.columnName}" = UPDATED."${c.columnName}"').join(' AND ')}',
+            'WHERE $whereClause',
           );
           ${deepUpdates.isNotEmpty ? deepUpdates.join() : ''}
         }
@@ -120,7 +138,7 @@ class UpdateGenerator {
     }
 
     return '''
-      ${table.updateRequestAnnotation ?? ''}
+      ${table.annotateWith ?? ''}
       class $requestClassName {
         $requestClassName({${requestFields.map((f) => '${f.key.endsWith('?') ? '' : 'required '}this.${f.value}').join(', ')}});
         ${requestFields.map((f) => '${f.key} ${f.value};').join('\n')}

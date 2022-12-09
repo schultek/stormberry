@@ -6,7 +6,7 @@ import '../table_builder.dart';
 import 'column_builder.dart';
 import 'foreign_column_builder.dart';
 
-class ReferenceColumnBuilder extends ColumnBuilder with ReferencingColumnBuilder {
+class ReferenceColumnBuilder extends ColumnBuilder with RelationalColumnBuilder, ReferencingColumnBuilder {
   @override
   FieldElement? parameter;
   @override

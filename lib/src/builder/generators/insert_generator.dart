@@ -1,8 +1,11 @@
+import '../../../builder.dart';
+import '../../core/case_style.dart';
 import '../column/column_builder.dart';
 import '../column/field_column_builder.dart';
 import '../column/foreign_column_builder.dart';
 import '../column/reference_column_builder.dart';
 import '../table_builder.dart';
+import '../utils.dart';
 
 class InsertGenerator {
   String generateInsertMethod(TableBuilder table) {
@@ -35,7 +38,7 @@ class InsertGenerator {
         });
 
         var deepInsert = '''
-          await _${column.linkBuilder.element.name}Repository(db).insert(db, requests${isNullable ? '.where((r) => r.${column.paramName} != null)' : ''}.map((r) {
+          await db.${CaseStyle.camelCase.transform(column.linkBuilder.className)}.insertMany(requests${isNullable ? '.where((r) => r.${column.paramName} != null)' : ''}.map((r) {
             return ${column.linkBuilder.element.name}InsertRequest(${requestParams.join(', ')});
           }).toList());
         ''';
@@ -59,7 +62,7 @@ class InsertGenerator {
         });
 
         var deepInsert = '''
-          await _${column.linkBuilder.element.name}Repository(db).insert(db, requests${isNullable ? '.where((r) => r.${column.paramName} != null)' : ''}.expand((r) {
+          await db.${CaseStyle.camelCase.transform(column.linkBuilder.className)}.insertMany(requests${isNullable ? '.where((r) => r.${column.paramName} != null)' : ''}.expand((r) {
             return r.${column.paramName}${isNullable ? '!' : ''}.map((rr) => ${column.linkBuilder.element.name}InsertRequest(${requestParams.join(', ')}));
           }).toList());
         ''';
@@ -112,6 +115,14 @@ class InsertGenerator {
 
     var insertColumns = table.columns.whereType<NamedColumnBuilder>();
 
+    String toInsertValue(NamedColumnBuilder c) {
+      if (c is FieldColumnBuilder && c.isAutoIncrement) {
+        return '\${registry.encode(autoIncrements[requests.indexOf(r)][\'${c.columnName}\'])}';
+      } else {
+        return '\${registry.encode(r.${c.paramName}${c.converter != null ? ', ${c.converter!.toSource()}' : ''})}';
+      }
+    }
+
     return '''
       @override
       Future<${keyReturnStatement != null ? 'List<int>' : 'void'}> insert(Database db, List<${table.element.name}InsertRequest> requests) async {
@@ -120,7 +131,7 @@ class InsertGenerator {
         ${conflictKeyStatement ?? ''}
         await db.query(
           'INSERT INTO "${table.tableName}" ( ${insertColumns.map((c) => '"${c.columnName}"').join(', ')} )\\n'
-          'VALUES \${requests.map((r) => '( ${insertColumns.map((c) => c is FieldColumnBuilder && c.isAutoIncrement ? '\${registry.encode(autoIncrements[requests.indexOf(r)][\'${c.columnName}\'])}' : '\${registry.encode(r.${c.paramName})}').join(', ')} )').join(', ')}\\n'${onConflictClause ?? ''},
+          'VALUES \${requests.map((r) => '( ${insertColumns.map(toInsertValue).join(', ')} )').join(', ')}\\n'${onConflictClause ?? ''},
         );
         ${deepInserts.isNotEmpty ? deepInserts.join() : ''}
         ${keyReturnStatement ?? ''}
@@ -160,7 +171,7 @@ class InsertGenerator {
     }
 
     return '''
-      ${table.insertRequestAnnotation ?? ''}
+      ${table.annotateWith ?? ''}
       class $requestClassName {
         $requestClassName({${requestFields.map((f) => '${f.key.endsWith('?') ? '' : 'required '}this.${f.value}').join(', ')}});
         ${requestFields.map((f) => '${f.key} ${f.value};').join('\n')}

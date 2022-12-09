@@ -1,26 +1,20 @@
 builders:
   stormberry:
     import: "package:stormberry/builder.dart"
-    builder_factories: [ "buildSchema" ]
-    build_extensions: { ".dart": [ ".output.g.dart", ".runner.g.dart" ] }
-    auto_apply: none
+    builder_factories: [ "analyzeSchema" ]
+    build_extensions: { ".dart": ["___"] }
+    auto_apply: dependents
     build_to: cache
-    applies_builders: ["stormberry|output"]
-  output:
+    runs_before: ["stormberry|schema", "stormberry|runner"]
+  schema:
     import: "package:stormberry/builder.dart"
-    builder_factories: [ "buildOutput" ]
-    build_extensions: { ".output.g.dart": [ ".schema.g.dart" ] }
-    auto_apply: none
+    builder_factories: [ "buildSchema" ]
+    build_extensions: { ".dart": [ ".schema.dart" ] }
+    auto_apply: dependents
     build_to: source
-    required_inputs: [".output.g.dart"]
-    applies_builders: [ "stormberry|output_cleanup" ]
-post_process_builders:
-  output_cleanup:
+  runner:
     import: "package:stormberry/builder.dart"
-    builder_factory: "outputCleanup"
-targets:
-  $default:
-    builders:
-      stormberry:
-        generate_for:
-          - test/generation_test.dart
+    builder_factories: [ "buildRunner" ]
+    build_extensions: { ".dart": [ ".runner.dart" ] }
+    auto_apply: dependents
+    build_to: cache

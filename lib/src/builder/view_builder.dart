@@ -1,13 +1,17 @@
-import 'package:analyzer/dart/ast/ast.dart';
-import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
+import 'package:collection/collection.dart';
+import 'package:source_gen/source_gen.dart';
 
-import '../../internals.dart';
+import '../core/annotations.dart';
 import '../core/case_style.dart';
 import 'column/column_builder.dart';
 import 'column/field_column_builder.dart';
 import 'table_builder.dart';
 import 'utils.dart';
+
+final hiddenInChecker = TypeChecker.fromRuntime(HiddenIn);
+final viewedInChecker = TypeChecker.fromRuntime(ViewedIn);
+final transformedInChecker = TypeChecker.fromRuntime(TransformedIn);
 
 class LiteralValue {
   String value;
@@ -34,9 +38,9 @@ class ViewColumn {
     var c = column;
     if (c is LinkedColumnBuilder) {
       if (viewAs != null) {
-        return c.linkBuilder.views.firstWhere((v) => v.name.toLowerCase() == viewAs!.toLowerCase());
+        return c.linkBuilder.views.values.firstWhere((v) => v.name.toLowerCase() == viewAs!.toLowerCase());
       } else {
-        return c.linkBuilder.views.firstWhere((v) => v.isDefaultView);
+        return c.linkBuilder.views.values.firstWhere((v) => v.isDefaultView);
       }
     }
     return null;
@@ -79,11 +83,9 @@ class ViewColumn {
 
 class ViewBuilder {
   TableBuilder table;
-  DartObject? annotation;
+  String name;
 
-  ViewBuilder(this.table, this.annotation);
-
-  String get name => annotation?.getField('name')!.toStringValue() ?? '';
+  ViewBuilder(this.table, this.name);
 
   bool get isDefaultView => name.isEmpty;
 
@@ -96,83 +98,40 @@ class ViewBuilder {
 
   String get viewTableName => CaseStyle.snakeCase.transform('${!isDefaultView ? '${name}_' : ''}${table.tableName}_view');
 
-  List<ViewColumn>? _columns;
-  List<ViewColumn> get columns => _columns ??= _getViewColumns();
-  List<ViewColumn> _getViewColumns() {
-    var viewFields = annotation != null
-        ? Map.fromEntries(
-            annotation!
-                .getField('fields')!
-                .toListValue()!
-                .map((f) => MapEntry(f.getField('name')!.toStringValue()!, f)),
-          )
-        : <String, DartObject>{};
-
+  late List<ViewColumn> columns = () {
     var columns = <ViewColumn>[];
 
     for (var column in table.columns) {
       if (column.parameter == null) {
         continue;
       }
-      if (viewFields.containsKey(column.parameter!.name)) {
-        var fieldName = column.parameter!.name;
-        var viewField = viewFields[fieldName]!;
-
-        var isHidden = viewField.getField('isHidden')!.toBoolValue()!;
-
+      var modifiers = column.modifiers.where((m) => m.read('name').stringValue.toLowerCase() == name);
+      if (modifiers.isNotEmpty) {
+        var isHidden = modifiers.any((m) => m.instanceOf(hiddenInChecker));
         if (isHidden) {
           continue;
         }
 
-        var viewAs = viewField.getField('viewAs')!.toStringValue();
+        var viewAs = modifiers.where((m) => m.instanceOf(viewedInChecker)).firstOrNull?.read('as').stringValue;
 
         if (viewAs == null && column is LinkedColumnBuilder) {
-          if (!column.linkBuilder.views.any((v) => v.isDefaultView)) {
-            column.linkBuilder.views.add(ViewBuilder(column.linkBuilder, null));
+          if (!column.linkBuilder.views.values.any((v) => v.isDefaultView)) {
+            column.linkBuilder.views[''] = ViewBuilder(column.linkBuilder, '');
           }
         }
 
-        var transformer = viewField.getField('transformer')!;
+        var transformer = modifiers.where((m) => m.instanceOf(transformedInChecker)).firstOrNull?.read('by');
+
         String? transformerCode;
-        if (!transformer.isNull) {
-          var node = table.element.getNode();
-          if (node is ClassDeclaration) {
-            var tnode = node.metadata.firstWhere((a) => a.name.name == (Model).toString());
-            var vnode =
-                tnode.arguments!.arguments.whereType<NamedExpression>().firstWhere((p) => p.name.label.name == 'views');
-            if (vnode.expression is ListLiteral) {
-              var list = vnode.expression as ListLiteral;
-              var fields = list.elements
-                  .whereType<MethodInvocation>()
-                  .firstWhere((node) =>
-                      node.methodName.name == 'View' &&
-                      (node.argumentList.arguments.first as StringLiteral).stringValue?.toLowerCase() == name.toLowerCase())
-                  .argumentList
-                  .arguments[1];
-              if (fields is ListLiteral) {
-                var field = fields.elements
-                    .whereType<MethodInvocation>()
-                    .firstWhere((e) => (e.argumentList.arguments.first as StringLiteral).stringValue == fieldName);
-                Expression? exp;
-                if (field.methodName.name == 'transform') {
-                  exp = field.argumentList.arguments[1];
-                } else if (field.methodName.name == 'Field') {
-                  exp = field.argumentList.arguments
-                      .whereType<NamedExpression>()
-                      .firstWhere((a) => a.name.label.name == 'transformer')
-                      .expression;
-                }
-                transformerCode = exp?.toSource();
-              }
-            }
-          }
+        if (transformer != null && !transformer.isNull) {
+          transformerCode = transformer.toSource();
         }
 
         columns.add(ViewColumn(column, viewAs: viewAs, transformer: transformerCode));
       } else {
         if (column is LinkedColumnBuilder) {
-          if (!column.linkBuilder.views.any((v) => v.isDefaultView)) {
-            column.linkBuilder.views.add(ViewBuilder(column.linkBuilder, null));
+          if (!column.linkBuilder.views.values.any((v) => v.isDefaultView)) {
+            column.linkBuilder.views[''] = ViewBuilder(column.linkBuilder, '');
           }
         }
 
@@ -181,12 +140,5 @@ class ViewBuilder {
     }
 
     return columns;
-  }
-
-  String? get targetAnnotation {
-    if (annotation != null && !annotation!.getField('annotation')!.isNull) {
-      return '@${annotation!.getField('annotation')!.toSource()}';
-    }
-    return null;
-  }
+  }();
 }

@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 
-import '../../internals.dart';
+import '../core/transformer.dart';
 
 String buildJsonSchema(Map<String, dynamic> schema) {
   var out = <String, dynamic>{};

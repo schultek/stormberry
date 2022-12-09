@@ -5,7 +5,7 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:build/build.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:source_gen/source_gen.dart';
-
+import 'package:path/path.dart' as path;
 import 'generators/join_json_generator.dart';
 import 'generators/repository_generator.dart';
 import 'generators/table_json_generator.dart';
@@ -14,17 +14,27 @@ import 'table_builder.dart';
 import 'utils.dart';
 import 'view_builder.dart';
 
-class BuilderState {
-  Set<Uri> imports = {};
+final schemaResource = Resource<SchemaState>(() => SchemaState());
+
+class SchemaState {
+  late GlobalOptions options;
+  bool didPrepareColumns = false;
+  Map<AssetId, AssetState> assets = {};
+
+  Map<Element, TableBuilder> get builders => assets.values.map((a) => a.builders).reduce((a, b) => {...a, ...b});
+  Map<String, JoinTableBuilder> get joinBuilders => assets.values.map((a) => a.joinBuilders).reduce((a, b) => {...a, ...b});
+}
+
+class AssetState {
   Map<Element, TableBuilder> builders = {};
   Map<String, JoinTableBuilder> joinBuilders = {};
-  GlobalOptions options;
+}
 
-  Map<String, MapEntry<String, String?>> typeConverters = {};
-  Map<String, String> decoders = {};
-  Set<EnumElement> enums = {};
+class BuilderState {
+  SchemaState schema;
+  AssetState asset;
 
-  BuilderState(this.options);
+  BuilderState(this.schema, this.asset);
 }
 
 /// The main builder used for code generation
@@ -36,93 +46,106 @@ class StormberryBuilder implements Builder {
 
   @override
   FutureOr<void> build(BuildStep buildStep) async {
-    var resolver = buildStep.resolver;
-    var inputId = buildStep.inputId;
-
-    var visibleLibraries = await resolver.libraries.toList();
     try {
-      var outputMap = generate(visibleLibraries, buildStep);
-
-      for (var key in outputMap.keys) {
-        var outputId = inputId.changeExtension(key);
-        await buildStep.writeAsString(outputId, outputMap[key]!);
+      if (!await buildStep.resolver.isLibrary(buildStep.inputId)) {
+        return;
       }
-    } catch (e) {
+      var library = await buildStep.inputLibrary;
+      await analyze(library, buildStep);
+    } catch (e, st) {
       print('\x1B[31mFailed to build database schema:\n\n$e\x1B[0m\n');
+      print(st);
+    }
+  }
+
+  @override
+  Map<String, List<String>> get buildExtensions => const {'.dart': ['___']};
+
+  Future<void> analyze(LibraryElement library, BuildStep buildStep) async {
+    SchemaState schema = await buildStep.fetchResource(schemaResource);
+    schema.options = options;
+
+    var asset = AssetState();
+    schema.assets[buildStep.inputId] = asset;
+
+    var builderState = BuilderState(schema, asset);
+
+    var reader = LibraryReader(library);
+
+    var tables = reader.annotatedWith(tableChecker);
+
+    for (var table in tables) {
+      asset.builders[table.element] = TableBuilder(
+        table.element as ClassElement,
+        table.annotation,
+        builderState,
+      );
+    }
+  }
+}
+
+class SchemaBuilder implements Builder {
+  SchemaBuilder();
+
+  @override
+  FutureOr<void> build(BuildStep buildStep) async {
+    var state = await buildStep.fetchResource(schemaResource);
+
+    if (!state.didPrepareColumns) {
+      for (var builder in state.builders.values) {
+        builder.prepareColumns();
+      }
+      state.didPrepareColumns = true;
+    }
+
+    var asset = state.assets[buildStep.inputId];
+    if (asset != null && asset.builders.isNotEmpty) {
+      var formatter = DartFormatter(pageWidth: state.options.lineLength);
+      buildStep.writeAsString(buildStep.inputId.changeExtension('.schema.dart'), formatter.format('''
+        part of '${path.basename(buildStep.inputId.path)}';
+        
+        ${RepositoryGenerator().generateRepositories(asset)}
+      '''));
     }
   }
 
   @override
   Map<String, List<String>> get buildExtensions => const {
-        '.dart': ['.output.g.dart', '.runner.g.dart']
+        '.dart': ['.schema.dart']
       };
+}
 
-  /// Main generation handler
-  /// Searches for mappable classes and enums recursively
-  Map<String, String> generate(List<LibraryElement> libraries, BuildStep buildStep) {
-    BuilderState state = BuilderState(options);
 
-    state.imports.add(Uri.parse('package:stormberry/internals.dart'));
+class RunnerBuilder implements Builder {
+  RunnerBuilder();
 
-    for (var library in libraries) {
-      if (library.isInSdk) {
-        continue;
-      }
-
-      var reader = LibraryReader(library);
-
-      var typeConverters = reader.annotatedWith(typeConverterChecker);
-      var tables = reader.annotatedWith(tableChecker);
-
-      if (tables.isNotEmpty || typeConverters.isNotEmpty) {
-        state.imports.add(library.source.uri);
-      }
-
-      for (var element in typeConverters) {
-        var typeClassName = (element.element as ClassElement).thisType.superclass!.typeArguments[0].element!.name!;
-        var converterClassName = element.element.name!;
-        var sqlType = element.annotation.objectValue.getField('type')?.toStringValue();
-        state.typeConverters[typeClassName] = MapEntry(converterClassName, sqlType);
-      }
-
-      for (var table in tables) {
-        state.builders[table.element] = TableBuilder(
-          table.element as ClassElement,
-          table.annotation,
-          state,
-        );
-      }
-    }
-    for (var builder in state.builders.values) {
-      builder.prepareColumns(state.enums);
-    }
-
-    var map = <String, String>{};
-
-    map['.output.g.dart'] = DartFormatter(pageWidth: options.lineLength).format('''
-      // ignore_for_file: prefer_relative_imports
-      ${writeImports(state.imports, buildStep.inputId)}
-      
-      ${RepositoryGenerator().generateRepositories(state)}
-    ''');
-
-    map['.runner.g.dart'] = DartFormatter(pageWidth: options.lineLength).format('''
-      import 'dart:isolate'; 
-      import 'package:stormberry/src/helpers/json_schema.dart';
-      import 'package:stormberry/stormberry.dart';
-      
-      import '${buildStep.inputId.uri}';
-      
-      void main(List<String> args, SendPort port) {
-        port.send(buildJsonSchema(jsonSchema));
-      }
-    
-      const jsonSchema = ${LiteralValue.fix(const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
-          for (var def in state.builders.values) def.tableName: TableJsonGenerator().generateJsonSchema(def),
-          for (var def in state.joinBuilders.values) def.tableName: JoinJsonGenerator().generateJsonSchema(def),
+  @override
+  FutureOr<void> build(BuildStep buildStep) async {
+    var state = await buildStep.fetchResource(schemaResource);
+    var asset = state.assets[buildStep.inputId];
+    if (asset != null && asset.builders.isNotEmpty) {
+      var formatter = DartFormatter(pageWidth: state.options.lineLength);
+      buildStep.writeAsString(buildStep.inputId.changeExtension('.runner.dart'), formatter.format('''
+        import 'dart:isolate';
+        import 'package:stormberry/src/helpers/json_schema.dart';
+        import 'package:stormberry/stormberry.dart';
+  
+        import '${buildStep.inputId.uri}';
+  
+        void main(List<String> args, SendPort port) {
+          port.send(buildJsonSchema(jsonSchema));
+        }
+  
+        const jsonSchema = ${LiteralValue.fix(const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
+          for (var def in asset.builders.values) def.tableName: TableJsonGenerator().generateJsonSchema(def),
+          for (var def in asset.joinBuilders.values) def.tableName: JoinJsonGenerator().generateJsonSchema(def),
         }))};
-    ''');
-
-    return map;
+      '''));
+    }
   }
+
+  @override
+  Map<String, List<String>> get buildExtensions => const {
+    '.dart': ['.runner.dart']
+  };
 }

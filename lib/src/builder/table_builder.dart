@@ -27,10 +27,9 @@ class TableBuilder {
   late String className;
   late String tableName;
   late FieldElement? primaryKeyParameter;
-  late List<ViewBuilder> views;
+  late Map<String, ViewBuilder> views;
   late List<IndexBuilder> indexes;
-  String? insertRequestAnnotation;
-  String? updateRequestAnnotation;
+  String? annotateWith;
 
   TableBuilder(this.element, this.annotation, this.state) {
     tableName = _getTableName();
@@ -40,24 +39,14 @@ class TableBuilder {
         .where((p) => primaryKeyChecker.hasAnnotationOf(p) || primaryKeyChecker.hasAnnotationOf(p.getter ?? p))
         .firstOrNull;
 
-    views = annotation.read('views').listValue.map((o) {
-      return ViewBuilder(this, o);
-    }).toList();
-
-    if (views.isEmpty) {
-      views.add(ViewBuilder(this, null));
-    }
+    views = {};
 
     indexes = annotation.read('indexes').listValue.map((o) {
       return IndexBuilder(this, o);
     }).toList();
 
-    if (!annotation.read('insertRequestAnnotation').isNull) {
-      insertRequestAnnotation = '@${annotation.read('insertRequestAnnotation').toSource()}';
-    }
-
-    if (!annotation.read('updateRequestAnnotation').isNull) {
-      updateRequestAnnotation = '@${annotation.read('updateRequestAnnotation').toSource()}';
+    if (!annotation.read('annotateWith').isNull) {
+      annotateWith = '@${annotation.read('annotateWith').toSource()}';
     }
   }
 
@@ -80,7 +69,7 @@ class TableBuilder {
         name += 's';
       }
     }
-    return state.options.tableCaseStyle.transform(name);
+    return state.schema.options.tableCaseStyle.transform(name);
   }
 
   List<ColumnBuilder> columns = [];
@@ -89,9 +78,9 @@ class TableBuilder {
       ? columns.whereType<FieldColumnBuilder>().where((c) => c.parameter == primaryKeyParameter).firstOrNull
       : null;
 
-  void prepareColumns(Set<EnumElement> enums) {
+  void prepareColumns() {
     final allFields =
-        element.fields.followedBy(element.allSupertypes.expand((t) => t.isDartCoreObject ? [] : t.element.fields));
+        element.fields.followedBy(element.allSupertypes.expand((t) => t.isDartCoreObject ? [] : t.element2.fields));
 
     for (var param in allFields) {
       if (columns.any((c) => c.parameter == param)) {
@@ -100,13 +89,10 @@ class TableBuilder {
 
       var isList = param.type.isDartCoreList;
       var dataType = isList ? (param.type as InterfaceType).typeArguments[0] : param.type;
-      if (dataType.isEnum) {
-        enums.add(dataType.element2 as EnumElement);
-      }
-      if (!state.builders.containsKey(dataType.element)) {
+      if (!state.schema.builders.containsKey(dataType.element2)) {
         columns.add(FieldColumnBuilder(param, this, state));
       } else {
-        var otherBuilder = state.builders[dataType.element]!;
+        var otherBuilder = state.schema.builders[dataType.element2]!;
 
         var selfHasKey = primaryKeyParameter != null;
         var otherHasKey = otherBuilder.primaryKeyParameter != null;
@@ -125,52 +111,68 @@ class TableBuilder {
         if (!selfHasKey && !otherHasKey) {
           // Json column
           columns.add(FieldColumnBuilder(param, this, state));
-        } else if (selfHasKey && otherHasKey && selfIsList && otherIsList) {
-          // Many to Many
-
-          var joinBuilder = JoinTableBuilder(this, otherBuilder, state);
-          if (!state.joinBuilders.containsKey(joinBuilder.tableName)) {
-            state.joinBuilders[joinBuilder.tableName] = joinBuilder;
-          }
-
-          var selfColumn = JoinColumnBuilder(param, otherBuilder, joinBuilder, this, state);
-
-          if (otherParam != null) {
-            var otherColumn = JoinColumnBuilder(otherParam, this, joinBuilder, otherBuilder, state);
-
-            otherColumn.referencedColumn = selfColumn;
-            selfColumn.referencedColumn = otherColumn;
-
-            otherBuilder.columns.add(otherColumn);
-          }
-
-          columns.add(selfColumn);
         } else {
-          ReferencingColumnBuilder selfColumn;
+          if (selfHasKey && otherHasKey && selfIsList && otherIsList) {
+            // Many to Many
 
-          if (otherHasKey && !selfIsList) {
-            selfColumn = ForeignColumnBuilder(param, otherBuilder, this, state);
+            var joinBuilder = JoinTableBuilder(this, otherBuilder, state);
+            if (!state.schema.joinBuilders.containsKey(joinBuilder.tableName)) {
+              state.asset.joinBuilders[joinBuilder.tableName] = joinBuilder;
+            }
+
+            var selfColumn = JoinColumnBuilder(param, otherBuilder, joinBuilder, this, state);
+
+            if (otherParam != null) {
+              var otherColumn = JoinColumnBuilder(otherParam, this, joinBuilder, otherBuilder, state);
+
+              otherColumn.referencedColumn = selfColumn;
+              selfColumn.referencedColumn = otherColumn;
+
+              otherBuilder.columns.add(otherColumn);
+            }
+
+            columns.add(selfColumn);
           } else {
-            selfColumn = ReferenceColumnBuilder(param, otherBuilder, this, state);
+            ReferencingColumnBuilder selfColumn;
+
+            if (otherHasKey && !selfIsList) {
+              selfColumn = ForeignColumnBuilder(param, otherBuilder, this, state);
+            } else {
+              selfColumn = ReferenceColumnBuilder(param, otherBuilder, this, state);
+            }
+
+            columns.add(selfColumn);
+
+            ReferencingColumnBuilder otherColumn;
+
+            if (selfHasKey && !otherIsList) {
+              otherColumn = ForeignColumnBuilder(otherParam, this, otherBuilder, state);
+              var insertIndex = otherBuilder.columns.lastIndexWhere((c) => c is ForeignColumnBuilder) + 1;
+              otherBuilder.columns.insert(insertIndex, otherColumn);
+            } else {
+              otherColumn = ReferenceColumnBuilder(otherParam, this, otherBuilder, state);
+              otherBuilder.columns.add(otherColumn);
+            }
+
+            selfColumn.referencedColumn = otherColumn;
+            otherColumn.referencedColumn = selfColumn;
           }
-
-          columns.add(selfColumn);
-
-          ReferencingColumnBuilder otherColumn;
-
-          if (selfHasKey && !otherIsList) {
-            otherColumn = ForeignColumnBuilder(otherParam, this, otherBuilder, state);
-            var insertIndex = otherBuilder.columns.lastIndexWhere((c) => c is ForeignColumnBuilder) + 1;
-            otherBuilder.columns.insert(insertIndex, otherColumn);
-          } else {
-            otherColumn = ReferenceColumnBuilder(otherParam, this, otherBuilder, state);
-            otherBuilder.columns.add(otherColumn);
-          }
-
-          selfColumn.referencedColumn = otherColumn;
-          otherColumn.referencedColumn = selfColumn;
         }
       }
+    }
+
+    for (var c in columns) {
+      for (var m in c.modifiers) {
+        var viewName = CaseStyle.camelCase.transform(m.read('name').stringValue);
+
+        if (!views.containsKey(viewName)) {
+          views[viewName] = ViewBuilder(this, viewName);
+        }
+      }
+    }
+
+    if (views.isEmpty) {
+      views[''] = ViewBuilder(this, '');
     }
   }
 
@@ -178,7 +180,7 @@ class TableBuilder {
     // TODO add binding
     return element.fields.where((p) {
       var pType = p.type.isDartCoreList ? (p.type as InterfaceType).typeArguments[0] : p.type;
-      return pType.element == param.enclosingElement;
+      return pType.element2 == param.enclosingElement3;
     }).firstOrNull;
   }
 
@@ -188,7 +190,7 @@ class TableBuilder {
     if (base != null && plural && name.endsWith('s')) {
       name = name.substring(0, base.length - (base.endsWith('es') ? 2 : 1));
     }
-    name = state.options.columnCaseStyle.transform('$name-${primaryKeyColumn!.columnName}');
+    name = state.schema.options.columnCaseStyle.transform('$name-${primaryKeyColumn!.columnName}');
     if (plural) {
       name += name.endsWith('s') ? 'es' : 's';
     }

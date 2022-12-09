@@ -1,14 +1,16 @@
+import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 
 import '../column/field_column_builder.dart';
 import '../table_builder.dart';
+import '../utils.dart';
 import '../view_builder.dart';
 
 class ViewGenerator {
   String generateRepositoryMethods(TableBuilder table, {bool abstract = false}) {
     var str = StringBuffer();
 
-    for (var view in table.views) {
+    for (var view in table.views.values) {
       var viewName = view.viewName;
 
       if (table.primaryKeyColumn != null) {
@@ -24,7 +26,7 @@ class ViewGenerator {
         }
       }
 
-      var signature = 'Future<List<${view.entityName}>> query${viewName}s([QueryParams? params])';
+      var signature = 'Future<List<${view.entityName}>> query$viewName${viewName.endsWith('s') ? 'e' : ''}s([QueryParams? params])';
       if (abstract) {
         str.writeln('$signature;');
       } else {
@@ -36,7 +38,7 @@ class ViewGenerator {
   }
 
   String generateViewClasses(TableBuilder table) {
-    return table.views.map((v) => generateViewClass(v)).join('\n');
+    return table.views.values.map((v) => generateViewClass(v)).join('\n');
   }
 
   String generateViewClass(ViewBuilder view) {
@@ -65,9 +67,9 @@ class ViewGenerator {
         ${view.entityName} decode(TypedMap map) => ${view.className}(${view.columns.map((c) => '${c.paramName}: ${_getInitializer(c)}').join(',')});
       }
       
-      ${view.targetAnnotation ?? ''}
+      ${view.table.annotateWith ?? ''}
       class ${view.className}${implementsBase ? ' implements ${view.table.element.name}' : ''} {
-        ${view.className}(${view.columns.isEmpty ? '' : '{${view.columns.map((c) => '${c.isNullable ? '' : 'required '}this.${c.paramName}').join(', ')}}'});
+        ${view.className}(${view.columns.isEmpty ? '' : '{${view.columns.map((c) => '${c.isNullable ? '' : 'required '}this.${c.paramName}').join(', ')},}'});
         
         ${view.columns.map((c) => '${implementsBase ? '@override ' : ''}final ${c.dartType} ${c.paramName};').join('\n')}
       }
@@ -99,6 +101,11 @@ class ViewGenerator {
 
     if (c.view != null) {
       str += '${c.view!.entityName}Queryable().decoder)';
+    } else if (c.column.converter != null) {
+      str += '${c.column.converter!.toSource()}.decode)';
+    } else if (c.column is FieldColumnBuilder && (c.column as FieldColumnBuilder).dataType.isEnum) {
+      var e = (c.column as FieldColumnBuilder).dataType.element2 as EnumElement;
+      str += 'EnumTypeConverter<${e.name}>(${e.name}.values).decode)';
     } else {
       str += 'registry.decode)';
     }
