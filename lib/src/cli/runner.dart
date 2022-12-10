@@ -24,8 +24,20 @@ class MigrateCommand extends Command<void> {
     argParser.addOption('port', help: 'Set the database port.');
     argParser.addOption('username', help: 'Set the database username.');
     argParser.addOption('password', help: 'Set the database password.');
-    argParser.addOption('ssl', help: 'Whether or not this connection should connect securely.');
-    argParser.addOption('socket', help: 'If true, connection is made via unix socket.');
+
+    argParser.addFlag(
+      'ssl',
+      negatable: true,
+      defaultsTo: null,
+      help: 'Whether or not this connection should connect securely.',
+    );
+
+    argParser.addFlag(
+      'unix-socket',
+      negatable: true,
+      defaultsTo: null,
+      help: 'Whether or not the connection is made via unix socket.',
+    );
 
     argParser.addOption(
       'output',
@@ -57,8 +69,8 @@ class MigrateCommand extends Command<void> {
     String? dbName = argResults!['db'] as String?;
     String? dbUsername = argResults!['username'] as String?;
     String? dbPassword = argResults!['password'] as String?;
-    String? dbSSL = argResults!['ssl'] as String?;
-    String? dbSocket = argResults!['socket'] as String?;
+    bool? dbSSL = argResults!['ssl'] as bool?;
+    bool? dbSocket = argResults!['unix-socket'] as bool?;
 
     var pubspecYaml = File('pubspec.yaml');
 
@@ -118,7 +130,7 @@ class MigrateCommand extends Command<void> {
     }
 
     if (dbName == null && Platform.environment['DB_NAME'] == null) {
-      stdout.write('Select a database to update: ');
+      stdout.write('Select a database to update : ');
       dbName = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
     }
 
@@ -151,7 +163,12 @@ class MigrateCommand extends Command<void> {
 
     if (dbPassword == null && Platform.environment['DB_PASSWORD'] == null) {
       stdout.write('Enter the DB password : ');
+      stdin.echoMode = false;
+
       dbPassword = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
+
+      stdin.echoMode = true;
+      stdout.writeln();
 
       if (dbPassword?.isEmpty ?? true) {
         dbPassword = null;
