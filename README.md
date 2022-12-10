@@ -428,6 +428,12 @@ The tool supported the following options:
 
 - `-h`: Shows the available options.
 - `--db=<db_name>`: Specify the database name. Tool will ask if not specified.
+- `--host=<host_address>`: Specify the database host address. Tool will ask if not specified.
+- `--port=<port>`: Specify the database port. Tool will ask if not specified.
+- `--username=<username>`: Specify the database username. Tool will ask if not specified.
+- `--password=<password>`: Specify the database password. Tool will ask if not specified.
+- `--ssl=<ssl>`: Specify if the connection use SSL or not. Tool will ask if not specified.
+- `--socket=<socket>`: Specify if the connection use unix socket or not. Tool will ask if not specified.
 - `--dry-run`: Logs any changes to the schema without writing to the database, and exists
   with code 1 if there are any.
 - `--apply-changes`: Apply any changes without asking for confirmation.
