@@ -178,14 +178,14 @@ class MigrateCommand extends Command<void> {
     bool? useSSL = dbSSL;
     bool? isUnixSocket = dbSocket;
 
-    if (dbSSL == null && Platform.environment['DB_SSL'] == null) {
+    if (useSSL == null && Platform.environment['DB_SSL'] == null) {
       stdout.write('Use SSL ? (yes/no): ');
       final input = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
 
       useSSL = input == null ? null : input == 'yes';
     }
 
-    if (dbSocket == null && Platform.environment['DB_SOCKET'] == null) {
+    if (isUnixSocket == null && Platform.environment['DB_SOCKET'] == null) {
       stdout.write('Use unix socket ? (yes/no): ');
       final input = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
 
