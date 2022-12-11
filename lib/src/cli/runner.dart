@@ -175,8 +175,8 @@ class MigrateCommand extends Command<void> {
       }
     }
 
-    bool? useSSL;
-    bool? isUnixSocket;
+    bool? useSSL = dbSSL;
+    bool? isUnixSocket = dbSocket;
 
     if (dbSSL == null && Platform.environment['DB_SSL'] == null) {
       stdout.write('Use SSL ? (yes/no): ');
