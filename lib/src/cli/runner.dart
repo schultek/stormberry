@@ -39,6 +39,13 @@ class MigrateCommand extends Command<void> {
       help: 'Whether or not the connection is made via unix socket.',
     );
 
+    argParser.addFlag(
+      'defaults',
+      negatable: false,
+      help:
+          'Use default values except for the values provided via arguments or environment variables',
+    );
+
     argParser.addOption(
       'output',
       abbr: 'o',
@@ -64,6 +71,7 @@ class MigrateCommand extends Command<void> {
     bool dryRun = argResults!['dry-run'] as bool;
     String? output = argResults!['output'] as String?;
     bool applyChanges = argResults!['apply-changes'] as bool;
+    bool useDefaults = argResults!['defaults'] as bool;
     String? dbHostAddress = argResults!['host'] as String?;
     int? dbPort = argResults!['port'] as int?;
     String? dbName = argResults!['db'] as String?;
@@ -129,12 +137,13 @@ class MigrateCommand extends Command<void> {
       schema = schema.mergeWith(targetSchema);
     }
 
-    if (dbName == null && Platform.environment['DB_NAME'] == null) {
+    if (!useDefaults &&
+        dbName == null && Platform.environment['DB_NAME'] == null) {
       stdout.write('Select a database to update : ');
       dbName = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
     }
 
-    if (dbHostAddress == null &&
+    if (!useDefaults && dbHostAddress == null &&
         Platform.environment['DB_HOST_ADDRESS'] == null) {
       stdout.write('Enter the DB host address : ');
       dbHostAddress =
@@ -145,14 +154,16 @@ class MigrateCommand extends Command<void> {
       }
     }
 
-    if (dbPort == null && Platform.environment['DB_PORT'] == null) {
+    if (!useDefaults &&
+        dbPort == null && Platform.environment['DB_PORT'] == null) {
       stdout.write('Enter the DB port : ');
       final input = stdin.readLineSync();
 
       dbPort = int.tryParse(input ?? '');
     }
 
-    if (dbUsername == null && Platform.environment['DB_USERNAME'] == null) {
+    if (!useDefaults &&
+        dbUsername == null && Platform.environment['DB_USERNAME'] == null) {
       stdout.write('Enter the DB username : ');
       dbUsername = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
 
@@ -161,7 +172,8 @@ class MigrateCommand extends Command<void> {
       }
     }
 
-    if (dbPassword == null && Platform.environment['DB_PASSWORD'] == null) {
+    if (!useDefaults &&
+        dbPassword == null && Platform.environment['DB_PASSWORD'] == null) {
       stdout.write('Enter the DB password : ');
       stdin.echoMode = false;
 
@@ -178,14 +190,16 @@ class MigrateCommand extends Command<void> {
     bool? useSSL = dbSSL;
     bool? isUnixSocket = dbSocket;
 
-    if (useSSL == null && Platform.environment['DB_SSL'] == null) {
+    if (!useDefaults &&
+        useSSL == null && Platform.environment['DB_SSL'] == null) {
       stdout.write('Use SSL ? (yes/no): ');
       final input = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
 
       useSSL = input == null ? null : input == 'yes';
     }
 
-    if (isUnixSocket == null && Platform.environment['DB_SOCKET'] == null) {
+    if (!useDefaults &&
+        isUnixSocket == null && Platform.environment['DB_SOCKET'] == null) {
       stdout.write('Use unix socket ? (yes/no): ');
       final input = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
 
