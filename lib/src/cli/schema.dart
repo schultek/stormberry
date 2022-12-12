@@ -5,6 +5,7 @@ import '../../stormberry.dart';
 class DatabaseSchema {
   final Map<String, TableSchema> tables;
   final Map<String, ViewSchema> views;
+
   const DatabaseSchema(this.tables, this.views);
 
   DatabaseSchema copy() => DatabaseSchema(

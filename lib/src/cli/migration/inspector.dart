@@ -1,6 +1,6 @@
-import '../../stormberry.dart';
+import '../../../stormberry.dart';
 
-import 'schema.dart';
+import '../schema.dart';
 
 Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
   //ignore: prefer_const_constructors

@@ -125,7 +125,7 @@ class RunnerBuilder implements Builder {
     var asset = state.assets[buildStep.inputId];
     if (asset != null && asset.builders.isNotEmpty) {
       var formatter = DartFormatter(pageWidth: state.options.lineLength);
-      buildStep.writeAsString(buildStep.inputId.changeExtension('.runner.dart'), formatter.format('''
+      buildStep.writeAsString(buildStep.inputId.changeExtension('.stormberry.dart'), formatter.format('''
         import 'dart:isolate';
         import 'package:stormberry/src/helpers/json_schema.dart';
         import 'package:stormberry/stormberry.dart';
@@ -146,6 +146,6 @@ class RunnerBuilder implements Builder {
 
   @override
   Map<String, List<String>> get buildExtensions => const {
-    '.dart': ['.runner.dart']
+    '.dart': ['.stormberry.dart']
   };
 }

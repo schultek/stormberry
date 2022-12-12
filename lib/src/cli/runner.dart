@@ -6,10 +6,12 @@ import 'package:args/command_runner.dart';
 import 'package:yaml/yaml.dart';
 
 import '../../stormberry.dart';
-import 'differentiator.dart';
-import 'output.dart';
-import 'patcher.dart';
+import 'migration/differentiator.dart';
+import 'migration/output.dart';
+import 'migration/patcher.dart';
 import 'schema.dart';
+import 'package:glob/glob.dart';
+import 'package:file/local.dart';
 
 class MigrateCommand extends Command<void> {
   MigrateCommand() {
@@ -19,6 +21,7 @@ class MigrateCommand extends Command<void> {
       help: 'Returns exit code 1 if there are any pending migrations. '
           'Does not apply any changes to the database.',
     );
+
     argParser.addOption('db', help: 'Set the database name.');
     argParser.addOption('host', help: 'Set the database host.');
     argParser.addOption('port', help: 'Set the database port.');
@@ -42,8 +45,8 @@ class MigrateCommand extends Command<void> {
     argParser.addFlag(
       'defaults',
       negatable: false,
-      help:
-          'Use default values except for the values provided via arguments or environment variables',
+      help: 'Whether to use default values for the not-provided connection props. If this is false '
+          'the cli will ask for all missing props.',
     );
 
     argParser.addOption(
@@ -71,14 +74,6 @@ class MigrateCommand extends Command<void> {
     bool dryRun = argResults!['dry-run'] as bool;
     String? output = argResults!['output'] as String?;
     bool applyChanges = argResults!['apply-changes'] as bool;
-    bool useDefaults = argResults!['defaults'] as bool;
-    String? dbHostAddress = argResults!['host'] as String?;
-    int? dbPort = argResults!['port'] as int?;
-    String? dbName = argResults!['db'] as String?;
-    String? dbUsername = argResults!['username'] as String?;
-    String? dbPassword = argResults!['password'] as String?;
-    bool? dbSSL = argResults!['ssl'] as bool?;
-    bool? dbSocket = argResults!['unix-socket'] as bool?;
 
     var pubspecYaml = File('pubspec.yaml');
 
@@ -89,39 +84,13 @@ class MigrateCommand extends Command<void> {
 
     var packageName = loadYaml(await pubspecYaml.readAsString())['name'] as String;
 
-    var buildYaml = File('build.yaml');
+    var runners = Glob('.dart_tool/build/generated/$packageName/lib/**.stormberry.dart');
 
-    if (!buildYaml.existsSync()) {
-      print('Cannot find build.yaml file in current directory.');
-      exit(1);
-    }
-
-    var content = loadYaml(await buildYaml.readAsString());
-
-    List<String>? generateTargets = (content['targets'] as YamlMap?)
-        ?.values
-        .map((t) => t['builders']?['stormberry'])
-        .where((b) => b != null)
-        .expand((b) => b['generate_for'] as List)
-        .map((d) => d as String)
-        .toList();
-
-    if (generateTargets == null || generateTargets.isEmpty) {
-      print('Cannot find stormberry generation targets in build.yaml. '
-          'Make sure you have the stormberry builder configured with at least one generation target.');
-      exit(1);
-    }
+    var files = runners.listFileSystem(LocalFileSystem());
 
     var schema = DatabaseSchema.empty();
 
-    for (var target in generateTargets) {
-      var schemaPath = target.replaceFirst('.dart', '.runner.g.dart');
-      var file = File('.dart_tool/build/generated/$packageName/$schemaPath');
-      if (!file.existsSync()) {
-        print('Could not run migration for target $target. Did you run the build script?');
-        exit(1);
-      }
-
+    await for (var file in files) {
       var port = ReceivePort();
       await Isolate.spawnUri(
         file.absolute.uri,
@@ -137,82 +106,29 @@ class MigrateCommand extends Command<void> {
       schema = schema.mergeWith(targetSchema);
     }
 
-    if (!useDefaults &&
-        dbName == null && Platform.environment['DB_NAME'] == null) {
-      stdout.write('Select a database to update : ');
-      dbName = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
+    if (schema.tables.isEmpty) {
+      print('Could not run migration, because there are no models found. Did you run the build?');
+      exit(1);
     }
 
-    if (!useDefaults && dbHostAddress == null &&
-        Platform.environment['DB_HOST_ADDRESS'] == null) {
-      stdout.write('Enter the DB host address : ');
-      dbHostAddress =
-          stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
-
-      if (dbHostAddress?.isEmpty ?? true) {
-        dbHostAddress = null;
-      }
-    }
-
-    if (!useDefaults &&
-        dbPort == null && Platform.environment['DB_PORT'] == null) {
-      stdout.write('Enter the DB port : ');
-      final input = stdin.readLineSync();
-
-      dbPort = int.tryParse(input ?? '');
-    }
-
-    if (!useDefaults &&
-        dbUsername == null && Platform.environment['DB_USERNAME'] == null) {
-      stdout.write('Enter the DB username : ');
-      dbUsername = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
-
-      if (dbUsername?.isEmpty ?? true) {
-        dbUsername = null;
-      }
-    }
-
-    if (!useDefaults &&
-        dbPassword == null && Platform.environment['DB_PASSWORD'] == null) {
-      stdout.write('Enter the DB password : ');
-      stdin.echoMode = false;
-
-      dbPassword = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
-
-      stdin.echoMode = true;
-      stdout.writeln();
-
-      if (dbPassword?.isEmpty ?? true) {
-        dbPassword = null;
-      }
-    }
-
-    bool? useSSL = dbSSL;
-    bool? isUnixSocket = dbSocket;
-
-    if (!useDefaults &&
-        useSSL == null && Platform.environment['DB_SSL'] == null) {
-      stdout.write('Use SSL ? (yes/no): ');
-      final input = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
-
-      useSSL = input == null ? null : input == 'yes';
-    }
-
-    if (!useDefaults &&
-        isUnixSocket == null && Platform.environment['DB_SOCKET'] == null) {
-      stdout.write('Use unix socket ? (yes/no): ');
-      final input = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
-
-      isUnixSocket = input == null ? null : input == 'yes';
-    }
+    var dbName = resolveProperty<String>(arg: 'db', env: 'DB_NAME', prompt: 'Select a database to update: ');
+    var dbHost =
+        resolveProperty<String>(arg: 'host', env: 'DB_HOST_ADDRESS', prompt: 'Enter the database host address: ');
+    var dbPort = resolveProperty<int>(arg: 'port', env: 'DB_PORT', prompt: 'Enter the database port: ');
+    var dbUser = resolveProperty<String>(arg: 'username', env: 'DB_USERNAME', prompt: 'Enter the database username: ');
+    var dbPassword = resolveProperty<String>(
+        arg: 'password', env: 'DB_PASSWORD', prompt: 'Enter the database password: ', obscureInput: true);
+    var useSSL = resolveProperty<bool>(arg: 'ssl', env: 'DB_SSL', prompt: 'Use SSL? (yes/no): ');
+    var isUnixSocket =
+        resolveProperty<bool>(arg: 'unix-socket', env: 'DB_SOCKET', prompt: 'Use unix socket? (yes/no): ');
 
     var db = Database(
-      database: dbName,
-      host: dbHostAddress,
+      host: dbHost,
       port: dbPort,
-      useSSL: useSSL,
+      database: dbName,
       password: dbPassword,
-      user: dbUsername,
+      user: dbUser,
+      useSSL: useSSL,
       isUnixSocket: isUnixSocket,
     );
 
@@ -287,5 +203,55 @@ class MigrateCommand extends Command<void> {
     } else {
       print('NO CHANGES, ALL DONE');
     }
+  }
+
+  T? resolveProperty<T>({
+    required String arg,
+    required String env,
+    required String prompt,
+    bool obscureInput = false,
+  }) {
+    var result = argResults![arg];
+    if (result != null) {
+      if (result is T) {
+        return result;
+      } else if (result is String && T == int) {
+        return int.tryParse(result) as T;
+      }
+    }
+
+    bool useDefaults = argResults!['defaults'] as bool;
+    if (useDefaults || Platform.environment[env] != null) {
+      return null;
+    }
+
+    stdout.write(prompt);
+
+    if (obscureInput) {
+      stdin.echoMode = false;
+    }
+
+    var input = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
+
+    if (obscureInput) {
+      stdin.echoMode = true;
+      stdout.writeln();
+    }
+
+    if (input != null && input.isNotEmpty) {
+      if (T == String) {
+        return input as T;
+      } else if (T == int) {
+        return int.tryParse(input) as T?;
+      } else if (T == bool) {
+        return input == 'yes'
+            ? true as T
+            : input == 'no'
+                ? false as T
+                : null;
+      }
+    }
+
+    return null;
   }
 }
