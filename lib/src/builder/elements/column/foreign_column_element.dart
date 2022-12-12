@@ -8,9 +8,9 @@ import 'column_element.dart';
 
 class ForeignColumnElement extends ColumnElement with RelationalColumnElement, ReferencingColumnElement, NamedColumnElement {
   @override
-  FieldElement? parameter;
+  final FieldElement? parameter;
   @override
-  TableElement linkedTable;
+  final TableElement linkedTable;
 
   @override
   late ReferencingColumnElement referencedColumn;

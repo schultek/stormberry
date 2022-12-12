@@ -7,10 +7,10 @@ import 'column_element.dart';
 
 class JoinColumnElement extends ColumnElement with RelationalColumnElement, LinkedColumnElement {
   @override
-  FieldElement parameter;
+  final FieldElement parameter;
   @override
-  TableElement linkedTable;
-  JoinTableElement joinTable;
+  final TableElement linkedTable;
+  final JoinTableElement joinTable;
 
   late JoinColumnElement referencedColumn;
 

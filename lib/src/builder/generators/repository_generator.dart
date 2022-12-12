@@ -1,4 +1,3 @@
-import '../../core/case_style.dart';
 import '../schema.dart';
 import '../elements/table_element.dart';
 import 'delete_generator.dart';
@@ -10,7 +9,7 @@ class RepositoryGenerator {
   String generateRepositories(AssetState state) {
     return '''
     extension Repositories on Database {
-      ${state.tables.values.map((b) => '  ${b.element.name}Repository get ${CaseStyle.camelCase.transform(b.className)} => ${b.element.name}Repository._(this);\n').join()}
+      ${state.tables.values.map((b) => '  ${b.element.name}Repository get ${b.repoName} => ${b.element.name}Repository._(this);\n').join()}
     }
     
     final registry = ModelRegistry();

@@ -10,7 +10,7 @@ import 'column_element.dart';
 
 class FieldColumnElement extends ColumnElement with NamedColumnElement {
   @override
-  FieldElement parameter;
+  final FieldElement parameter;
 
   late final bool isAutoIncrement;
 

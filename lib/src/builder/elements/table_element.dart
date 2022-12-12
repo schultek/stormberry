@@ -20,11 +20,11 @@ extension EnumType on DartType {
 }
 
 class TableElement {
-  ClassElement element;
-  ConstantReader annotation;
-  BuilderState state;
+  final ClassElement element;
+  final ConstantReader annotation;
+  final BuilderState state;
 
-  late String className;
+  late String repoName;
   late String tableName;
   late FieldElement? primaryKeyParameter;
   late Map<String, ViewElement> views;
@@ -33,7 +33,7 @@ class TableElement {
 
   TableElement(this.element, this.annotation, this.state) {
     tableName = _getTableName();
-    className = _getClassName();
+    repoName = _getRepoName();
 
     primaryKeyParameter = element.fields
         .where((p) => primaryKeyChecker.hasAnnotationOf(p) || primaryKeyChecker.hasAnnotationOf(p.getter ?? p))
@@ -55,10 +55,10 @@ class TableElement {
       return annotation.read('tableName').stringValue;
     }
 
-    return _getClassName(singular: singular);
+    return state.options.tableCaseStyle.transform(_getRepoName(singular: singular));
   }
 
-  String _getClassName({bool singular = false}) {
+  String _getRepoName({bool singular = false}) {
     var name = element.name;
     if (!singular) {
       if (element.name.endsWith('s')) {
@@ -69,7 +69,7 @@ class TableElement {
         name += 's';
       }
     }
-    return state.options.tableCaseStyle.transform(name);
+    return CaseStyle.camelCase.transform(name);
   }
 
   List<ColumnElement> columns = [];

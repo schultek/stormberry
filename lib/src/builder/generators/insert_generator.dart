@@ -1,4 +1,3 @@
-import '../../core/case_style.dart';
 import '../elements/column/column_element.dart';
 import '../elements/column/field_column_element.dart';
 import '../elements/column/foreign_column_element.dart';
@@ -37,7 +36,7 @@ class InsertGenerator {
         });
 
         var deepInsert = '''
-          await db.${CaseStyle.camelCase.transform(column.linkedTable.className)}.insertMany(requests${isNullable ? '.where((r) => r.${column.paramName} != null)' : ''}.map((r) {
+          await db.${column.linkedTable.repoName}.insertMany(requests${isNullable ? '.where((r) => r.${column.paramName} != null)' : ''}.map((r) {
             return ${column.linkedTable.element.name}InsertRequest(${requestParams.join(', ')});
           }).toList());
         ''';
@@ -61,7 +60,7 @@ class InsertGenerator {
         });
 
         var deepInsert = '''
-          await db.${CaseStyle.camelCase.transform(column.linkedTable.className)}.insertMany(requests${isNullable ? '.where((r) => r.${column.paramName} != null)' : ''}.expand((r) {
+          await db.${column.linkedTable.repoName}.insertMany(requests${isNullable ? '.where((r) => r.${column.paramName} != null)' : ''}.expand((r) {
             return r.${column.paramName}${isNullable ? '!' : ''}.map((rr) => ${column.linkedTable.element.name}InsertRequest(${requestParams.join(', ')}));
           }).toList());
         ''';

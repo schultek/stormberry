@@ -1,4 +1,3 @@
-import '../../core/case_style.dart';
 import '../elements/column/column_element.dart';
 import '../elements/column/field_column_element.dart';
 import '../elements/column/foreign_column_element.dart';
@@ -31,7 +30,7 @@ class UpdateGenerator {
         }
 
         var deepUpdate = '''
-          await db.${CaseStyle.camelCase.transform(column.linkedTable.className)}.updateMany(requests.where((r) => r.${column.paramName} != null).map((r) {
+          await db.${column.linkedTable.repoName}.updateMany(requests.where((r) => r.${column.paramName} != null).map((r) {
             return ${column.linkedTable.element.name}UpdateRequest(${requestParams.join(', ')});
           }).toList());
         ''';
@@ -50,7 +49,7 @@ class UpdateGenerator {
         }
 
         var deepUpdate = '''
-          await db.${CaseStyle.camelCase.transform(column.linkedTable.className)}.updateMany(requests.where((r) => r.${column.paramName} != null).expand((r) {
+          await db.${column.linkedTable.repoName}.updateMany(requests.where((r) => r.${column.paramName} != null).expand((r) {
             return r.${column.paramName}!.map((rr) => ${column.linkedTable.element.name}UpdateRequest(${requestParams.join(', ')}));
           }).toList());
         ''';

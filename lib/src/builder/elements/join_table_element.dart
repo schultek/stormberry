@@ -3,11 +3,11 @@ import '../schema.dart';
 import 'table_element.dart';
 
 class JoinTableElement {
-  late TableElement first;
-  late TableElement second;
-  BuilderState state;
+  late final TableElement first;
+  late final TableElement second;
+  final BuilderState state;
 
-  late String tableName;
+  late final String tableName;
 
   JoinTableElement(TableElement first, TableElement second, this.state) {
     var sorted = [first, second]..sort((a, b) => a.tableName.compareTo(b.tableName));

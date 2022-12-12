@@ -3,8 +3,8 @@ import 'package:analyzer/dart/constant/value.dart';
 import 'table_element.dart';
 
 class IndexElement {
-  TableElement table;
-  DartObject annotation;
+  final TableElement table;
+  final DartObject annotation;
 
   IndexElement(this.table, this.annotation);
 

@@ -10,24 +10,29 @@ final schemaResource = Resource<SchemaState>(() => SchemaState());
 
 class SchemaState {
   final Map<AssetId, AssetState> _assets = {};
-  bool _didPrepareColumns = false;
+  bool _didFinalize = false;
 
   Map<Element, TableElement> get tables => _assets.values.map((a) => a.tables).reduce((a, b) => {...a, ...b});
   Map<String, JoinTableElement> get joinTables => _assets.values.map((a) => a.joinTables).reduce((a, b) => {...a, ...b});
 
   AssetState createForAsset(AssetId assetId) {
+    assert(!_didFinalize, 'Schema was already finalized.');
     var asset = AssetState();
     return _assets[assetId] = asset;
   }
 
   AssetState? getForAsset(AssetId assetId) {
-    if (!_didPrepareColumns) {
+    finalize();
+    return _assets[assetId];
+  }
+
+  void finalize() {
+    if (!_didFinalize) {
       for (var element in tables.values) {
         element.prepareColumns();
       }
-      _didPrepareColumns = true;
+      _didFinalize = true;
     }
-    return _assets[assetId];
   }
 
 }

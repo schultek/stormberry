@@ -8,9 +8,9 @@ import 'foreign_column_element.dart';
 
 class ReferenceColumnElement extends ColumnElement with RelationalColumnElement, ReferencingColumnElement {
   @override
-  FieldElement? parameter;
+  final FieldElement? parameter;
   @override
-  TableElement linkedTable;
+  final TableElement linkedTable;
 
   @override
   covariant late ForeignColumnElement referencedColumn;
@@ -50,10 +50,5 @@ class ReferenceColumnElement extends ColumnElement with RelationalColumnElement,
         'link_table_name': linkedTable.tableName,
       };
     }
-  }
-
-  @override
-  String toString() {
-    return 'ReferenceColumnBuilder{$paramName}';
   }
 }

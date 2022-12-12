@@ -82,8 +82,8 @@ class ViewColumn {
 }
 
 class ViewElement {
-  TableElement table;
-  String name;
+  final TableElement table;
+  final String name;
 
   ViewElement(this.table, this.name);
 

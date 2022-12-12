@@ -49,8 +49,8 @@ abstract class ParameterColumnElement implements ColumnElement {
 }
 
 abstract class ColumnElement {
-  BuilderState state;
-  TableElement parentTable;
+  final BuilderState state;
+  final TableElement parentTable;
 
   ColumnElement(this.parentTable, this.state) {
     checkConverter();
