@@ -20,6 +20,31 @@ class MigrateCommand extends Command<void> {
           'Does not apply any changes to the database.',
     );
     argParser.addOption('db', help: 'Set the database name.');
+    argParser.addOption('host', help: 'Set the database host.');
+    argParser.addOption('port', help: 'Set the database port.');
+    argParser.addOption('username', help: 'Set the database username.');
+    argParser.addOption('password', help: 'Set the database password.');
+
+    argParser.addFlag(
+      'ssl',
+      negatable: true,
+      defaultsTo: null,
+      help: 'Whether or not this connection should connect securely.',
+    );
+
+    argParser.addFlag(
+      'unix-socket',
+      negatable: true,
+      defaultsTo: null,
+      help: 'Whether or not the connection is made via unix socket.',
+    );
+
+    argParser.addFlag(
+      'defaults',
+      negatable: false,
+      help:
+          'Use default values except for the values provided via arguments or environment variables',
+    );
 
     argParser.addOption(
       'output',
@@ -44,9 +69,16 @@ class MigrateCommand extends Command<void> {
   @override
   Future<void> run() async {
     bool dryRun = argResults!['dry-run'] as bool;
-    String? dbName = argResults!['db'] as String?;
     String? output = argResults!['output'] as String?;
     bool applyChanges = argResults!['apply-changes'] as bool;
+    bool useDefaults = argResults!['defaults'] as bool;
+    String? dbHostAddress = argResults!['host'] as String?;
+    int? dbPort = argResults!['port'] as int?;
+    String? dbName = argResults!['db'] as String?;
+    String? dbUsername = argResults!['username'] as String?;
+    String? dbPassword = argResults!['password'] as String?;
+    bool? dbSSL = argResults!['ssl'] as bool?;
+    bool? dbSocket = argResults!['unix-socket'] as bool?;
 
     var pubspecYaml = File('pubspec.yaml');
 
@@ -105,12 +137,84 @@ class MigrateCommand extends Command<void> {
       schema = schema.mergeWith(targetSchema);
     }
 
-    if (dbName == null && Platform.environment['DB_NAME'] == null) {
-      stdout.write('Select a database to update: ');
+    if (!useDefaults &&
+        dbName == null && Platform.environment['DB_NAME'] == null) {
+      stdout.write('Select a database to update : ');
       dbName = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
     }
 
-    var db = Database(database: dbName);
+    if (!useDefaults && dbHostAddress == null &&
+        Platform.environment['DB_HOST_ADDRESS'] == null) {
+      stdout.write('Enter the DB host address : ');
+      dbHostAddress =
+          stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
+
+      if (dbHostAddress?.isEmpty ?? true) {
+        dbHostAddress = null;
+      }
+    }
+
+    if (!useDefaults &&
+        dbPort == null && Platform.environment['DB_PORT'] == null) {
+      stdout.write('Enter the DB port : ');
+      final input = stdin.readLineSync();
+
+      dbPort = int.tryParse(input ?? '');
+    }
+
+    if (!useDefaults &&
+        dbUsername == null && Platform.environment['DB_USERNAME'] == null) {
+      stdout.write('Enter the DB username : ');
+      dbUsername = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
+
+      if (dbUsername?.isEmpty ?? true) {
+        dbUsername = null;
+      }
+    }
+
+    if (!useDefaults &&
+        dbPassword == null && Platform.environment['DB_PASSWORD'] == null) {
+      stdout.write('Enter the DB password : ');
+      stdin.echoMode = false;
+
+      dbPassword = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
+
+      stdin.echoMode = true;
+      stdout.writeln();
+
+      if (dbPassword?.isEmpty ?? true) {
+        dbPassword = null;
+      }
+    }
+
+    bool? useSSL = dbSSL;
+    bool? isUnixSocket = dbSocket;
+
+    if (!useDefaults &&
+        useSSL == null && Platform.environment['DB_SSL'] == null) {
+      stdout.write('Use SSL ? (yes/no): ');
+      final input = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
+
+      useSSL = input == null ? null : input == 'yes';
+    }
+
+    if (!useDefaults &&
+        isUnixSocket == null && Platform.environment['DB_SOCKET'] == null) {
+      stdout.write('Use unix socket ? (yes/no): ');
+      final input = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
+
+      isUnixSocket = input == null ? null : input == 'yes';
+    }
+
+    var db = Database(
+      database: dbName,
+      host: dbHostAddress,
+      port: dbPort,
+      useSSL: useSSL,
+      password: dbPassword,
+      user: dbUsername,
+      isUnixSocket: isUnixSocket,
+    );
 
     await db.open();
 

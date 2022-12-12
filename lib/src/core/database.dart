@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:postgres/postgres.dart';
 
+import 'default_values.dart';
+
 class Database {
   bool debugPrint;
 
@@ -35,13 +37,13 @@ class Database {
     bool? isUnixSocket,
     this.allowClearTextPassword = false,
     this.replicationMode = ReplicationMode.none,
-  })  : host = host ?? Platform.environment['DB_HOST_ADDRESS'] ?? '127.0.0.1',
-        port = port ?? int.tryParse(Platform.environment['DB_PORT'] ?? '') ?? 5432,
-        database = database ?? Platform.environment['DB_NAME'] ?? 'postgres',
-        user = user ?? Platform.environment['DB_USERNAME'] ?? 'postgres',
-        password = password ?? Platform.environment['DB_PASSWORD'] ?? 'root',
-        useSSL = useSSL ?? (Platform.environment['DB_SSL'] != 'false'),
-        isUnixSocket = isUnixSocket ?? (Platform.environment['DB_SOCKET'] == 'true')
+  })  : host = host ?? Platform.environment['DB_HOST_ADDRESS'] ?? DB_HOST_ADDRESS,
+        port = port ?? int.tryParse(Platform.environment['DB_PORT'] ?? '') ?? DB_PORT,
+        database = database ?? Platform.environment['DB_NAME'] ?? DB_NAME,
+        user = user ?? Platform.environment['DB_USERNAME'] ?? DB_USERNAME,
+        password = password ?? Platform.environment['DB_PASSWORD'] ?? DB_PASSWORD,
+        useSSL = useSSL ?? (Platform.environment['DB_SSL'] != DB_SSL),
+        isUnixSocket = isUnixSocket ?? (Platform.environment['DB_SOCKET'] == DB_SOCKET)
   {
     _cachedConnection ??= connection();
   }
