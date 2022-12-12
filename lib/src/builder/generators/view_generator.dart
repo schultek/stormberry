@@ -104,7 +104,7 @@ class ViewGenerator {
     } else if (c.column.converter != null) {
       str += '${c.column.converter!.toSource()}.decode)';
     } else if (c.column is FieldColumnBuilder && (c.column as FieldColumnBuilder).dataType.isEnum) {
-      var e = (c.column as FieldColumnBuilder).dataType.element2 as EnumElement;
+      var e = (c.column as FieldColumnBuilder).dataType.element as EnumElement;
       str += 'EnumTypeConverter<${e.name}>(${e.name}.values).decode)';
     } else {
       str += 'registry.decode)';
