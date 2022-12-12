@@ -1,13 +1,13 @@
-import '../column/column_builder.dart';
-import '../column/foreign_column_builder.dart';
-import '../table_builder.dart';
+import '../elements/column/column_element.dart';
+import '../elements/column/foreign_column_element.dart';
+import '../elements/table_element.dart';
 
 class TableJsonGenerator {
-  Map<String, dynamic> generateJsonSchema(TableBuilder table) {
+  Map<String, dynamic> generateJsonSchema(TableElement table) {
     return {
       'columns': {
         for (var column in table.columns)
-          if (column is NamedColumnBuilder)
+          if (column is NamedColumnElement)
             column.columnName: {
               'type': column.sqlType,
               if (column.isNullable) 'isNullable': true,
@@ -20,16 +20,16 @@ class TableJsonGenerator {
             'column': table.primaryKeyColumn!.columnName,
           },
         for (var column in table.columns)
-          if (column is ForeignColumnBuilder)
+          if (column is ForeignColumnElement)
             {
               'type': 'foreign_key',
               'column': column.columnName,
-              'target': '${column.linkBuilder.tableName}.${column.linkBuilder.primaryKeyColumn!.columnName}',
+              'target': '${column.linkedTable.tableName}.${column.linkedTable.primaryKeyColumn!.columnName}',
               'on_delete': table.primaryKeyColumn != null ? 'set_null' : 'cascade',
               'on_update': 'cascade',
             },
         for (var column in table.columns)
-          if (column is ForeignColumnBuilder && column.isUnique)
+          if (column is ForeignColumnElement && column.isUnique)
             {
               'type': 'unique',
               'column': column.columnName,

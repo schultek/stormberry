@@ -4,17 +4,17 @@ import 'package:analyzer/dart/element/type.dart';
 import 'package:collection/collection.dart';
 import 'package:source_gen/source_gen.dart';
 
-import '../stormberry_builder.dart';
-import '../table_builder.dart';
-import '../utils.dart';
+import '../../schema.dart';
+import '../table_element.dart';
+import '../../utils.dart';
 
-abstract class NamedColumnBuilder implements ParameterColumnBuilder {
+abstract class NamedColumnElement implements ParameterColumnElement {
   String get columnName;
   bool get isNullable;
   String get sqlType;
 }
 
-abstract class RelationalColumnBuilder implements ColumnBuilder {
+abstract class RelationalColumnElement implements ColumnElement {
   @override
   void checkConverter() {
     if (converter != null) {
@@ -35,24 +35,24 @@ abstract class RelationalColumnBuilder implements ColumnBuilder {
   }
 }
 
-abstract class LinkedColumnBuilder implements ColumnBuilder {
-  TableBuilder get linkBuilder;
+abstract class LinkedColumnElement implements ColumnElement {
+  TableElement get linkedTable;
 }
 
-abstract class ReferencingColumnBuilder implements LinkedColumnBuilder, ParameterColumnBuilder {
-  ReferencingColumnBuilder get referencedColumn;
-  set referencedColumn(ReferencingColumnBuilder c);
+abstract class ReferencingColumnElement implements LinkedColumnElement, ParameterColumnElement {
+  ReferencingColumnElement get referencedColumn;
+  set referencedColumn(ReferencingColumnElement c);
 }
 
-abstract class ParameterColumnBuilder implements ColumnBuilder {
+abstract class ParameterColumnElement implements ColumnElement {
   String get paramName;
 }
 
-abstract class ColumnBuilder {
+abstract class ColumnElement {
   BuilderState state;
-  TableBuilder parentBuilder;
+  TableElement parentTable;
 
-  ColumnBuilder(this.parentBuilder, this.state) {
+  ColumnElement(this.parentTable, this.state) {
     checkConverter();
   }
 

@@ -1,28 +1,28 @@
 import '../../core/case_style.dart';
-import '../column/column_builder.dart';
-import '../column/field_column_builder.dart';
-import '../column/foreign_column_builder.dart';
-import '../column/reference_column_builder.dart';
-import '../table_builder.dart';
+import '../elements/column/column_element.dart';
+import '../elements/column/field_column_element.dart';
+import '../elements/column/foreign_column_element.dart';
+import '../elements/column/reference_column_element.dart';
+import '../elements/table_element.dart';
 import '../utils.dart';
 
 class InsertGenerator {
-  String generateInsertMethod(TableBuilder table) {
+  String generateInsertMethod(TableElement table) {
     var deepInserts = <String>[];
 
     for (var column
-        in table.columns.whereType<ReferenceColumnBuilder>().where((c) => c.linkBuilder.primaryKeyColumn == null)) {
-      if (column.linkBuilder.columns
-          .where((c) => c is ForeignColumnBuilder && c.linkBuilder != table && !c.isNullable)
+        in table.columns.whereType<ReferenceColumnElement>().where((c) => c.linkedTable.primaryKeyColumn == null)) {
+      if (column.linkedTable.columns
+          .where((c) => c is ForeignColumnElement && c.linkedTable != table && !c.isNullable)
           .isNotEmpty) {
         continue;
       }
 
       var isNullable = column.isNullable;
       if (!column.isList) {
-        var requestParams = column.linkBuilder.columns.whereType<ParameterColumnBuilder>().map((c) {
-          if (c is ForeignColumnBuilder) {
-            if (c.linkBuilder == table) {
+        var requestParams = column.linkedTable.columns.whereType<ParameterColumnElement>().map((c) {
+          if (c is ForeignColumnElement) {
+            if (c.linkedTable == table) {
               if (table.primaryKeyColumn!.isAutoIncrement) {
                 return '${c.paramName}: registry.decode(autoIncrements[requests.indexOf(r)][\'${table.primaryKeyColumn!.columnName}\'])';
               } else {
@@ -37,16 +37,16 @@ class InsertGenerator {
         });
 
         var deepInsert = '''
-          await db.${CaseStyle.camelCase.transform(column.linkBuilder.className)}.insertMany(requests${isNullable ? '.where((r) => r.${column.paramName} != null)' : ''}.map((r) {
-            return ${column.linkBuilder.element.name}InsertRequest(${requestParams.join(', ')});
+          await db.${CaseStyle.camelCase.transform(column.linkedTable.className)}.insertMany(requests${isNullable ? '.where((r) => r.${column.paramName} != null)' : ''}.map((r) {
+            return ${column.linkedTable.element.name}InsertRequest(${requestParams.join(', ')});
           }).toList());
         ''';
 
         deepInserts.add(deepInsert);
       } else {
-        var requestParams = column.linkBuilder.columns.whereType<ParameterColumnBuilder>().map((c) {
-          if (c is ForeignColumnBuilder) {
-            if (c.linkBuilder == table) {
+        var requestParams = column.linkedTable.columns.whereType<ParameterColumnElement>().map((c) {
+          if (c is ForeignColumnElement) {
+            if (c.linkedTable == table) {
               if (table.primaryKeyColumn!.isAutoIncrement) {
                 return '${c.paramName}: registry.decode(autoIncrements[requests.indexOf(r)][\'${table.primaryKeyColumn!.columnName}\'])';
               } else {
@@ -61,8 +61,8 @@ class InsertGenerator {
         });
 
         var deepInsert = '''
-          await db.${CaseStyle.camelCase.transform(column.linkBuilder.className)}.insertMany(requests${isNullable ? '.where((r) => r.${column.paramName} != null)' : ''}.expand((r) {
-            return r.${column.paramName}${isNullable ? '!' : ''}.map((rr) => ${column.linkBuilder.element.name}InsertRequest(${requestParams.join(', ')}));
+          await db.${CaseStyle.camelCase.transform(column.linkedTable.className)}.insertMany(requests${isNullable ? '.where((r) => r.${column.paramName} != null)' : ''}.expand((r) {
+            return r.${column.paramName}${isNullable ? '!' : ''}.map((rr) => ${column.linkedTable.element.name}InsertRequest(${requestParams.join(', ')}));
           }).toList());
         ''';
 
@@ -70,13 +70,13 @@ class InsertGenerator {
       }
     }
 
-    var autoIncrementCols = table.columns.whereType<FieldColumnBuilder>().where((c) => c.isAutoIncrement);
+    var autoIncrementCols = table.columns.whereType<FieldColumnElement>().where((c) => c.isAutoIncrement);
     String? autoIncrementStatement, keyReturnStatement;
 
     if (autoIncrementCols.isNotEmpty) {
       autoIncrementStatement = '''
         var rows = await db.query(requests
-          .map((r) => "SELECT ${autoIncrementCols.map((c) => "nextval('${c.parentBuilder.tableName}_${c.columnName}_seq') as \\\"${c.columnName}\\\"").join(', ')}")
+          .map((r) => "SELECT ${autoIncrementCols.map((c) => "nextval('${c.parentTable.tableName}_${c.columnName}_seq') as \\\"${c.columnName}\\\"").join(', ')}")
           .join('\\nUNION ALL\\n')
         );
         var autoIncrements = rows.map((r) => r.toColumnMap()).toList();
@@ -94,28 +94,28 @@ class InsertGenerator {
     if (table.primaryKeyColumn != null) {
       if (!table.primaryKeyColumn!.isAutoIncrement) {
         var conflictColumns = table.columns
-            .whereType<NamedColumnBuilder>()
-            .where((c) => c != table.primaryKeyColumn && (c is! FieldColumnBuilder || !c.isAutoIncrement));
+            .whereType<NamedColumnElement>()
+            .where((c) => c != table.primaryKeyColumn && (c is! FieldColumnElement || !c.isAutoIncrement));
         onConflictClause = '\n\'ON CONFLICT ( "${table.primaryKeyColumn!.columnName}" ) DO UPDATE SET '
             '${conflictColumns.map((c) => '"${c.columnName}" = EXCLUDED."${c.columnName}"').join(', ')}\'';
       }
-    } else if (table.columns.where((c) => c is ForeignColumnBuilder && c.isUnique).length == 1) {
-      var foreignColumn = table.columns.whereType<ForeignColumnBuilder>().first;
-      var conflictColumns = table.columns.whereType<FieldColumnBuilder>().where((c) => !c.isAutoIncrement);
+    } else if (table.columns.where((c) => c is ForeignColumnElement && c.isUnique).length == 1) {
+      var foreignColumn = table.columns.whereType<ForeignColumnElement>().first;
+      var conflictColumns = table.columns.whereType<FieldColumnElement>().where((c) => !c.isAutoIncrement);
       onConflictClause = '\n\'ON CONFLICT ( "${foreignColumn.columnName}" ) DO UPDATE SET '
           '${conflictColumns.map((c) => '"${c.columnName}" = EXCLUDED."${c.columnName}"').join(', ')}\'';
-    } else if (table.columns.where((c) => c is ForeignColumnBuilder && c.isUnique).length > 1) {
-      var conflictColumns = table.columns.whereType<FieldColumnBuilder>().where((c) => !c.isAutoIncrement);
+    } else if (table.columns.where((c) => c is ForeignColumnElement && c.isUnique).length > 1) {
+      var conflictColumns = table.columns.whereType<FieldColumnElement>().where((c) => !c.isAutoIncrement);
       conflictKeyStatement =
-          'var conflictKey = requests.isEmpty ? null : ${table.columns.whereType<ForeignColumnBuilder>().map((c) => 'requests.first.${c.paramName} != null ? ${c.isUnique ? "'${c.columnName}'" : 'mull'} : ').join()} null;';
+          'var conflictKey = requests.isEmpty ? null : ${table.columns.whereType<ForeignColumnElement>().map((c) => 'requests.first.${c.paramName} != null ? ${c.isUnique ? "'${c.columnName}'" : 'mull'} : ').join()} null;';
       onConflictClause = "\n'\${conflictKey != null ? 'ON CONFLICT (\"\$conflictKey\" ) DO UPDATE SET "
           "${conflictColumns.map((c) => '"${c.columnName}" = EXCLUDED."${c.columnName}"').join(', ')}' : ''}'";
     }
 
-    var insertColumns = table.columns.whereType<NamedColumnBuilder>();
+    var insertColumns = table.columns.whereType<NamedColumnElement>();
 
-    String toInsertValue(NamedColumnBuilder c) {
-      if (c is FieldColumnBuilder && c.isAutoIncrement) {
+    String toInsertValue(NamedColumnElement c) {
+      if (c is FieldColumnElement && c.isAutoIncrement) {
         return '\${registry.encode(autoIncrements[requests.indexOf(r)][\'${c.columnName}\'])}';
       } else {
         return '\${registry.encode(r.${c.paramName}${c.converter != null ? ', ${c.converter!.toSource()}' : ''})}';
@@ -138,32 +138,32 @@ class InsertGenerator {
     ''';
   }
 
-  String generateInsertRequest(TableBuilder table) {
+  String generateInsertRequest(TableElement table) {
     var requestClassName = '${table.element.name}InsertRequest';
     var requestFields = <MapEntry<String, String>>[];
 
     for (var column in table.columns) {
-      if (column is FieldColumnBuilder) {
+      if (column is FieldColumnElement) {
         if (!column.isAutoIncrement) {
           requestFields.add(MapEntry(column.parameter.type.getDisplayString(withNullability: true), column.paramName));
         }
-      } else if (column is ReferenceColumnBuilder && column.linkBuilder.primaryKeyColumn == null) {
-        if (column.linkBuilder.columns
-            .where((c) => c is ForeignColumnBuilder && c.linkBuilder != table && !c.isNullable)
+      } else if (column is ReferenceColumnElement && column.linkedTable.primaryKeyColumn == null) {
+        if (column.linkedTable.columns
+            .where((c) => c is ForeignColumnElement && c.linkedTable != table && !c.isNullable)
             .isNotEmpty) {
           continue;
         }
         requestFields.add(MapEntry(column.parameter!.type.getDisplayString(withNullability: true), column.paramName));
-      } else if (column is ForeignColumnBuilder) {
+      } else if (column is ForeignColumnElement) {
         var fieldNullSuffix = column.isNullable ? '?' : '';
         String fieldType;
-        if (column.linkBuilder.primaryKeyColumn == null) {
-          fieldType = column.linkBuilder.element.name;
+        if (column.linkedTable.primaryKeyColumn == null) {
+          fieldType = column.linkedTable.element.name;
           if (column.isList) {
             fieldType = 'List<$fieldType>';
           }
         } else {
-          fieldType = column.linkBuilder.primaryKeyColumn!.dartType;
+          fieldType = column.linkedTable.primaryKeyColumn!.dartType;
         }
         requestFields.add(MapEntry('$fieldType$fieldNullSuffix', column.paramName));
       }

@@ -2,7 +2,7 @@ import 'package:collection/collection.dart';
 import '../../../stormberry.dart';
 
 import 'inspector.dart';
-import '../schema.dart';
+import 'schema.dart';
 
 Future<DatabaseSchemaDiff> getSchemaDiff(Database db, DatabaseSchema dbSchema) async {
   var existingSchema = await inspectDatabaseSchema(db);

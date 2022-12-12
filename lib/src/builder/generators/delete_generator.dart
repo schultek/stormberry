@@ -1,7 +1,7 @@
-import '../table_builder.dart';
+import '../elements/table_element.dart';
 
 class DeleteGenerator {
-  String generateDeleteMethod(TableBuilder table) {
+  String generateDeleteMethod(TableElement table) {
     var keyType = table.primaryKeyColumn?.dartType;
     if (keyType == null) return '';
 

@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import '../../stormberry.dart';
+import '../../../stormberry.dart';
 
 class DatabaseSchema {
   final Map<String, TableSchema> tables;
@@ -206,28 +206,6 @@ class UniqueConstraint extends TableConstraint {
 
   @override
   int get hashCode => name.hashCode;
-}
-
-class TableTrigger {
-  final String name;
-  final String column;
-  final String function;
-  final List<String> args;
-
-  const TableTrigger(this.name, this.column, this.function, this.args);
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is TableTrigger &&
-          runtimeType == other.runtimeType &&
-          name == other.name &&
-          column == other.column &&
-          function == other.function &&
-          args.join(',') == other.args.join(',');
-
-  @override
-  int get hashCode => name.hashCode ^ column.hashCode ^ function.hashCode ^ args.hashCode;
 }
 
 extension TableIndexParser on TableIndex {

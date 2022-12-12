@@ -1,8 +1,8 @@
-import '../column/column_builder.dart';
-import '../join_table_builder.dart';
+import '../elements/column/column_element.dart';
+import '../elements/join_table_element.dart';
 
 class JoinJsonGenerator {
-  Map<String, dynamic> generateJsonSchema(JoinTableBuilder join) {
+  Map<String, dynamic> generateJsonSchema(JoinTableElement join) {
     return {
       'columns': {
         join.first.getForeignKeyName(): {

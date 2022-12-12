@@ -1,28 +1,28 @@
 import '../../core/case_style.dart';
-import '../column/column_builder.dart';
-import '../column/field_column_builder.dart';
-import '../column/foreign_column_builder.dart';
-import '../column/reference_column_builder.dart';
-import '../table_builder.dart';
+import '../elements/column/column_element.dart';
+import '../elements/column/field_column_element.dart';
+import '../elements/column/foreign_column_element.dart';
+import '../elements/column/reference_column_element.dart';
+import '../elements/table_element.dart';
 import '../utils.dart';
 
 class UpdateGenerator {
-  String generateUpdateMethod(TableBuilder table) {
+  String generateUpdateMethod(TableElement table) {
     var deepUpdates = <String>[];
 
     for (var column
-        in table.columns.whereType<ReferenceColumnBuilder>().where((c) => c.linkBuilder.primaryKeyColumn == null)) {
-      if (column.linkBuilder.columns
-          .where((c) => c is ForeignColumnBuilder && c.linkBuilder != table && !c.isNullable)
+        in table.columns.whereType<ReferenceColumnElement>().where((c) => c.linkedTable.primaryKeyColumn == null)) {
+      if (column.linkedTable.columns
+          .where((c) => c is ForeignColumnElement && c.linkedTable != table && !c.isNullable)
           .isNotEmpty) {
         continue;
       }
 
       if (!column.isList) {
         var requestParams = <String>[];
-        for (var c in column.linkBuilder.columns.whereType<ParameterColumnBuilder>()) {
-          if (c is ForeignColumnBuilder) {
-            if (c.linkBuilder == table) {
+        for (var c in column.linkedTable.columns.whereType<ParameterColumnElement>()) {
+          if (c is ForeignColumnElement) {
+            if (c.linkedTable == table) {
               requestParams.add('${c.paramName}: r.${table.primaryKeyColumn!.paramName}');
             }
           } else {
@@ -31,17 +31,17 @@ class UpdateGenerator {
         }
 
         var deepUpdate = '''
-          await db.${CaseStyle.camelCase.transform(column.linkBuilder.className)}.updateMany(requests.where((r) => r.${column.paramName} != null).map((r) {
-            return ${column.linkBuilder.element.name}UpdateRequest(${requestParams.join(', ')});
+          await db.${CaseStyle.camelCase.transform(column.linkedTable.className)}.updateMany(requests.where((r) => r.${column.paramName} != null).map((r) {
+            return ${column.linkedTable.element.name}UpdateRequest(${requestParams.join(', ')});
           }).toList());
         ''';
 
         deepUpdates.add(deepUpdate);
       } else {
         var requestParams = <String>[];
-        for (var c in column.linkBuilder.columns.whereType<ParameterColumnBuilder>()) {
-          if (c is ForeignColumnBuilder) {
-            if (c.linkBuilder == table) {
+        for (var c in column.linkedTable.columns.whereType<ParameterColumnElement>()) {
+          if (c is ForeignColumnElement) {
+            if (c.linkedTable == table) {
               requestParams.add('${c.paramName}: r.${table.primaryKeyColumn!.paramName}');
             }
           } else {
@@ -50,8 +50,8 @@ class UpdateGenerator {
         }
 
         var deepUpdate = '''
-          await db.${CaseStyle.camelCase.transform(column.linkBuilder.className)}.updateMany(requests.where((r) => r.${column.paramName} != null).expand((r) {
-            return r.${column.paramName}!.map((rr) => ${column.linkBuilder.element.name}UpdateRequest(${requestParams.join(', ')}));
+          await db.${CaseStyle.camelCase.transform(column.linkedTable.className)}.updateMany(requests.where((r) => r.${column.paramName} != null).expand((r) {
+            return r.${column.paramName}!.map((rr) => ${column.linkedTable.element.name}UpdateRequest(${requestParams.join(', ')}));
           }).toList());
         ''';
 
@@ -60,14 +60,14 @@ class UpdateGenerator {
     }
 
     var hasPrimaryKey = table.primaryKeyColumn != null;
-    var setColumns = table.columns.whereType<NamedColumnBuilder>().where((c) =>
-        (hasPrimaryKey ? c != table.primaryKeyColumn : c is FieldColumnBuilder) &&
-        (c is! FieldColumnBuilder || !c.isAutoIncrement));
+    var setColumns = table.columns.whereType<NamedColumnElement>().where((c) =>
+        (hasPrimaryKey ? c != table.primaryKeyColumn : c is FieldColumnElement) &&
+        (c is! FieldColumnElement || !c.isAutoIncrement));
     var updateColumns = table.columns
-        .whereType<NamedColumnBuilder>()
-        .where((c) => table.primaryKeyColumn == c || c is! FieldColumnBuilder || !c.isAutoIncrement);
+        .whereType<NamedColumnElement>()
+        .where((c) => table.primaryKeyColumn == c || c is! FieldColumnElement || !c.isAutoIncrement);
 
-    String toUpdateValue(NamedColumnBuilder c) {
+    String toUpdateValue(NamedColumnElement c) {
       return '\${registry.encode(r.${c.paramName}${c.converter != null ? ', ${c.converter!.toSource()}' : ''})}';
     }
 
@@ -78,7 +78,7 @@ class UpdateGenerator {
           '"${table.tableName}"."${table.primaryKeyColumn!.columnName}" = UPDATED."${table.primaryKeyColumn!.columnName}"';
     } else {
       whereClause = table.columns
-          .whereType<ForeignColumnBuilder>()
+          .whereType<ForeignColumnElement>()
           .map((c) => '"${table.tableName}"."${c.columnName}" = UPDATED."${c.columnName}"')
           .join(' AND ');
     }
@@ -99,12 +99,12 @@ class UpdateGenerator {
       ''';
   }
 
-  String generateUpdateRequest(TableBuilder table) {
+  String generateUpdateRequest(TableElement table) {
     var requestClassName = '${table.element.name}UpdateRequest';
     var requestFields = <MapEntry<String, String>>[];
 
     for (var column in table.columns) {
-      if (column is FieldColumnBuilder) {
+      if (column is FieldColumnElement) {
         if (column == table.primaryKeyColumn || !column.isAutoIncrement) {
           requestFields.add(MapEntry(
             column.parameter.type.getDisplayString(withNullability: false) +
@@ -112,9 +112,9 @@ class UpdateGenerator {
             column.paramName,
           ));
         }
-      } else if (column is ReferenceColumnBuilder && column.linkBuilder.primaryKeyColumn == null) {
-        if (column.linkBuilder.columns
-            .where((c) => c is ForeignColumnBuilder && c.linkBuilder != table && !c.isNullable)
+      } else if (column is ReferenceColumnElement && column.linkedTable.primaryKeyColumn == null) {
+        if (column.linkedTable.columns
+            .where((c) => c is ForeignColumnElement && c.linkedTable != table && !c.isNullable)
             .isNotEmpty) {
           continue;
         }
@@ -122,16 +122,16 @@ class UpdateGenerator {
             column.parameter!.type.getDisplayString(withNullability: false) +
                 (column == table.primaryKeyColumn ? '' : '?'),
             column.paramName));
-      } else if (column is ForeignColumnBuilder) {
+      } else if (column is ForeignColumnElement) {
         var fieldNullSuffix = column == table.primaryKeyColumn ? '' : '?';
         String fieldType;
-        if (column.linkBuilder.primaryKeyColumn == null) {
-          fieldType = column.linkBuilder.element.name;
+        if (column.linkedTable.primaryKeyColumn == null) {
+          fieldType = column.linkedTable.element.name;
           if (column.isList) {
             fieldType = 'List<$fieldType>';
           }
         } else {
-          fieldType = column.linkBuilder.primaryKeyColumn!.dartType;
+          fieldType = column.linkedTable.primaryKeyColumn!.dartType;
         }
         requestFields.add(MapEntry('$fieldType$fieldNullSuffix', column.paramName));
       }

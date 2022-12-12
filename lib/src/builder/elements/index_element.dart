@@ -1,12 +1,12 @@
 import 'package:analyzer/dart/constant/value.dart';
 
-import 'table_builder.dart';
+import 'table_element.dart';
 
-class IndexBuilder {
-  TableBuilder table;
+class IndexElement {
+  TableElement table;
   DartObject annotation;
 
-  IndexBuilder(this.table, this.annotation);
+  IndexElement(this.table, this.annotation);
 
   Map<String, dynamic> toMap() {
     return {

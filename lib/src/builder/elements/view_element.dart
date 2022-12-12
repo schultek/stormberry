@@ -2,12 +2,12 @@ import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:collection/collection.dart';
 import 'package:source_gen/source_gen.dart';
 
-import '../core/annotations.dart';
-import '../core/case_style.dart';
-import 'column/column_builder.dart';
-import 'column/field_column_builder.dart';
-import 'table_builder.dart';
-import 'utils.dart';
+import '../../core/annotations.dart';
+import '../../core/case_style.dart';
+import 'column/column_element.dart';
+import 'column/field_column_element.dart';
+import 'table_element.dart';
+import '../utils.dart';
 
 final hiddenInChecker = TypeChecker.fromRuntime(HiddenIn);
 final viewedInChecker = TypeChecker.fromRuntime(ViewedIn);
@@ -30,17 +30,17 @@ class ViewColumn {
   String? viewAs;
   String? transformer;
 
-  ColumnBuilder column;
+  ColumnElement column;
 
   ViewColumn(this.column, {this.viewAs, this.transformer});
 
-  ViewBuilder? get view {
+  ViewElement? get view {
     var c = column;
-    if (c is LinkedColumnBuilder) {
+    if (c is LinkedColumnElement) {
       if (viewAs != null) {
-        return c.linkBuilder.views.values.firstWhere((v) => v.name.toLowerCase() == viewAs!.toLowerCase());
+        return c.linkedTable.views.values.firstWhere((v) => v.name.toLowerCase() == viewAs!.toLowerCase());
       } else {
-        return c.linkBuilder.views.values.firstWhere((v) => v.isDefaultView);
+        return c.linkedTable.views.values.firstWhere((v) => v.isDefaultView);
       }
     }
     return null;
@@ -64,8 +64,8 @@ class ViewColumn {
   String? get tableName {
     if (view != null) {
       return view!.viewTableName;
-    } else if (column is LinkedColumnBuilder) {
-      return (column as LinkedColumnBuilder).linkBuilder.tableName;
+    } else if (column is LinkedColumnElement) {
+      return (column as LinkedColumnElement).linkedTable.tableName;
     }
     return null;
   }
@@ -76,16 +76,16 @@ class ViewColumn {
     return column.toMap()
       ..addAll({
         if (transformer != null) 'transformer': LiteralValue(transformer!),
-        if (column is! FieldColumnBuilder) 'table_name': tableName,
+        if (column is! FieldColumnElement) 'table_name': tableName,
       });
   }
 }
 
-class ViewBuilder {
-  TableBuilder table;
+class ViewElement {
+  TableElement table;
   String name;
 
-  ViewBuilder(this.table, this.name);
+  ViewElement(this.table, this.name);
 
   bool get isDefaultView => name.isEmpty;
 
@@ -114,9 +114,9 @@ class ViewBuilder {
 
         var viewAs = modifiers.where((m) => m.instanceOf(viewedInChecker)).firstOrNull?.read('as').stringValue;
 
-        if (viewAs == null && column is LinkedColumnBuilder) {
-          if (!column.linkBuilder.views.values.any((v) => v.isDefaultView)) {
-            column.linkBuilder.views[''] = ViewBuilder(column.linkBuilder, '');
+        if (viewAs == null && column is LinkedColumnElement) {
+          if (!column.linkedTable.views.values.any((v) => v.isDefaultView)) {
+            column.linkedTable.views[''] = ViewElement(column.linkedTable, '');
           }
         }
 
@@ -129,9 +129,9 @@ class ViewBuilder {
 
         columns.add(ViewColumn(column, viewAs: viewAs, transformer: transformerCode));
       } else {
-        if (column is LinkedColumnBuilder) {
-          if (!column.linkBuilder.views.values.any((v) => v.isDefaultView)) {
-            column.linkBuilder.views[''] = ViewBuilder(column.linkBuilder, '');
+        if (column is LinkedColumnElement) {
+          if (!column.linkedTable.views.values.any((v) => v.isDefaultView)) {
+            column.linkedTable.views[''] = ViewElement(column.linkedTable, '');
           }
         }
 

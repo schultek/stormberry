@@ -1,6 +1,6 @@
 import '../../core/case_style.dart';
-import '../stormberry_builder.dart';
-import '../table_builder.dart';
+import '../schema.dart';
+import '../elements/table_element.dart';
 import 'delete_generator.dart';
 import 'insert_generator.dart';
 import 'update_generator.dart';
@@ -10,22 +10,22 @@ class RepositoryGenerator {
   String generateRepositories(AssetState state) {
     return '''
     extension Repositories on Database {
-      ${state.builders.values.map((b) => '  ${b.element.name}Repository get ${CaseStyle.camelCase.transform(b.className)} => ${b.element.name}Repository._(this);\n').join()}
+      ${state.tables.values.map((b) => '  ${b.element.name}Repository get ${CaseStyle.camelCase.transform(b.className)} => ${b.element.name}Repository._(this);\n').join()}
     }
     
     final registry = ModelRegistry();
     
-    ${state.builders.values.map((t) => generateRepository(t)).join()}
+    ${state.tables.values.map((t) => generateRepository(t)).join()}
     
-    ${state.builders.values.map((t) => InsertGenerator().generateInsertRequest(t)).join()}
+    ${state.tables.values.map((t) => InsertGenerator().generateInsertRequest(t)).join()}
     
-    ${state.builders.values.map((t) => UpdateGenerator().generateUpdateRequest(t)).join()}
+    ${state.tables.values.map((t) => UpdateGenerator().generateUpdateRequest(t)).join()}
     
-    ${state.builders.values.map((t) => ViewGenerator().generateViewClasses(t)).join()}
+    ${state.tables.values.map((t) => ViewGenerator().generateViewClasses(t)).join()}
   ''';
   }
 
-  String generateRepository(TableBuilder table) {
+  String generateRepository(TableElement table) {
     var repoName = '${table.element.name}Repository';
 
     var keyType = table.primaryKeyColumn?.dartType;

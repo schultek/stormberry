@@ -1,22 +1,22 @@
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 
-import '../stormberry_builder.dart';
-import '../table_builder.dart';
-import 'column_builder.dart';
-import 'foreign_column_builder.dart';
+import '../../schema.dart';
+import '../table_element.dart';
+import 'column_element.dart';
+import 'foreign_column_element.dart';
 
-class ReferenceColumnBuilder extends ColumnBuilder with RelationalColumnBuilder, ReferencingColumnBuilder {
+class ReferenceColumnElement extends ColumnElement with RelationalColumnElement, ReferencingColumnElement {
   @override
   FieldElement? parameter;
   @override
-  TableBuilder linkBuilder;
+  TableElement linkedTable;
 
   @override
-  covariant late ForeignColumnBuilder referencedColumn;
+  covariant late ForeignColumnElement referencedColumn;
 
-  ReferenceColumnBuilder(this.parameter, this.linkBuilder, TableBuilder parentBuilder, BuilderState state)
-      : super(parentBuilder, state);
+  ReferenceColumnElement(this.parameter, this.linkedTable, TableElement parentTable, BuilderState state)
+      : super(parentTable, state);
 
   @override
   String get paramName => parameter?.name ?? '';
@@ -24,8 +24,8 @@ class ReferenceColumnBuilder extends ColumnBuilder with RelationalColumnBuilder,
   bool get isNullable {
     if (parameter != null) {
       return parameter!.type.nullabilitySuffix != NullabilitySuffix.none;
-    } else if (parentBuilder.primaryKeyColumn == null) {
-      return parentBuilder.columns.whereType<ReferenceColumnBuilder>().length > 1;
+    } else if (parentTable.primaryKeyColumn == null) {
+      return parentTable.columns.whereType<ReferenceColumnElement>().length > 1;
     } else {
       return true;
     }
@@ -47,7 +47,7 @@ class ReferenceColumnBuilder extends ColumnBuilder with RelationalColumnBuilder,
         'type': 'multi_reference_column',
         'param_name': parameter!.name,
         'ref_column_name': referencedColumn.columnName,
-        'link_table_name': linkBuilder.tableName,
+        'link_table_name': linkedTable.tableName,
       };
     }
   }

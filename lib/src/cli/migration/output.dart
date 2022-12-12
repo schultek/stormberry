@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as path;
 import 'differentiator.dart';
-import '../schema.dart';
+import 'schema.dart';
 
 var fileIndex = 0;
 

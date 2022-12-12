@@ -1,13 +1,13 @@
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 
-import '../column/field_column_builder.dart';
-import '../table_builder.dart';
+import '../elements/column/field_column_element.dart';
+import '../elements/table_element.dart';
 import '../utils.dart';
-import '../view_builder.dart';
+import '../elements/view_element.dart';
 
 class ViewGenerator {
-  String generateRepositoryMethods(TableBuilder table, {bool abstract = false}) {
+  String generateRepositoryMethods(TableElement table, {bool abstract = false}) {
     var str = StringBuffer();
 
     for (var view in table.views.values) {
@@ -37,11 +37,11 @@ class ViewGenerator {
     return str.toString();
   }
 
-  String generateViewClasses(TableBuilder table) {
+  String generateViewClasses(TableElement table) {
     return table.views.values.map((v) => generateViewClass(v)).join('\n');
   }
 
-  String generateViewClass(ViewBuilder view) {
+  String generateViewClass(ViewElement view) {
     var hasKey = view.table.primaryKeyColumn != null;
     var keyType = hasKey ? view.table.primaryKeyColumn!.dartType : null;
 
@@ -96,15 +96,15 @@ class ViewGenerator {
       defVal = 'const {}';
     }
 
-    var key = column is FieldColumnBuilder ? column.columnName : c.paramName;
+    var key = column is FieldColumnElement ? column.columnName : c.paramName;
     str += "('$key', ";
 
     if (c.view != null) {
       str += '${c.view!.entityName}Queryable().decoder)';
     } else if (c.column.converter != null) {
       str += '${c.column.converter!.toSource()}.decode)';
-    } else if (c.column is FieldColumnBuilder && (c.column as FieldColumnBuilder).dataType.isEnum) {
-      var e = (c.column as FieldColumnBuilder).dataType.element as EnumElement;
+    } else if (c.column is FieldColumnElement && (c.column as FieldColumnElement).dataType.isEnum) {
+      var e = (c.column as FieldColumnElement).dataType.element as EnumElement;
       str += 'EnumTypeConverter<${e.name}>(${e.name}.values).decode)';
     } else {
       str += 'registry.decode)';

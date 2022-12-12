@@ -11,7 +11,7 @@ import '../../stormberry.dart';
 import 'migration/differentiator.dart';
 import 'migration/output.dart';
 import 'migration/patcher.dart';
-import 'schema.dart';
+import 'migration/schema.dart';
 import 'package:glob/glob.dart';
 import 'package:file/local.dart';
 

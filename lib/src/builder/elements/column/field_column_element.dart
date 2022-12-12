@@ -2,26 +2,26 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 
-import '../../core/case_style.dart';
-import '../stormberry_builder.dart';
-import '../table_builder.dart';
-import '../utils.dart';
-import 'column_builder.dart';
+import '../../../core/case_style.dart';
+import '../../schema.dart';
+import '../table_element.dart';
+import '../../utils.dart';
+import 'column_element.dart';
 
-class FieldColumnBuilder extends ColumnBuilder with NamedColumnBuilder {
+class FieldColumnElement extends ColumnElement with NamedColumnElement {
   @override
   FieldElement parameter;
 
   late final bool isAutoIncrement;
 
-  FieldColumnBuilder(this.parameter, TableBuilder parentBuilder, BuilderState state) : super(parentBuilder, state) {
+  FieldColumnElement(this.parameter, TableElement parentTable, BuilderState state) : super(parentTable, state) {
     isAutoIncrement = (autoIncrementChecker.firstAnnotationOf(parameter) ??
         autoIncrementChecker.firstAnnotationOf(parameter.getter ?? parameter)) !=
         null;
 
     if (isAutoIncrement && !parameter.type.isDartCoreInt) {
       throw 'The following field is annotated with @AutoIncrement() but has an unallowed type:\n'
-          '  - "${parameter.getDisplayString(withNullability: true)}" in class "${parentBuilder.element
+          '  - "${parameter.getDisplayString(withNullability: true)}" in class "${parentTable.element
           .getDisplayString(withNullability: true)}"\n'
           'A field annotated with @AutoIncrement() must be of type int.';
     }
@@ -36,7 +36,7 @@ class FieldColumnBuilder extends ColumnBuilder with NamedColumnBuilder {
       if (dataType != converterType) {
         throw 'The following field is annotated with @UseConverter(...) with a custom converter '
             'that has a different type than the field:\n'
-            '  - Field "${parameter.getDisplayString(withNullability: true)}" in class "${parentBuilder.element.getDisplayString(withNullability: true)}"\n'
+            '  - Field "${parameter.getDisplayString(withNullability: true)}" in class "${parentTable.element.getDisplayString(withNullability: true)}"\n'
             '  - Converter "${converter!.toSource()}" with type "$converterType"';
       }
     }
@@ -83,7 +83,7 @@ class FieldColumnBuilder extends ColumnBuilder with NamedColumnBuilder {
   String get paramName => parameter.name;
 
   @override
-  String get columnName => state.schema.options.columnCaseStyle.transform(parameter.name);
+  String get columnName => state.options.columnCaseStyle.transform(parameter.name);
 
   @override
   bool get isNullable => parameter.type.nullabilitySuffix != NullabilitySuffix.none;
@@ -94,10 +94,5 @@ class FieldColumnBuilder extends ColumnBuilder with NamedColumnBuilder {
       'type': 'field_column',
       'column_name': columnName,
     };
-  }
-
-  @override
-  String toString() {
-    return 'FieldColumnBuilder{$paramName}';
   }
 }
