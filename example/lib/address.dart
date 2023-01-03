@@ -1,4 +1,5 @@
 import 'package:stormberry/stormberry.dart';
+
 part 'address.schema.dart';
 
 class Address {

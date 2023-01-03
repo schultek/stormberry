@@ -36,16 +36,24 @@ void main() {
 
       testColumn(
         tableA.columns[1],
+        {
+          'type': 'foreign_column',
+          'param_name': 'b',
+          'column_name': 'b_id',
+          'link_primary_key_name': 'id',
+        },
         columnName: 'b_id',
         sqlType: 'text',
         paramName: 'bId',
         isList: false,
+        isNullable: false,
         linkedTo: tableB,
         references: tableB.columns[0],
       );
 
       testColumn(
         tableB.columns[0],
+        null,
         paramName: '',
         isList: true,
         linkedTo: tableA,
@@ -89,16 +97,29 @@ void main() {
 
       testColumn(
         tableA.columns[1],
+        {
+          'type': 'foreign_column',
+          'param_name': 'b',
+          'column_name': 'b_id',
+          'link_primary_key_name': 'id',
+        },
         columnName: 'b_id',
         sqlType: 'text',
         paramName: 'bId',
         isList: false,
+        isNullable: false,
         linkedTo: tableB,
         references: tableB.columns[0],
       );
 
       testColumn(
         tableB.columns[0],
+        {
+          'type': 'multi_reference_column',
+          'param_name': 'a',
+          'ref_column_name': 'b_id',
+          'link_table_name': 'as',
+        },
         paramName: 'a',
         isList: true,
         linkedTo: tableA,

@@ -35,7 +35,7 @@ Future<void> main() async {
 
   print(account!.id);
 
-  var company = await db.companies.queryAdminView('abc');
+  var company = await db.companies.queryFullView('abc');
 
   print(company!.id);
 

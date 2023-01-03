@@ -3,11 +3,13 @@ import 'transformer.dart';
 
 /// Used to annotate a class as a database model
 class Model {
+  final List<Symbol> views;
   final List<TableIndex> indexes;
   final String? tableName;
   final dynamic annotateWith;
 
   const Model({
+    this.views = const [],
     this.indexes = const [],
     this.tableName,
     this.annotateWith,
@@ -15,25 +17,25 @@ class Model {
 }
 
 class ChangedIn {
-  final String name;
+  final Symbol name;
 
   const ChangedIn(this.name);
 }
 
 class HiddenIn extends ChangedIn {
-  const HiddenIn(String name) : super(name);
+  const HiddenIn(Symbol name) : super(name);
 }
 
 class ViewedIn extends ChangedIn {
-  final String as;
+  final Symbol as;
 
-  const ViewedIn(String name, {required this.as}) : super(name);
+  const ViewedIn(Symbol name, {required this.as}) : super(name);
 }
 
 class TransformedIn extends ChangedIn {
   final Transformer by;
 
-  const TransformedIn(String name, {required this.by}) : super(name);
+  const TransformedIn(Symbol name, {required this.by}) : super(name);
 }
 
 /// Used to annotate a field as the primary key of the table

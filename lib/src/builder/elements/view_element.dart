@@ -89,14 +89,15 @@ class ViewElement {
 
   bool get isDefaultView => name.isEmpty;
 
-  String get className => CaseStyle.pascalCase
-      .transform('${!isDefaultView ? '${name}_' : ''}${table.element.name}_view');
+  String get className =>
+      CaseStyle.pascalCase.transform('${!isDefaultView ? '${name}_' : ''}${table.element.name}_view');
 
   String get entityName => isDefaultView ? table.element.name : className;
 
   String get viewName => CaseStyle.pascalCase.transform(isDefaultView ? entityName : '${name}_view');
 
-  String get viewTableName => CaseStyle.snakeCase.transform('${!isDefaultView ? '${name}_' : ''}${table.tableName}_view');
+  String get viewTableName =>
+      CaseStyle.snakeCase.transform('${!isDefaultView ? '${name}_' : ''}${table.tableName}_view');
 
   late List<ViewColumn> columns = () {
     var columns = <ViewColumn>[];
@@ -105,14 +106,16 @@ class ViewElement {
       if (column.parameter == null) {
         continue;
       }
-      var modifiers = column.modifiers.where((m) => m.read('name').stringValue.toLowerCase() == name);
+
+      var modifiers = column.modifiers
+          .where((m) => m.read('name').objectValue.toSymbolValue()!.toLowerCase() == name.toLowerCase());
       if (modifiers.isNotEmpty) {
         var isHidden = modifiers.any((m) => m.instanceOf(hiddenInChecker));
         if (isHidden) {
           continue;
         }
 
-        var viewAs = modifiers.where((m) => m.instanceOf(viewedInChecker)).firstOrNull?.read('as').stringValue;
+        var viewAs = modifiers.where((m) => m.instanceOf(viewedInChecker)).firstOrNull?.read('as').objectValue.toSymbolValue();
 
         if (viewAs == null && column is LinkedColumnElement) {
           if (!column.linkedTable.views.values.any((v) => v.isDefaultView)) {

@@ -6,6 +6,7 @@ import 'package:stormberry/src/builder/elements/column/field_column_element.dart
 import 'package:stormberry/src/builder/elements/column/join_column_element.dart';
 import 'package:stormberry/src/builder/elements/join_table_element.dart';
 import 'package:stormberry/src/builder/elements/table_element.dart';
+import 'package:stormberry/src/builder/elements/view_element.dart';
 import 'package:stormberry/src/builder/schema.dart';
 import 'package:test/test.dart';
 
@@ -28,27 +29,40 @@ Future<SchemaState> analyzeSchema(String source) async {
 }
 
 void testIdColumn(ColumnElement column, {String? name = 'id'}) {
-  testColumn(column, columnName: name, sqlType: 'text', dartType: 'String', paramName: name, isList: false);
+  testColumn(
+    column,
+    {'type': 'field_column', 'column_name': name},
+    columnName: name,
+    sqlType: 'text',
+    dartType: 'String',
+    paramName: name,
+    isList: false,
+    isNullable: false,
+  );
 }
 
 void testColumn(
-  ColumnElement column, {
+  ColumnElement column,
+  Map<String, dynamic>? raw, {
   String? columnName,
   String? sqlType,
   String? dartType,
   String? paramName,
-  bool? isList,
+  required bool isList,
+  bool? isNullable,
   TableElement? linkedTo,
   ColumnElement? references,
   JoinTableElement? joinedTo,
 }) {
-  if (columnName != null || sqlType != null) {
+  if (columnName != null || sqlType != null || isNullable != null) {
     expect(column, isA<NamedColumnElement>());
     (column as NamedColumnElement);
     expect(column.columnName, equals(columnName));
     expect(column.sqlType, equals(sqlType));
+    expect(column.isNullable, equals(isNullable));
   } else {
-    expect(column, isNot(isA<NamedColumnElement>()));
+    expect(column, isNot(isA<NamedColumnElement>()),
+        reason: 'Missing [columnName] or [sqlType] param for named column.');
   }
 
   if (dartType != null) {
@@ -56,7 +70,7 @@ void testColumn(
     (column as FieldColumnElement);
     expect(column.dartType, equals(dartType));
   } else {
-    expect(column, isNot(isA<FieldColumnElement>()));
+    expect(column, isNot(isA<FieldColumnElement>()), reason: 'Missing [dartType] param for field column.');
   }
 
   if (paramName != null) {
@@ -64,7 +78,7 @@ void testColumn(
     (column as ParameterColumnElement);
     expect(column.paramName, equals(paramName));
   } else {
-    expect(column, isNot(isA<ParameterColumnElement>()));
+    expect(column, isNot(isA<ParameterColumnElement>()), reason: 'Missing [paramName] param for parameter column.');
   }
 
   expect(column.isList, equals(isList));
@@ -74,7 +88,7 @@ void testColumn(
     (column as LinkedColumnElement);
     expect(column.linkedTable, equals(linkedTo));
   } else {
-    expect(column, isNot(isA<LinkedColumnElement>()));
+    expect(column, isNot(isA<LinkedColumnElement>()), reason: 'Missing [linkedTo] param for linked column.');
   }
 
   if (references != null && joinedTo == null) {
@@ -82,7 +96,8 @@ void testColumn(
     (column as ReferencingColumnElement);
     expect(column.referencedColumn, equals(references));
   } else {
-    expect(column, isNot(isA<ReferencingColumnElement>()));
+    expect(column, isNot(isA<ReferencingColumnElement>()),
+        reason: 'Missing [references] param for referencing column.');
   }
 
   if (joinedTo != null) {
@@ -94,6 +109,32 @@ void testColumn(
     expect(references, isA<JoinColumnElement>());
     expect(column.referencedColumn, equals(references));
   } else {
-    expect(column, isNot(isA<JoinColumnElement>()));
+    expect(column, isNot(isA<JoinColumnElement>()), reason: 'Missing [joinedTo] param for join column.');
   }
+
+  if (column.parameter != null) {
+    expect(column.toMap(), equals(raw));
+  } else {
+    expect(raw, isNull, reason: 'Raw provided for a column without a parameter.');
+  }
+}
+
+void testViewColumn(
+  ViewColumn column,
+  Map<String, dynamic>? raw, {
+  String? viewAs,
+  String? transformer,
+  String? paramName,
+  String? dartType,
+  String? tableName,
+  bool? isNullable,
+}) {
+  expect(column.toMap(), equals(raw));
+
+  expect(column.viewAs, equals(viewAs));
+  expect(column.transformer, equals(viewAs));
+  expect(column.paramName, equals(paramName));
+  expect(column.dartType, equals(dartType));
+  expect(column.tableName, equals(tableName));
+  expect(column.isNullable, equals(isNullable));
 }

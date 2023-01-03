@@ -42,6 +42,15 @@ void main() {
 
       testColumn(
         tableA.columns[1],
+        {
+          'type': 'join_column',
+          'param_name': 'b',
+          'join_table_name': 'as_bs',
+          'link_table_name': 'bs',
+          'parent_foreign_key_name': 'a_id',
+          'link_primary_key_name': 'id',
+          'link_foreign_key_name': 'b_id',
+        },
         isList: true,
         linkedTo: tableB,
         references: tableB.columns[0],
@@ -50,6 +59,15 @@ void main() {
 
       testColumn(
         tableB.columns[0],
+        {
+          'type': 'join_column',
+          'param_name': 'a',
+          'join_table_name': 'as_bs',
+          'link_table_name': 'as',
+          'parent_foreign_key_name': 'b_id',
+          'link_primary_key_name': 'id',
+          'link_foreign_key_name': 'a_id',
+        },
         isList: true,
         linkedTo: tableA,
         references: tableA.columns[1],
@@ -57,6 +75,33 @@ void main() {
       );
 
       testIdColumn(tableB.columns[1]);
+    });
+
+    test('analyzes two-sided single-keyed many-to-many relation', () async {
+      caller() => analyzeSchema('''
+        import 'package:stormberry/stormberry.dart';
+
+        @Model()
+        abstract class A {
+          @PrimaryKey()
+          String get id;
+        
+          List<B> get b;
+        }
+        
+        @Model()
+        abstract class B {
+          String get name;
+          
+          List<A> get a;
+        }
+      ''');
+
+      expect(
+        caller,
+        throwsA('Model B cannot have a many-to-many relation to model A without specifying a primary key.\n'
+            'Either define a primary key for B or change the relation by changing field "List<A> a" to have a non-list type.'),
+      );
     });
   });
 }

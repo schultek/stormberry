@@ -15,18 +15,27 @@ abstract class OutputBuilder implements Builder {
   @override
   Future<void> build(BuildStep buildStep) async {
     await buildStep.inputLibrary;
-    var state = await buildStep.fetchResource(schemaResource);
-    var asset = state.getForAsset(buildStep.inputId);
 
-    if (asset != null && asset.tables.isNotEmpty) {
-      var formatter = DartFormatter(pageWidth: options.lineLength);
+    try {
+      var state = await buildStep.fetchResource(schemaResource);
+      var asset = state.getForAsset(buildStep.inputId);
 
-      buildStep.writeAsString(buildStep.inputId.changeExtension('.$target.dart'), formatter.format(buildTarget(buildStep, asset)));
+      if (asset != null && asset.tables.isNotEmpty) {
+        var formatter = DartFormatter(pageWidth: options.lineLength);
+
+        await buildStep.writeAsString(
+          buildStep.inputId.changeExtension('.$target.dart'),
+          formatter.format(buildTarget(buildStep, asset)),
+        );
+      }
+    } catch (e, st) {
+      print('\x1B[31mFailed to build database schema:\n\n$e\x1B[0m\n');
+      print(st);
     }
   }
 
   @override
   Map<String, List<String>> get buildExtensions => {
-    '.dart': ['.$target.dart']
-  };
+        '.dart': ['.$target.dart']
+      };
 }

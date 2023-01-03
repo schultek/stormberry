@@ -14,12 +14,12 @@ abstract class AccountRepository
         ModelRepositoryDelete<int> {
   factory AccountRepository._(Database db) = _AccountRepository;
 
-  Future<CompanyAccountView?> queryCompanyView(int id);
-  Future<List<CompanyAccountView>> queryCompanyViews([QueryParams? params]);
-  Future<AdminAccountView?> queryAdminView(int id);
-  Future<List<AdminAccountView>> queryAdminViews([QueryParams? params]);
+  Future<FullAccountView?> queryFullView(int id);
+  Future<List<FullAccountView>> queryFullViews([QueryParams? params]);
   Future<UserAccountView?> queryUserView(int id);
   Future<List<UserAccountView>> queryUserViews([QueryParams? params]);
+  Future<CompanyAccountView?> queryCompanyView(int id);
+  Future<List<CompanyAccountView>> queryCompanyViews([QueryParams? params]);
 }
 
 class _AccountRepository extends BaseRepository
@@ -31,23 +31,13 @@ class _AccountRepository extends BaseRepository
   _AccountRepository(Database db) : super(db: db);
 
   @override
-  Future<CompanyAccountView?> queryCompanyView(int id) {
-    return queryOne(id, CompanyAccountViewQueryable());
+  Future<FullAccountView?> queryFullView(int id) {
+    return queryOne(id, FullAccountViewQueryable());
   }
 
   @override
-  Future<List<CompanyAccountView>> queryCompanyViews([QueryParams? params]) {
-    return queryMany(CompanyAccountViewQueryable(), params);
-  }
-
-  @override
-  Future<AdminAccountView?> queryAdminView(int id) {
-    return queryOne(id, AdminAccountViewQueryable());
-  }
-
-  @override
-  Future<List<AdminAccountView>> queryAdminViews([QueryParams? params]) {
-    return queryMany(AdminAccountViewQueryable(), params);
+  Future<List<FullAccountView>> queryFullViews([QueryParams? params]) {
+    return queryMany(FullAccountViewQueryable(), params);
   }
 
   @override
@@ -58,6 +48,16 @@ class _AccountRepository extends BaseRepository
   @override
   Future<List<UserAccountView>> queryUserViews([QueryParams? params]) {
     return queryMany(UserAccountViewQueryable(), params);
+  }
+
+  @override
+  Future<CompanyAccountView?> queryCompanyView(int id) {
+    return queryOne(id, CompanyAccountViewQueryable());
+  }
+
+  @override
+  Future<List<CompanyAccountView>> queryCompanyViews([QueryParams? params]) {
+    return queryMany(CompanyAccountViewQueryable(), params);
   }
 
   @override
@@ -134,7 +134,7 @@ class AccountUpdateRequest {
   String? companyId;
 }
 
-class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView, int> {
+class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> {
   @override
   String get keyName => 'id';
 
@@ -142,81 +142,43 @@ class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView,
   String encodeKey(int key) => registry.encode(key);
 
   @override
-  String get tableName => 'company_accounts_view';
+  String get tableName => 'full_accounts_view';
 
   @override
   String get tableAlias => 'accounts';
 
   @override
-  CompanyAccountView decode(TypedMap map) => CompanyAccountView(
-      id: map.get('id', registry.decode),
-      firstName: map.get('first_name', registry.decode),
-      lastName: map.get('last_name', registry.decode),
-      location: map.get('location', LatLngConverter().decode),
-      parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const []);
-}
-
-class CompanyAccountView {
-  CompanyAccountView({
-    required this.id,
-    required this.firstName,
-    required this.lastName,
-    required this.location,
-    required this.parties,
-  });
-
-  final int id;
-  final String firstName;
-  final String lastName;
-  final LatLng location;
-  final List<CompanyPartyView> parties;
-}
-
-class AdminAccountViewQueryable extends KeyedViewQueryable<AdminAccountView, int> {
-  @override
-  String get keyName => 'id';
-
-  @override
-  String encodeKey(int key) => registry.encode(key);
-
-  @override
-  String get tableName => 'admin_accounts_view';
-
-  @override
-  String get tableAlias => 'accounts';
-
-  @override
-  AdminAccountView decode(TypedMap map) => AdminAccountView(
+  FullAccountView decode(TypedMap map) => FullAccountView(
+      invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
+      parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
       id: map.get('id', registry.decode),
       firstName: map.get('first_name', registry.decode),
       lastName: map.get('last_name', registry.decode),
       location: map.get('location', LatLngConverter().decode),
       billingAddress: map.getOpt('billingAddress', BillingAddressQueryable().decoder),
-      invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
-      company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
-      parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const []);
+      company: map.getOpt('company', MemberCompanyViewQueryable().decoder));
 }
 
-class AdminAccountView {
-  AdminAccountView({
+class FullAccountView {
+  FullAccountView({
+    required this.invoices,
+    required this.parties,
     required this.id,
     required this.firstName,
     required this.lastName,
     required this.location,
     this.billingAddress,
-    required this.invoices,
     this.company,
-    required this.parties,
   });
 
+  final List<OwnerInvoiceView> invoices;
+  final List<GuestPartyView> parties;
   final int id;
   final String firstName;
   final String lastName;
   final LatLng location;
   final BillingAddress? billingAddress;
-  final List<OwnerInvoiceView> invoices;
   final MemberCompanyView? company;
-  final List<GuestPartyView> parties;
 }
 
 class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> {
@@ -234,34 +196,72 @@ class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> 
 
   @override
   UserAccountView decode(TypedMap map) => UserAccountView(
+      invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
+      parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
       id: map.get('id', registry.decode),
       firstName: map.get('first_name', registry.decode),
       lastName: map.get('last_name', registry.decode),
       location: map.get('location', LatLngConverter().decode),
       billingAddress: map.getOpt('billingAddress', BillingAddressQueryable().decoder),
-      invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
-      company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
-      parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const []);
+      company: map.getOpt('company', MemberCompanyViewQueryable().decoder));
 }
 
 class UserAccountView {
   UserAccountView({
+    required this.invoices,
+    required this.parties,
     required this.id,
     required this.firstName,
     required this.lastName,
     required this.location,
     this.billingAddress,
-    required this.invoices,
     this.company,
-    required this.parties,
   });
 
+  final List<OwnerInvoiceView> invoices;
+  final List<GuestPartyView> parties;
   final int id;
   final String firstName;
   final String lastName;
   final LatLng location;
   final BillingAddress? billingAddress;
-  final List<OwnerInvoiceView> invoices;
   final MemberCompanyView? company;
-  final List<GuestPartyView> parties;
+}
+
+class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView, int> {
+  @override
+  String get keyName => 'id';
+
+  @override
+  String encodeKey(int key) => registry.encode(key);
+
+  @override
+  String get tableName => 'company_accounts_view';
+
+  @override
+  String get tableAlias => 'accounts';
+
+  @override
+  CompanyAccountView decode(TypedMap map) => CompanyAccountView(
+      parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
+      id: map.get('id', registry.decode),
+      firstName: map.get('first_name', registry.decode),
+      lastName: map.get('last_name', registry.decode),
+      location: map.get('location', LatLngConverter().decode));
+}
+
+class CompanyAccountView {
+  CompanyAccountView({
+    required this.parties,
+    required this.id,
+    required this.firstName,
+    required this.lastName,
+    required this.location,
+  });
+
+  final List<CompanyPartyView> parties;
+  final int id;
+  final String firstName;
+  final String lastName;
+  final LatLng location;
 }

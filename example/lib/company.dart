@@ -2,11 +2,14 @@ import 'package:stormberry/stormberry.dart';
 
 import 'account.dart';
 import 'address.dart';
+import 'invoice.dart';
+import 'party.dart';
 
 part 'company.schema.dart';
 
-@Model()
+@Model(views: [#Full, #Member])
 abstract class Company {
+
   @PrimaryKey()
   String get id;
 
@@ -14,47 +17,15 @@ abstract class Company {
 
   List<BillingAddress> get addresses;
 
-  @HiddenIn('member')
-  @ViewedIn('admin', as: 'company')
+  @HiddenIn(#Member)
+  @ViewedIn(#Full, as: #Company)
   List<Account> get members;
 
-  @HiddenIn('member')
-  @ViewedIn('admin', as: 'owner')
+  @HiddenIn(#Member)
+  @ViewedIn(#Full, as: #Owner)
   List<Invoice> get invoices;
 
-  @HiddenIn('member')
-  @ViewedIn('admin', as: 'company')
+  @HiddenIn(#Member)
+  @ViewedIn(#Full, as: #Company)
   List<Party> get parties;
-}
-
-@Model()
-abstract class Invoice {
-  @PrimaryKey()
-  String get id;
-  String get title;
-  String get invoiceId;
-
-  @HiddenIn('owner')
-  Account? get account;
-
-  @HiddenIn('owner')
-  Company? get company;
-}
-
-@Model()
-abstract class Party {
-  @PrimaryKey()
-  String get id;
-
-  String get name;
-
-  @HiddenIn('guest')
-  @HiddenIn('company')
-  List<Account> get guests;
-
-  @ViewedIn('guest', as: 'member')
-  @HiddenIn('company')
-  Company? get sponsor;
-
-  int get date;
 }
