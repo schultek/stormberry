@@ -39,9 +39,9 @@ class _InvoiceRepository extends BaseRepository
     if (requests.isEmpty) return;
 
     await db.query(
-      'INSERT INTO "invoices" ( "account_id", "id", "title", "invoice_id", "company_id" )\n'
-      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.accountId)}, ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.title)}, ${TypeEncoder.i.encode(r.invoiceId)}, ${TypeEncoder.i.encode(r.companyId)} )').join(', ')}\n'
-      'ON CONFLICT ( "id" ) DO UPDATE SET "account_id" = EXCLUDED."account_id", "title" = EXCLUDED."title", "invoice_id" = EXCLUDED."invoice_id", "company_id" = EXCLUDED."company_id"',
+      'INSERT INTO "invoices" ( "account_id", "company_id", "id", "title", "invoice_id" )\n'
+      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.accountId)}, ${TypeEncoder.i.encode(r.companyId)}, ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.title)}, ${TypeEncoder.i.encode(r.invoiceId)} )').join(', ')}\n'
+      'ON CONFLICT ( "id" ) DO UPDATE SET "account_id" = EXCLUDED."account_id", "company_id" = EXCLUDED."company_id", "title" = EXCLUDED."title", "invoice_id" = EXCLUDED."invoice_id"',
     );
   }
 
@@ -50,9 +50,9 @@ class _InvoiceRepository extends BaseRepository
     if (requests.isEmpty) return;
     await db.query(
       'UPDATE "invoices"\n'
-      'SET "account_id" = COALESCE(UPDATED."account_id"::int8, "invoices"."account_id"), "title" = COALESCE(UPDATED."title"::text, "invoices"."title"), "invoice_id" = COALESCE(UPDATED."invoice_id"::text, "invoices"."invoice_id"), "company_id" = COALESCE(UPDATED."company_id"::text, "invoices"."company_id")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.accountId)}, ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.title)}, ${TypeEncoder.i.encode(r.invoiceId)}, ${TypeEncoder.i.encode(r.companyId)} )').join(', ')} )\n'
-      'AS UPDATED("account_id", "id", "title", "invoice_id", "company_id")\n'
+      'SET "account_id" = COALESCE(UPDATED."account_id"::int8, "invoices"."account_id"), "company_id" = COALESCE(UPDATED."company_id"::text, "invoices"."company_id"), "title" = COALESCE(UPDATED."title"::text, "invoices"."title"), "invoice_id" = COALESCE(UPDATED."invoice_id"::text, "invoices"."invoice_id")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.accountId)}, ${TypeEncoder.i.encode(r.companyId)}, ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.title)}, ${TypeEncoder.i.encode(r.invoiceId)} )').join(', ')} )\n'
+      'AS UPDATED("account_id", "company_id", "id", "title", "invoice_id")\n'
       'WHERE "invoices"."id" = UPDATED."id"',
     );
   }
@@ -69,21 +69,21 @@ class _InvoiceRepository extends BaseRepository
 
 class InvoiceInsertRequest {
   InvoiceInsertRequest(
-      {this.accountId, required this.id, required this.title, required this.invoiceId, this.companyId});
+      {this.accountId, this.companyId, required this.id, required this.title, required this.invoiceId});
   int? accountId;
+  String? companyId;
   String id;
   String title;
   String invoiceId;
-  String? companyId;
 }
 
 class InvoiceUpdateRequest {
-  InvoiceUpdateRequest({this.accountId, required this.id, this.title, this.invoiceId, this.companyId});
+  InvoiceUpdateRequest({this.accountId, this.companyId, required this.id, this.title, this.invoiceId});
   int? accountId;
+  String? companyId;
   String id;
   String? title;
   String? invoiceId;
-  String? companyId;
 }
 
 class OwnerInvoiceViewQueryable extends KeyedViewQueryable<OwnerInvoiceView, String> {

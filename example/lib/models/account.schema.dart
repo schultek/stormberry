@@ -147,19 +147,18 @@ class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> 
 
   @override
   FullAccountView decode(TypedMap map) => FullAccountView(
-      parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
       id: map.get('id', TypeEncoder.i.decode),
       firstName: map.get('first_name', TypeEncoder.i.decode),
       lastName: map.get('last_name', TypeEncoder.i.decode),
       location: map.get('location', LatLngConverter().decode),
       billingAddress: map.getOpt('billingAddress', BillingAddressQueryable().decoder),
       invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
-      company: map.getOpt('company', MemberCompanyViewQueryable().decoder));
+      company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
+      parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const []);
 }
 
 class FullAccountView {
   FullAccountView({
-    required this.parties,
     required this.id,
     required this.firstName,
     required this.lastName,
@@ -167,9 +166,9 @@ class FullAccountView {
     this.billingAddress,
     required this.invoices,
     this.company,
+    required this.parties,
   });
 
-  final List<GuestPartyView> parties;
   final int id;
   final String firstName;
   final String lastName;
@@ -177,6 +176,7 @@ class FullAccountView {
   final BillingAddress? billingAddress;
   final List<OwnerInvoiceView> invoices;
   final MemberCompanyView? company;
+  final List<GuestPartyView> parties;
 }
 
 class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> {
@@ -194,19 +194,18 @@ class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> 
 
   @override
   UserAccountView decode(TypedMap map) => UserAccountView(
-      parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
       id: map.get('id', TypeEncoder.i.decode),
       firstName: map.get('first_name', TypeEncoder.i.decode),
       lastName: map.get('last_name', TypeEncoder.i.decode),
       location: map.get('location', LatLngConverter().decode),
       billingAddress: map.getOpt('billingAddress', BillingAddressQueryable().decoder),
       invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
-      company: map.getOpt('company', MemberCompanyViewQueryable().decoder));
+      company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
+      parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const []);
 }
 
 class UserAccountView {
   UserAccountView({
-    required this.parties,
     required this.id,
     required this.firstName,
     required this.lastName,
@@ -214,9 +213,9 @@ class UserAccountView {
     this.billingAddress,
     required this.invoices,
     this.company,
+    required this.parties,
   });
 
-  final List<GuestPartyView> parties;
   final int id;
   final String firstName;
   final String lastName;
@@ -224,6 +223,7 @@ class UserAccountView {
   final BillingAddress? billingAddress;
   final List<OwnerInvoiceView> invoices;
   final MemberCompanyView? company;
+  final List<GuestPartyView> parties;
 }
 
 class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView, int> {
@@ -241,25 +241,25 @@ class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView,
 
   @override
   CompanyAccountView decode(TypedMap map) => CompanyAccountView(
-      parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
       id: map.get('id', TypeEncoder.i.decode),
       firstName: map.get('first_name', TypeEncoder.i.decode),
       lastName: map.get('last_name', TypeEncoder.i.decode),
-      location: map.get('location', LatLngConverter().decode));
+      location: map.get('location', LatLngConverter().decode),
+      parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const []);
 }
 
 class CompanyAccountView {
   CompanyAccountView({
-    required this.parties,
     required this.id,
     required this.firstName,
     required this.lastName,
     required this.location,
+    required this.parties,
   });
 
-  final List<CompanyPartyView> parties;
   final int id;
   final String firstName;
   final String lastName;
   final LatLng location;
+  final List<CompanyPartyView> parties;
 }

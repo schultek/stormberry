@@ -116,30 +116,30 @@ class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, Strin
 
   @override
   FullCompanyView decode(TypedMap map) => FullCompanyView(
-      parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
       members: map.getListOpt('members', CompanyAccountViewQueryable().decoder) ?? const [],
-      invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
       id: map.get('id', TypeEncoder.i.decode),
       name: map.get('name', TypeEncoder.i.decode),
-      addresses: map.getListOpt('addresses', BillingAddressQueryable().decoder) ?? const []);
+      addresses: map.getListOpt('addresses', BillingAddressQueryable().decoder) ?? const [],
+      invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
+      parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const []);
 }
 
 class FullCompanyView {
   FullCompanyView({
-    required this.parties,
     required this.members,
-    required this.invoices,
     required this.id,
     required this.name,
     required this.addresses,
+    required this.invoices,
+    required this.parties,
   });
 
-  final List<CompanyPartyView> parties;
   final List<CompanyAccountView> members;
-  final List<OwnerInvoiceView> invoices;
   final String id;
   final String name;
   final List<BillingAddress> addresses;
+  final List<OwnerInvoiceView> invoices;
+  final List<CompanyPartyView> parties;
 }
 
 class MemberCompanyViewQueryable extends KeyedViewQueryable<MemberCompanyView, String> {

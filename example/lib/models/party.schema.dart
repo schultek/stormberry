@@ -51,9 +51,9 @@ class _PartyRepository extends BaseRepository
     if (requests.isEmpty) return;
 
     await db.query(
-      'INSERT INTO "parties" ( "id", "name", "sponsor_id", "date" )\n'
-      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.sponsorId)}, ${TypeEncoder.i.encode(r.date)} )').join(', ')}\n'
-      'ON CONFLICT ( "id" ) DO UPDATE SET "name" = EXCLUDED."name", "sponsor_id" = EXCLUDED."sponsor_id", "date" = EXCLUDED."date"',
+      'INSERT INTO "parties" ( "sponsor_id", "id", "name", "date" )\n'
+      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.sponsorId)}, ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.date)} )').join(', ')}\n'
+      'ON CONFLICT ( "id" ) DO UPDATE SET "sponsor_id" = EXCLUDED."sponsor_id", "name" = EXCLUDED."name", "date" = EXCLUDED."date"',
     );
   }
 
@@ -62,9 +62,9 @@ class _PartyRepository extends BaseRepository
     if (requests.isEmpty) return;
     await db.query(
       'UPDATE "parties"\n'
-      'SET "name" = COALESCE(UPDATED."name"::text, "parties"."name"), "sponsor_id" = COALESCE(UPDATED."sponsor_id"::text, "parties"."sponsor_id"), "date" = COALESCE(UPDATED."date"::int8, "parties"."date")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.sponsorId)}, ${TypeEncoder.i.encode(r.date)} )').join(', ')} )\n'
-      'AS UPDATED("id", "name", "sponsor_id", "date")\n'
+      'SET "sponsor_id" = COALESCE(UPDATED."sponsor_id"::text, "parties"."sponsor_id"), "name" = COALESCE(UPDATED."name"::text, "parties"."name"), "date" = COALESCE(UPDATED."date"::int8, "parties"."date")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.sponsorId)}, ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.date)} )').join(', ')} )\n'
+      'AS UPDATED("sponsor_id", "id", "name", "date")\n'
       'WHERE "parties"."id" = UPDATED."id"',
     );
   }
@@ -80,18 +80,18 @@ class _PartyRepository extends BaseRepository
 }
 
 class PartyInsertRequest {
-  PartyInsertRequest({required this.id, required this.name, this.sponsorId, required this.date});
+  PartyInsertRequest({this.sponsorId, required this.id, required this.name, required this.date});
+  String? sponsorId;
   String id;
   String name;
-  String? sponsorId;
   int date;
 }
 
 class PartyUpdateRequest {
-  PartyUpdateRequest({required this.id, this.name, this.sponsorId, this.date});
+  PartyUpdateRequest({this.sponsorId, required this.id, this.name, this.date});
+  String? sponsorId;
   String id;
   String? name;
-  String? sponsorId;
   int? date;
 }
 
@@ -110,23 +110,23 @@ class GuestPartyViewQueryable extends KeyedViewQueryable<GuestPartyView, String>
 
   @override
   GuestPartyView decode(TypedMap map) => GuestPartyView(
+      sponsor: map.getOpt('sponsor', MemberCompanyViewQueryable().decoder),
       id: map.get('id', TypeEncoder.i.decode),
       name: map.get('name', TypeEncoder.i.decode),
-      sponsor: map.getOpt('sponsor', MemberCompanyViewQueryable().decoder),
       date: map.get('date', TypeEncoder.i.decode));
 }
 
 class GuestPartyView {
   GuestPartyView({
+    this.sponsor,
     required this.id,
     required this.name,
-    this.sponsor,
     required this.date,
   });
 
+  final MemberCompanyView? sponsor;
   final String id;
   final String name;
-  final MemberCompanyView? sponsor;
   final int date;
 }
 
