@@ -54,7 +54,7 @@ class ViewGenerator {
         String get keyName => '${view.table.primaryKeyColumn!.columnName}';
         
         @override
-        String encodeKey($keyType key) => registry.encode(key);
+        String encodeKey($keyType key) => TypeEncoder.i.encode(key);
         ''' : ''}
         
         @override
@@ -107,7 +107,7 @@ class ViewGenerator {
       var e = (c.column as FieldColumnElement).dataType.element as EnumElement;
       str += 'EnumTypeConverter<${e.name}>(${e.name}.values).decode)';
     } else {
-      str += 'registry.decode)';
+      str += 'TypeEncoder.i.decode)';
     }
 
     if (defVal != null) {

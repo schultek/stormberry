@@ -23,7 +23,7 @@ class InsertGenerator {
           if (c is ForeignColumnElement) {
             if (c.linkedTable == table) {
               if (table.primaryKeyColumn!.isAutoIncrement) {
-                return '${c.paramName}: registry.decode(autoIncrements[requests.indexOf(r)][\'${table.primaryKeyColumn!.columnName}\'])';
+                return '${c.paramName}: TypeEncoder.i.decode(autoIncrements[requests.indexOf(r)][\'${table.primaryKeyColumn!.columnName}\'])';
               } else {
                 return '${c.paramName}: r.${table.primaryKeyColumn!.paramName}';
               }
@@ -47,7 +47,7 @@ class InsertGenerator {
           if (c is ForeignColumnElement) {
             if (c.linkedTable == table) {
               if (table.primaryKeyColumn!.isAutoIncrement) {
-                return '${c.paramName}: registry.decode(autoIncrements[requests.indexOf(r)][\'${table.primaryKeyColumn!.columnName}\'])';
+                return '${c.paramName}: TypeEncoder.i.decode(autoIncrements[requests.indexOf(r)][\'${table.primaryKeyColumn!.columnName}\'])';
               } else {
                 return '${c.paramName}: r.${table.primaryKeyColumn!.paramName}';
               }
@@ -83,7 +83,7 @@ class InsertGenerator {
 
       if (table.primaryKeyColumn?.isAutoIncrement ?? false) {
         keyReturnStatement =
-            "return autoIncrements.map<int>((m) => registry.decode(m['${table.primaryKeyColumn!.columnName}'])).toList();";
+            "return autoIncrements.map<int>((m) => TypeEncoder.i.decode(m['${table.primaryKeyColumn!.columnName}'])).toList();";
       }
     }
 
@@ -115,9 +115,9 @@ class InsertGenerator {
 
     String toInsertValue(NamedColumnElement c) {
       if (c is FieldColumnElement && c.isAutoIncrement) {
-        return '\${registry.encode(autoIncrements[requests.indexOf(r)][\'${c.columnName}\'])}';
+        return '\${TypeEncoder.i.encode(autoIncrements[requests.indexOf(r)][\'${c.columnName}\'])}';
       } else {
-        return '\${registry.encode(r.${c.paramName}${c.converter != null ? ', ${c.converter!.toSource()}' : ''})}';
+        return '\${TypeEncoder.i.encode(r.${c.paramName}${c.converter != null ? ', ${c.converter!.toSource()}' : ''})}';
       }
     }
 

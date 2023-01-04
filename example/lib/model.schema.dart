@@ -5,8 +5,6 @@ extension Repositories on Database {
   BRepository get bs => BRepository._(this);
 }
 
-final registry = ModelRegistry();
-
 abstract class ARepository
     implements
         ModelRepository,
@@ -40,7 +38,7 @@ class _ARepository extends BaseRepository
 
     await db.query(
       'INSERT INTO "as" ( "id", "b_id" )\n'
-      'VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.bId)} )').join(', ')}\n'
+      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.bId)} )').join(', ')}\n'
       'ON CONFLICT ( "id" ) DO UPDATE SET "b_id" = EXCLUDED."b_id"',
     );
   }
@@ -51,7 +49,7 @@ class _ARepository extends BaseRepository
     await db.query(
       'UPDATE "as"\n'
       'SET "b_id" = COALESCE(UPDATED."b_id"::text, "as"."b_id")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.bId)} )').join(', ')} )\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.bId)} )').join(', ')} )\n'
       'AS UPDATED("id", "b_id")\n'
       'WHERE "as"."id" = UPDATED."id"',
     );
@@ -62,7 +60,7 @@ class _ARepository extends BaseRepository
     if (keys.isEmpty) return;
     await db.query(
       'DELETE FROM "as"\n'
-      'WHERE "as"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )',
+      'WHERE "as"."id" IN ( ${keys.map((k) => TypeEncoder.i.encode(k)).join(',')} )',
     );
   }
 }
@@ -100,7 +98,7 @@ class _BRepository extends BaseRepository
 
     await db.query(
       'INSERT INTO "bs" ( "a_id", "id" )\n'
-      'VALUES ${requests.map((r) => '( ${registry.encode(r.aId)}, ${registry.encode(r.id)} )').join(', ')}\n'
+      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.aId)}, ${TypeEncoder.i.encode(r.id)} )').join(', ')}\n'
       'ON CONFLICT ( "id" ) DO UPDATE SET "a_id" = EXCLUDED."a_id"',
     );
   }
@@ -111,7 +109,7 @@ class _BRepository extends BaseRepository
     await db.query(
       'UPDATE "bs"\n'
       'SET "a_id" = COALESCE(UPDATED."a_id"::text, "bs"."a_id")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.aId)}, ${registry.encode(r.id)} )').join(', ')} )\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.aId)}, ${TypeEncoder.i.encode(r.id)} )').join(', ')} )\n'
       'AS UPDATED("a_id", "id")\n'
       'WHERE "bs"."id" = UPDATED."id"',
     );
@@ -122,7 +120,7 @@ class _BRepository extends BaseRepository
     if (keys.isEmpty) return;
     await db.query(
       'DELETE FROM "bs"\n'
-      'WHERE "bs"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )',
+      'WHERE "bs"."id" IN ( ${keys.map((k) => TypeEncoder.i.encode(k)).join(',')} )',
     );
   }
 }
@@ -156,7 +154,7 @@ class AQueryable extends KeyedViewQueryable<A, String> {
   String get keyName => 'id';
 
   @override
-  String encodeKey(String key) => registry.encode(key);
+  String encodeKey(String key) => TypeEncoder.i.encode(key);
 
   @override
   String get tableName => 'as_view';
@@ -165,7 +163,7 @@ class AQueryable extends KeyedViewQueryable<A, String> {
   String get tableAlias => 'as';
 
   @override
-  A decode(TypedMap map) => AView(id: map.get('id', registry.decode), b: map.get('b', BQueryable().decoder));
+  A decode(TypedMap map) => AView(id: map.get('id', TypeEncoder.i.decode), b: map.get('b', BQueryable().decoder));
 }
 
 class AView implements A {
@@ -185,7 +183,7 @@ class BQueryable extends KeyedViewQueryable<B, String> {
   String get keyName => 'id';
 
   @override
-  String encodeKey(String key) => registry.encode(key);
+  String encodeKey(String key) => TypeEncoder.i.encode(key);
 
   @override
   String get tableName => 'bs_view';
@@ -194,7 +192,7 @@ class BQueryable extends KeyedViewQueryable<B, String> {
   String get tableAlias => 'bs';
 
   @override
-  B decode(TypedMap map) => BView(a: map.getOpt('a', AQueryable().decoder), id: map.get('id', registry.decode));
+  B decode(TypedMap map) => BView(a: map.getOpt('a', AQueryable().decoder), id: map.get('id', TypeEncoder.i.decode));
 }
 
 class BView implements B {

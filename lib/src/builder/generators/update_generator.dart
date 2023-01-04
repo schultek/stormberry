@@ -67,7 +67,7 @@ class UpdateGenerator {
         .where((c) => table.primaryKeyColumn == c || c is! FieldColumnElement || !c.isAutoIncrement);
 
     String toUpdateValue(NamedColumnElement c) {
-      return '\${registry.encode(r.${c.paramName}${c.converter != null ? ', ${c.converter!.toSource()}' : ''})}';
+      return '\${TypeEncoder.i.encode(r.${c.paramName}${c.converter != null ? ', ${c.converter!.toSource()}' : ''})}';
     }
 
     String whereClause;

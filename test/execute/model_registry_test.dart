@@ -3,10 +3,10 @@ import 'package:test/test.dart';
 
 void main() {
   group('model registry', () {
-    late ModelRegistry registry;
+    late TypeEncoder registry;
 
     setUpAll(() {
-      registry = ModelRegistry();
+      registry = TypeEncoder();
     });
 
     test('properly escapes strings', () async {

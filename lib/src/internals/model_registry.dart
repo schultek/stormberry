@@ -56,9 +56,11 @@ class _DateTimeConverter extends TypeConverter<DateTime> {
   String encode(DateTime self) => self.toUtc().toIso8601String();
 }
 
-class ModelRegistry {
+class TypeEncoder {
 
-  ModelRegistry();
+  TypeEncoder();
+
+  static TypeEncoder i = TypeEncoder();
 
   T decode<T>(dynamic value) {
     if (value is T) {

@@ -4,8 +4,6 @@ extension Repositories on Database {
   CompanyRepository get companies => CompanyRepository._(this);
 }
 
-final registry = ModelRegistry();
-
 abstract class CompanyRepository
     implements
         ModelRepository,
@@ -54,7 +52,7 @@ class _CompanyRepository extends BaseRepository
 
     await db.query(
       'INSERT INTO "companies" ( "id", "name" )\n'
-      'VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)} )').join(', ')}\n'
+      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)} )').join(', ')}\n'
       'ON CONFLICT ( "id" ) DO UPDATE SET "name" = EXCLUDED."name"',
     );
     await db.billingAddresses.insertMany(requests.expand((r) {
@@ -69,7 +67,7 @@ class _CompanyRepository extends BaseRepository
     await db.query(
       'UPDATE "companies"\n'
       'SET "name" = COALESCE(UPDATED."name"::text, "companies"."name")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)} )').join(', ')} )\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)} )').join(', ')} )\n'
       'AS UPDATED("id", "name")\n'
       'WHERE "companies"."id" = UPDATED."id"',
     );
@@ -84,7 +82,7 @@ class _CompanyRepository extends BaseRepository
     if (keys.isEmpty) return;
     await db.query(
       'DELETE FROM "companies"\n'
-      'WHERE "companies"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )',
+      'WHERE "companies"."id" IN ( ${keys.map((k) => TypeEncoder.i.encode(k)).join(',')} )',
     );
   }
 }
@@ -108,7 +106,7 @@ class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, Strin
   String get keyName => 'id';
 
   @override
-  String encodeKey(String key) => registry.encode(key);
+  String encodeKey(String key) => TypeEncoder.i.encode(key);
 
   @override
   String get tableName => 'full_companies_view';
@@ -118,27 +116,27 @@ class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, Strin
 
   @override
   FullCompanyView decode(TypedMap map) => FullCompanyView(
-      invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
       parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
       members: map.getListOpt('members', CompanyAccountViewQueryable().decoder) ?? const [],
-      id: map.get('id', registry.decode),
-      name: map.get('name', registry.decode),
+      invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
+      id: map.get('id', TypeEncoder.i.decode),
+      name: map.get('name', TypeEncoder.i.decode),
       addresses: map.getListOpt('addresses', BillingAddressQueryable().decoder) ?? const []);
 }
 
 class FullCompanyView {
   FullCompanyView({
-    required this.invoices,
     required this.parties,
     required this.members,
+    required this.invoices,
     required this.id,
     required this.name,
     required this.addresses,
   });
 
-  final List<OwnerInvoiceView> invoices;
   final List<CompanyPartyView> parties;
   final List<CompanyAccountView> members;
+  final List<OwnerInvoiceView> invoices;
   final String id;
   final String name;
   final List<BillingAddress> addresses;
@@ -149,7 +147,7 @@ class MemberCompanyViewQueryable extends KeyedViewQueryable<MemberCompanyView, S
   String get keyName => 'id';
 
   @override
-  String encodeKey(String key) => registry.encode(key);
+  String encodeKey(String key) => TypeEncoder.i.encode(key);
 
   @override
   String get tableName => 'member_companies_view';
@@ -159,8 +157,8 @@ class MemberCompanyViewQueryable extends KeyedViewQueryable<MemberCompanyView, S
 
   @override
   MemberCompanyView decode(TypedMap map) => MemberCompanyView(
-      id: map.get('id', registry.decode),
-      name: map.get('name', registry.decode),
+      id: map.get('id', TypeEncoder.i.decode),
+      name: map.get('name', TypeEncoder.i.decode),
       addresses: map.getListOpt('addresses', BillingAddressQueryable().decoder) ?? const []);
 }
 

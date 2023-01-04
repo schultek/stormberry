@@ -54,19 +54,6 @@ abstract class User {
 }
 ```
 
-Next, create a `build.yaml` in the root directory of your package and add this snippet:
-
-```yaml
-targets:
-  $default:
-    builders:
-      stormberry:
-        generate_for:
-          # library that exposes all your table classes
-          # modify this if to match your library file
-          - lib/models.dart
-```
-
 In order to generate the serialization code, run the following command:
 
 ```shell script
@@ -79,9 +66,7 @@ You'll need to re-run code generation each time you are making changes to your c
 dart pub run build_runner watch
 ```
 
-This will generate a `.schema.g.dart` file.
-
-Last step is to `import` the generated dart file wherever you want / need them.
+This will generate a `.schema.dart` file that you should add as a `part` to the original model file.
 
 # Setup
 

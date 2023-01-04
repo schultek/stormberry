@@ -12,8 +12,6 @@ class RepositoryGenerator {
       ${state.tables.values.map((b) => '  ${b.element.name}Repository get ${b.repoName} => ${b.element.name}Repository._(this);\n').join()}
     }
     
-    final registry = ModelRegistry();
-    
     ${state.tables.values.map((t) => generateRepository(t)).join()}
     
     ${state.tables.values.map((t) => InsertGenerator().generateInsertRequest(t)).join()}

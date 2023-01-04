@@ -4,8 +4,6 @@ extension Repositories on Database {
   PartyRepository get parties => PartyRepository._(this);
 }
 
-final registry = ModelRegistry();
-
 abstract class PartyRepository
     implements
         ModelRepository,
@@ -54,7 +52,7 @@ class _PartyRepository extends BaseRepository
 
     await db.query(
       'INSERT INTO "parties" ( "id", "name", "sponsor_id", "date" )\n'
-      'VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.sponsorId)}, ${registry.encode(r.date)} )').join(', ')}\n'
+      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.sponsorId)}, ${TypeEncoder.i.encode(r.date)} )').join(', ')}\n'
       'ON CONFLICT ( "id" ) DO UPDATE SET "name" = EXCLUDED."name", "sponsor_id" = EXCLUDED."sponsor_id", "date" = EXCLUDED."date"',
     );
   }
@@ -65,7 +63,7 @@ class _PartyRepository extends BaseRepository
     await db.query(
       'UPDATE "parties"\n'
       'SET "name" = COALESCE(UPDATED."name"::text, "parties"."name"), "sponsor_id" = COALESCE(UPDATED."sponsor_id"::text, "parties"."sponsor_id"), "date" = COALESCE(UPDATED."date"::int8, "parties"."date")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${registry.encode(r.id)}, ${registry.encode(r.name)}, ${registry.encode(r.sponsorId)}, ${registry.encode(r.date)} )').join(', ')} )\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.sponsorId)}, ${TypeEncoder.i.encode(r.date)} )').join(', ')} )\n'
       'AS UPDATED("id", "name", "sponsor_id", "date")\n'
       'WHERE "parties"."id" = UPDATED."id"',
     );
@@ -76,7 +74,7 @@ class _PartyRepository extends BaseRepository
     if (keys.isEmpty) return;
     await db.query(
       'DELETE FROM "parties"\n'
-      'WHERE "parties"."id" IN ( ${keys.map((k) => registry.encode(k)).join(',')} )',
+      'WHERE "parties"."id" IN ( ${keys.map((k) => TypeEncoder.i.encode(k)).join(',')} )',
     );
   }
 }
@@ -102,7 +100,7 @@ class GuestPartyViewQueryable extends KeyedViewQueryable<GuestPartyView, String>
   String get keyName => 'id';
 
   @override
-  String encodeKey(String key) => registry.encode(key);
+  String encodeKey(String key) => TypeEncoder.i.encode(key);
 
   @override
   String get tableName => 'guest_parties_view';
@@ -112,10 +110,10 @@ class GuestPartyViewQueryable extends KeyedViewQueryable<GuestPartyView, String>
 
   @override
   GuestPartyView decode(TypedMap map) => GuestPartyView(
-      id: map.get('id', registry.decode),
-      name: map.get('name', registry.decode),
+      id: map.get('id', TypeEncoder.i.decode),
+      name: map.get('name', TypeEncoder.i.decode),
       sponsor: map.getOpt('sponsor', MemberCompanyViewQueryable().decoder),
-      date: map.get('date', registry.decode));
+      date: map.get('date', TypeEncoder.i.decode));
 }
 
 class GuestPartyView {
@@ -137,7 +135,7 @@ class CompanyPartyViewQueryable extends KeyedViewQueryable<CompanyPartyView, Str
   String get keyName => 'id';
 
   @override
-  String encodeKey(String key) => registry.encode(key);
+  String encodeKey(String key) => TypeEncoder.i.encode(key);
 
   @override
   String get tableName => 'company_parties_view';
@@ -147,9 +145,9 @@ class CompanyPartyViewQueryable extends KeyedViewQueryable<CompanyPartyView, Str
 
   @override
   CompanyPartyView decode(TypedMap map) => CompanyPartyView(
-      id: map.get('id', registry.decode),
-      name: map.get('name', registry.decode),
-      date: map.get('date', registry.decode));
+      id: map.get('id', TypeEncoder.i.decode),
+      name: map.get('name', TypeEncoder.i.decode),
+      date: map.get('date', TypeEncoder.i.decode));
 }
 
 class CompanyPartyView {
