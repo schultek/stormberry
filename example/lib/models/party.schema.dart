@@ -51,9 +51,9 @@ class _PartyRepository extends BaseRepository
     if (requests.isEmpty) return;
 
     await db.query(
-      'INSERT INTO "parties" ( "sponsor_id", "id", "name", "date" )\n'
-      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.sponsorId)}, ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.date)} )').join(', ')}\n'
-      'ON CONFLICT ( "id" ) DO UPDATE SET "sponsor_id" = EXCLUDED."sponsor_id", "name" = EXCLUDED."name", "date" = EXCLUDED."date"',
+      'INSERT INTO "parties" ( "id", "name", "sponsor_id", "date" )\n'
+      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.sponsorId)}, ${TypeEncoder.i.encode(r.date)} )').join(', ')}\n'
+      'ON CONFLICT ( "id" ) DO UPDATE SET "name" = EXCLUDED."name", "sponsor_id" = EXCLUDED."sponsor_id", "date" = EXCLUDED."date"',
     );
   }
 
@@ -62,9 +62,9 @@ class _PartyRepository extends BaseRepository
     if (requests.isEmpty) return;
     await db.query(
       'UPDATE "parties"\n'
-      'SET "sponsor_id" = COALESCE(UPDATED."sponsor_id"::text, "parties"."sponsor_id"), "name" = COALESCE(UPDATED."name"::text, "parties"."name"), "date" = COALESCE(UPDATED."date"::int8, "parties"."date")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.sponsorId)}, ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.date)} )').join(', ')} )\n'
-      'AS UPDATED("sponsor_id", "id", "name", "date")\n'
+      'SET "name" = COALESCE(UPDATED."name"::text, "parties"."name"), "sponsor_id" = COALESCE(UPDATED."sponsor_id"::text, "parties"."sponsor_id"), "date" = COALESCE(UPDATED."date"::int8, "parties"."date")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.sponsorId)}, ${TypeEncoder.i.encode(r.date)} )').join(', ')} )\n'
+      'AS UPDATED("id", "name", "sponsor_id", "date")\n'
       'WHERE "parties"."id" = UPDATED."id"',
     );
   }
@@ -80,18 +80,30 @@ class _PartyRepository extends BaseRepository
 }
 
 class PartyInsertRequest {
-  PartyInsertRequest({this.sponsorId, required this.id, required this.name, required this.date});
-  String? sponsorId;
+  PartyInsertRequest({
+    required this.id,
+    required this.name,
+    this.sponsorId,
+    required this.date,
+  });
+
   String id;
   String name;
+  String? sponsorId;
   int date;
 }
 
 class PartyUpdateRequest {
-  PartyUpdateRequest({this.sponsorId, required this.id, this.name, this.date});
-  String? sponsorId;
+  PartyUpdateRequest({
+    required this.id,
+    this.name,
+    this.sponsorId,
+    this.date,
+  });
+
   String id;
   String? name;
+  String? sponsorId;
   int? date;
 }
 
@@ -103,30 +115,33 @@ class GuestPartyViewQueryable extends KeyedViewQueryable<GuestPartyView, String>
   String encodeKey(String key) => TypeEncoder.i.encode(key);
 
   @override
-  String get tableName => 'guest_parties_view';
+  String get query => 'SELECT "parties".*, row_to_json("sponsor".*) as "sponsor"'
+      'FROM "parties"'
+      'LEFT JOIN (${MemberCompanyViewQueryable().query}) "sponsor"'
+      'ON "parties"."sponsor_id" = "sponsor"."id"';
 
   @override
   String get tableAlias => 'parties';
 
   @override
   GuestPartyView decode(TypedMap map) => GuestPartyView(
-      sponsor: map.getOpt('sponsor', MemberCompanyViewQueryable().decoder),
       id: map.get('id', TypeEncoder.i.decode),
       name: map.get('name', TypeEncoder.i.decode),
+      sponsor: map.getOpt('sponsor', MemberCompanyViewQueryable().decoder),
       date: map.get('date', TypeEncoder.i.decode));
 }
 
 class GuestPartyView {
   GuestPartyView({
-    this.sponsor,
     required this.id,
     required this.name,
+    this.sponsor,
     required this.date,
   });
 
-  final MemberCompanyView? sponsor;
   final String id;
   final String name;
+  final MemberCompanyView? sponsor;
   final int date;
 }
 
@@ -138,7 +153,8 @@ class CompanyPartyViewQueryable extends KeyedViewQueryable<CompanyPartyView, Str
   String encodeKey(String key) => TypeEncoder.i.encode(key);
 
   @override
-  String get tableName => 'company_parties_view';
+  String get query => 'SELECT "parties".*'
+      'FROM "parties"';
 
   @override
   String get tableAlias => 'parties';

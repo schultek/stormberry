@@ -38,17 +38,6 @@ class TableJsonGenerator {
       'indexes': [
         for (var index in table.indexes) index.toMap(),
       ],
-      'views': [
-        for (var view in table.views.values)
-          {
-            'table_name': table.tableName,
-            'primary_key_name': table.primaryKeyColumn?.columnName,
-            'name': view.viewTableName,
-            'columns': [
-              for (var column in view.columns) column.toMap(),
-            ],
-          },
-      ],
     };
   }
 }

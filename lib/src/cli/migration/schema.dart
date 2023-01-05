@@ -4,18 +4,15 @@ import '../../../stormberry.dart';
 
 class DatabaseSchema {
   final Map<String, TableSchema> tables;
-  final Map<String, ViewSchema> views;
 
-  const DatabaseSchema(this.tables, this.views);
+  const DatabaseSchema(this.tables);
 
   DatabaseSchema copy() => DatabaseSchema(
         {for (var t in tables.entries) t.key: t.value.copy()},
-        {...views},
       );
 
   factory DatabaseSchema.fromMap(Map<String, dynamic> map) {
     var tables = <String, TableSchema>{};
-    var views = <String, ViewSchema>{};
     for (var key in map.keys) {
       var table = map[key];
       tables[key] = TableSchema(
@@ -28,24 +25,16 @@ class DatabaseSchema {
         indexes:
             (table['indexes'] as List?)?.map((i) => TableIndexParser.fromMap(i as Map<String, dynamic>)).toList() ?? [],
       );
-      for (var v in table['views'] as List? ?? []) {
-        views[v['name'] as String] = ViewSchema(
-          name: v['name'] as String,
-          definition: v['definition'] as String,
-          hash: v['hash'] as String,
-        );
-      }
     }
-    return DatabaseSchema(tables, views);
+    return DatabaseSchema(tables);
   }
 
   factory DatabaseSchema.empty() {
-    return DatabaseSchema({}, {});
+    return DatabaseSchema({});
   }
 
   DatabaseSchema mergeWith(DatabaseSchema targetSchema) {
     var tables = {...this.tables};
-    var views = {...this.views};
 
     for (var key in targetSchema.tables.keys) {
       if (tables.containsKey(key)) {
@@ -55,15 +44,7 @@ class DatabaseSchema {
       tables[key] = targetSchema.tables[key]!;
     }
 
-    for (var key in targetSchema.views.keys) {
-      if (views.containsKey(key)) {
-        stdout.write('Database contains duplicate view $key. Make sure each view has a unique name.');
-        exit(1);
-      }
-      views[key] = targetSchema.views[key]!;
-    }
-
-    return DatabaseSchema(tables, views);
+    return DatabaseSchema(tables);
   }
 }
 
@@ -224,34 +205,4 @@ extension TableIndexParser on TableIndex {
         'ON "$tableName" USING ${algorithm.toString().split(".")[1]} ( $joinedColumns ) '
         '${condition != null ? 'WHERE $condition' : ''}';
   }
-}
-
-class ViewSchema {
-  final String name;
-  final String definition;
-  final String hash;
-
-  ViewSchema({required this.name, required this.definition, required this.hash});
-
-  static Set<ViewNode> buildGraph(Set<ViewSchema> views) {
-    var nodes = {for (var v in views) ViewNode(v, {}, {})};
-
-    for (var a in nodes) {
-      for (var b in nodes) {
-        if (a.view.definition.contains(b.view.name)) {
-          a.children.add(b);
-          b.parents.add(a);
-        }
-      }
-    }
-    return nodes;
-  }
-}
-
-class ViewNode {
-  ViewSchema view;
-  Set<ViewNode> children;
-  Set<ViewNode> parents;
-
-  ViewNode(this.view, this.children, this.parents);
 }

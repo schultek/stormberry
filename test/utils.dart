@@ -126,15 +126,13 @@ void testViewColumn(
   String? transformer,
   String? paramName,
   String? dartType,
-  String? tableName,
   bool? isNullable,
 }) {
-  expect(column.toMap(), equals(raw));
+  expect(column.column.toMap(), equals(raw));
 
   expect(column.viewAs, equals(viewAs));
   expect(column.transformer, equals(viewAs));
   expect(column.paramName, equals(paramName));
   expect(column.dartType, equals(dartType));
-  expect(column.tableName, equals(tableName));
   expect(column.isNullable, equals(isNullable));
 }

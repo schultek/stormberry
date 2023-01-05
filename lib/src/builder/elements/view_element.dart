@@ -5,26 +5,12 @@ import 'package:source_gen/source_gen.dart';
 import '../../core/annotations.dart';
 import '../../core/case_style.dart';
 import 'column/column_element.dart';
-import 'column/field_column_element.dart';
 import 'table_element.dart';
 import '../utils.dart';
 
 final hiddenInChecker = TypeChecker.fromRuntime(HiddenIn);
 final viewedInChecker = TypeChecker.fromRuntime(ViewedIn);
 final transformedInChecker = TypeChecker.fromRuntime(TransformedIn);
-
-class LiteralValue {
-  String value;
-  LiteralValue(this.value);
-
-  dynamic toJson() {
-    return '__%$value%__';
-  }
-
-  static String fix(String json) {
-    return json.replaceAll('"__%', '').replaceAll('%__"', '');
-  }
-}
 
 class ViewColumn {
   String? viewAs;
@@ -61,24 +47,7 @@ class ViewColumn {
     }
   }
 
-  String? get tableName {
-    if (view != null) {
-      return view!.viewTableName;
-    } else if (column is LinkedColumnElement) {
-      return (column as LinkedColumnElement).linkedTable.tableName;
-    }
-    return null;
-  }
-
   bool get isNullable => column.parameter!.type.nullabilitySuffix == NullabilitySuffix.question;
-
-  Map<String, dynamic> toMap() {
-    return column.toMap()
-      ..addAll({
-        if (transformer != null) 'transformer': LiteralValue(transformer!),
-        if (column is! FieldColumnElement) 'table_name': tableName,
-      });
-  }
 }
 
 class ViewElement {

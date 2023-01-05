@@ -61,7 +61,6 @@ void main() {
         },
         paramName: 'b',
         dartType: 'B',
-        tableName: 'bs_view',
         isNullable: false,
       );
     });

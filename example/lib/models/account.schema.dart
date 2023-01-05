@@ -112,8 +112,14 @@ class _AccountRepository extends BaseRepository
 }
 
 class AccountInsertRequest {
-  AccountInsertRequest(
-      {required this.firstName, required this.lastName, required this.location, this.billingAddress, this.companyId});
+  AccountInsertRequest({
+    required this.firstName,
+    required this.lastName,
+    required this.location,
+    this.billingAddress,
+    this.companyId,
+  });
+
   String firstName;
   String lastName;
   LatLng location;
@@ -122,8 +128,15 @@ class AccountInsertRequest {
 }
 
 class AccountUpdateRequest {
-  AccountUpdateRequest(
-      {required this.id, this.firstName, this.lastName, this.location, this.billingAddress, this.companyId});
+  AccountUpdateRequest({
+    required this.id,
+    this.firstName,
+    this.lastName,
+    this.location,
+    this.billingAddress,
+    this.companyId,
+  });
+
   int id;
   String? firstName;
   String? lastName;
@@ -140,43 +153,65 @@ class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> 
   String encodeKey(int key) => TypeEncoder.i.encode(key);
 
   @override
-  String get tableName => 'full_accounts_view';
+  String get query =>
+      'SELECT "accounts".*, "parties"."data" as "parties", "invoices"."data" as "invoices", row_to_json("billingAddress".*) as "billingAddress", row_to_json("company".*) as "company"'
+      'FROM "accounts"'
+      'LEFT JOIN ('
+      '  SELECT "parties_accounts"."account_id",'
+      '    to_jsonb(array_agg("parties".*)) as data'
+      '  FROM "parties_accounts"'
+      '  LEFT JOIN (${GuestPartyViewQueryable().query}) "parties"'
+      '  ON "parties_accounts"."id" = "parties_accounts"."party_id"'
+      '  GROUP BY "parties_accounts"."account_id"'
+      ') "parties"'
+      'ON "accounts"."id" = "parties"."account_id"'
+      'LEFT JOIN ('
+      '  SELECT "invoices"."account_id",'
+      '    to_jsonb(array_agg("invoices".*)) as data'
+      '  FROM (${OwnerInvoiceViewQueryable().query}) "invoices"'
+      '  GROUP BY "invoices"."account_id"'
+      ') "invoices"'
+      'ON "accounts"."id" = "invoices"."account_id"'
+      'LEFT JOIN (${BillingAddressQueryable().query}) "billingAddress"'
+      'ON "accounts"."id" = "billingAddress"."account_id"'
+      'LEFT JOIN (${MemberCompanyViewQueryable().query}) "company"'
+      'ON "accounts"."company_id" = "company"."id"';
 
   @override
   String get tableAlias => 'accounts';
 
   @override
   FullAccountView decode(TypedMap map) => FullAccountView(
+      parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
+      invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
       id: map.get('id', TypeEncoder.i.decode),
       firstName: map.get('first_name', TypeEncoder.i.decode),
       lastName: map.get('last_name', TypeEncoder.i.decode),
       location: map.get('location', LatLngConverter().decode),
       billingAddress: map.getOpt('billingAddress', BillingAddressQueryable().decoder),
-      invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
-      company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
-      parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const []);
+      company: map.getOpt('company', MemberCompanyViewQueryable().decoder));
 }
 
 class FullAccountView {
   FullAccountView({
+    required this.parties,
+    required this.invoices,
     required this.id,
     required this.firstName,
     required this.lastName,
     required this.location,
     this.billingAddress,
-    required this.invoices,
     this.company,
-    required this.parties,
   });
 
+  final List<GuestPartyView> parties;
+  final List<OwnerInvoiceView> invoices;
   final int id;
   final String firstName;
   final String lastName;
   final LatLng location;
   final BillingAddress? billingAddress;
-  final List<OwnerInvoiceView> invoices;
   final MemberCompanyView? company;
-  final List<GuestPartyView> parties;
 }
 
 class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> {
@@ -187,43 +222,65 @@ class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> 
   String encodeKey(int key) => TypeEncoder.i.encode(key);
 
   @override
-  String get tableName => 'user_accounts_view';
+  String get query =>
+      'SELECT "accounts".*, "parties"."data" as "parties", "invoices"."data" as "invoices", row_to_json("billingAddress".*) as "billingAddress", row_to_json("company".*) as "company"'
+      'FROM "accounts"'
+      'LEFT JOIN ('
+      '  SELECT "parties_accounts"."account_id",'
+      '    to_jsonb(array_agg("parties".*)) as data'
+      '  FROM "parties_accounts"'
+      '  LEFT JOIN (${GuestPartyViewQueryable().query}) "parties"'
+      '  ON "parties_accounts"."id" = "parties_accounts"."party_id"'
+      '  GROUP BY "parties_accounts"."account_id"'
+      ') "parties"'
+      'ON "accounts"."id" = "parties"."account_id"'
+      'LEFT JOIN ('
+      '  SELECT "invoices"."account_id",'
+      '    to_jsonb(array_agg("invoices".*)) as data'
+      '  FROM (${OwnerInvoiceViewQueryable().query}) "invoices"'
+      '  GROUP BY "invoices"."account_id"'
+      ') "invoices"'
+      'ON "accounts"."id" = "invoices"."account_id"'
+      'LEFT JOIN (${BillingAddressQueryable().query}) "billingAddress"'
+      'ON "accounts"."id" = "billingAddress"."account_id"'
+      'LEFT JOIN (${MemberCompanyViewQueryable().query}) "company"'
+      'ON "accounts"."company_id" = "company"."id"';
 
   @override
   String get tableAlias => 'accounts';
 
   @override
   UserAccountView decode(TypedMap map) => UserAccountView(
+      parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
+      invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
       id: map.get('id', TypeEncoder.i.decode),
       firstName: map.get('first_name', TypeEncoder.i.decode),
       lastName: map.get('last_name', TypeEncoder.i.decode),
       location: map.get('location', LatLngConverter().decode),
       billingAddress: map.getOpt('billingAddress', BillingAddressQueryable().decoder),
-      invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
-      company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
-      parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const []);
+      company: map.getOpt('company', MemberCompanyViewQueryable().decoder));
 }
 
 class UserAccountView {
   UserAccountView({
+    required this.parties,
+    required this.invoices,
     required this.id,
     required this.firstName,
     required this.lastName,
     required this.location,
     this.billingAddress,
-    required this.invoices,
     this.company,
-    required this.parties,
   });
 
+  final List<GuestPartyView> parties;
+  final List<OwnerInvoiceView> invoices;
   final int id;
   final String firstName;
   final String lastName;
   final LatLng location;
   final BillingAddress? billingAddress;
-  final List<OwnerInvoiceView> invoices;
   final MemberCompanyView? company;
-  final List<GuestPartyView> parties;
 }
 
 class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView, int> {
@@ -234,32 +291,42 @@ class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView,
   String encodeKey(int key) => TypeEncoder.i.encode(key);
 
   @override
-  String get tableName => 'company_accounts_view';
+  String get query => 'SELECT "accounts".*, "parties"."data" as "parties"'
+      'FROM "accounts"'
+      'LEFT JOIN ('
+      '  SELECT "parties_accounts"."account_id",'
+      '    to_jsonb(array_agg("parties".*)) as data'
+      '  FROM "parties_accounts"'
+      '  LEFT JOIN (${CompanyPartyViewQueryable().query}) "parties"'
+      '  ON "parties_accounts"."id" = "parties_accounts"."party_id"'
+      '  GROUP BY "parties_accounts"."account_id"'
+      ') "parties"'
+      'ON "accounts"."id" = "parties"."account_id"';
 
   @override
   String get tableAlias => 'accounts';
 
   @override
   CompanyAccountView decode(TypedMap map) => CompanyAccountView(
+      parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
       id: map.get('id', TypeEncoder.i.decode),
       firstName: map.get('first_name', TypeEncoder.i.decode),
       lastName: map.get('last_name', TypeEncoder.i.decode),
-      location: map.get('location', LatLngConverter().decode),
-      parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const []);
+      location: map.get('location', LatLngConverter().decode));
 }
 
 class CompanyAccountView {
   CompanyAccountView({
+    required this.parties,
     required this.id,
     required this.firstName,
     required this.lastName,
     required this.location,
-    required this.parties,
   });
 
+  final List<CompanyPartyView> parties;
   final int id;
   final String firstName;
   final String lastName;
   final LatLng location;
-  final List<CompanyPartyView> parties;
 }

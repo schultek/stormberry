@@ -4,7 +4,7 @@ import 'schema.dart';
 
 Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
   //ignore: prefer_const_constructors
-  var schema = DatabaseSchema({}, {});
+  var schema = DatabaseSchema({});
 
   var tables = await db
       .query("SELECT * FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'");
@@ -103,18 +103,6 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
       unique: unique,
       condition: condition,
     ));
-  }
-
-  var views = await db.query("""
-    SELECT * 
-    FROM information_schema.views WHERE table_schema = 'public' AND table_name like '%_view'
-  """);
-  for (var row in views) {
-    var viewMap = row.toColumnMap();
-    var viewName = viewMap['table_name'] as String;
-    var viewDefinition = viewMap['view_definition'] as String;
-    var viewHash = RegExp('_#(.+)#_').firstMatch(viewDefinition)?.group(1) ?? '';
-    schema.views[viewName] = ViewSchema(name: viewName, definition: viewDefinition, hash: viewHash);
   }
 
   return schema;

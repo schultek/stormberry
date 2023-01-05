@@ -101,8 +101,9 @@ abstract class BaseRepository implements ModelRepository {
 }
 
 abstract class ViewQueryable<T> {
-  String get tableName;
+
   String get tableAlias;
+  String get query;
 
   T decode(TypedMap map);
 
@@ -135,7 +136,7 @@ class ViewQuery<Result> implements Query<List<Result>, QueryParams> {
   Future<List<Result>> apply(Database db, QueryParams params) async {
     var time = DateTime.now();
     var res = await db.query("""
-      SELECT * FROM "${queryable.tableName}" "${queryable.tableAlias}"
+      SELECT * FROM (${queryable.query}) "${queryable.tableAlias}"
       ${params.where != null ? "WHERE ${params.where}" : ""}
       ${params.orderBy != null ? "ORDER BY ${params.orderBy}" : ""}
       ${params.limit != null ? "LIMIT ${params.limit}" : ""}

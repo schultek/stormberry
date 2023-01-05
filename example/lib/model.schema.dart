@@ -126,25 +126,41 @@ class _BRepository extends BaseRepository
 }
 
 class AInsertRequest {
-  AInsertRequest({required this.id, required this.bId});
+  AInsertRequest({
+    required this.id,
+    required this.bId,
+  });
+
   String id;
   String bId;
 }
 
 class BInsertRequest {
-  BInsertRequest({this.aId, required this.id});
+  BInsertRequest({
+    this.aId,
+    required this.id,
+  });
+
   String? aId;
   String id;
 }
 
 class AUpdateRequest {
-  AUpdateRequest({required this.id, this.bId});
+  AUpdateRequest({
+    required this.id,
+    this.bId,
+  });
+
   String id;
   String? bId;
 }
 
 class BUpdateRequest {
-  BUpdateRequest({this.aId, required this.id});
+  BUpdateRequest({
+    this.aId,
+    required this.id,
+  });
+
   String? aId;
   String id;
 }
@@ -157,7 +173,10 @@ class AQueryable extends KeyedViewQueryable<A, String> {
   String encodeKey(String key) => TypeEncoder.i.encode(key);
 
   @override
-  String get tableName => 'as_view';
+  String get query => 'SELECT "as".*, row_to_json("b".*) as "b"'
+      'FROM "as"'
+      'LEFT JOIN (${BQueryable().query}) "b"'
+      'ON "as"."b_id" = "b"."id"';
 
   @override
   String get tableAlias => 'as';
@@ -186,7 +205,10 @@ class BQueryable extends KeyedViewQueryable<B, String> {
   String encodeKey(String key) => TypeEncoder.i.encode(key);
 
   @override
-  String get tableName => 'bs_view';
+  String get query => 'SELECT "bs".*, row_to_json("a".*) as "a"'
+      'FROM "bs"'
+      'LEFT JOIN (${AQueryable().query}) "a"'
+      'ON "bs"."a_id" = "a"."id"';
 
   @override
   String get tableAlias => 'bs';

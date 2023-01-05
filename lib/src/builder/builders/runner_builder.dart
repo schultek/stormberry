@@ -14,21 +14,21 @@ class RunnerBuilder extends OutputBuilder {
   String buildTarget(BuildStep buildStep, AssetState asset) {
     return '''
       import 'dart:isolate';
-      import 'package:stormberry/src/helpers/json_schema.dart';
+      import 'dart:convert';
       import 'package:stormberry/stormberry.dart';
 
       import '${buildStep.inputId.uri}';
 
       void main(List<String> args, SendPort port) {
-        port.send(buildJsonSchema(jsonSchema));
+        port.send(jsonEncode(jsonSchema));
       }
 
-      const jsonSchema = ${LiteralValue.fix(const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
+      const jsonSchema = ${const JsonEncoder.withIndent('  ').convert(<String, dynamic>{
           for (var element in asset.tables.values) //
             element.tableName: TableJsonGenerator().generateJsonSchema(element),
           for (var element in asset.joinTables.values) //
             element.tableName: JoinJsonGenerator().generateJsonSchema(element),
-        }))};
+        })};
     ''';
   }
 }

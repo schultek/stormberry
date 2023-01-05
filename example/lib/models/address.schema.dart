@@ -49,13 +49,15 @@ class _BillingAddressRepository extends BaseRepository
 }
 
 class BillingAddressInsertRequest {
-  BillingAddressInsertRequest(
-      {this.accountId,
-      this.companyId,
-      required this.city,
-      required this.postcode,
-      required this.name,
-      required this.street});
+  BillingAddressInsertRequest({
+    this.accountId,
+    this.companyId,
+    required this.city,
+    required this.postcode,
+    required this.name,
+    required this.street,
+  });
+
   int? accountId;
   String? companyId;
   String city;
@@ -65,7 +67,15 @@ class BillingAddressInsertRequest {
 }
 
 class BillingAddressUpdateRequest {
-  BillingAddressUpdateRequest({this.accountId, this.companyId, this.city, this.postcode, this.name, this.street});
+  BillingAddressUpdateRequest({
+    this.accountId,
+    this.companyId,
+    this.city,
+    this.postcode,
+    this.name,
+    this.street,
+  });
+
   int? accountId;
   String? companyId;
   String? city;
@@ -76,7 +86,8 @@ class BillingAddressUpdateRequest {
 
 class BillingAddressQueryable extends ViewQueryable<BillingAddress> {
   @override
-  String get tableName => 'billing_addresses_view';
+  String get query => 'SELECT "billing_addresses".*'
+      'FROM "billing_addresses"';
 
   @override
   String get tableAlias => 'billing_addresses';

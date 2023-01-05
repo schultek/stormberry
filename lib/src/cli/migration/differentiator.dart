@@ -68,32 +68,12 @@ Future<DatabaseSchemaDiff> getSchemaDiff(Database db, DatabaseSchema dbSchema) a
     diff.tables.added.add(newTable);
   }
 
-  for (var extView in existingSchema.views.values) {
-    if (newSchema.views.containsKey(extView.name)) {
-      var newView = newSchema.views.remove(extView.name)!;
-
-      if (newView.hash != extView.hash) {
-        diff.views.modified.add(Change(extView, newView));
-      }
-    } else {
-      diff.views.removed.add(extView);
-    }
-  }
-
-  for (var newView in newSchema.views.values) {
-    diff.views.added.add(newView);
-  }
-
   return diff;
 }
 
 void printDiff(DatabaseSchemaDiff diff) {
   for (var table in diff.tables.added) {
     print('++ TABLE ${table.name}');
-  }
-
-  for (var view in diff.views.added) {
-    print('++ VIEW ${view.name}');
   }
 
   for (var table in diff.tables.modified) {
@@ -129,14 +109,6 @@ void printDiff(DatabaseSchemaDiff diff) {
     }
   }
 
-  for (var view in diff.views.modified) {
-    print('<> VIEW ${view.newly.name}');
-  }
-
-  for (var view in diff.views.removed) {
-    print('-- VIEW ${view.name}');
-  }
-
   for (var table in diff.tables.removed) {
     print('-- TABLE ${table.name}');
   }
@@ -144,14 +116,13 @@ void printDiff(DatabaseSchemaDiff diff) {
 
 class DatabaseSchemaDiff {
   Diff<TableSchema, TableSchemaDiff> tables = Diff();
-  Diff<ViewSchema, Change<ViewSchema>> views = Diff();
 
   DatabaseSchema existingSchema;
   DatabaseSchema newSchema;
 
   DatabaseSchemaDiff(this.existingSchema, this.newSchema);
 
-  bool get hasChanges => tables.hasChanges((t) => t.hasChanges) || views.hasChanges();
+  bool get hasChanges => tables.hasChanges((t) => t.hasChanges);
 }
 
 class TableSchemaDiff {

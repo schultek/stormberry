@@ -5,6 +5,7 @@ import '../elements/column/field_column_element.dart';
 import '../elements/table_element.dart';
 import '../utils.dart';
 import '../elements/view_element.dart';
+import 'view_query_generator.dart';
 
 class ViewGenerator {
   String generateRepositoryMethods(TableElement table, {bool abstract = false}) {
@@ -58,7 +59,7 @@ class ViewGenerator {
         ''' : ''}
         
         @override
-        String get tableName => '${view.viewTableName}';
+        String get query => '${buildViewQuery(view).replaceAll("'", "\\'").replaceAll('\n', "'\n'")}';
         
         @override
         String get tableAlias => '${view.table.tableName}';
