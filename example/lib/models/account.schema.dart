@@ -65,13 +65,13 @@ class _AccountRepository extends BaseRepository
     var autoIncrements = rows.map((r) => r.toColumnMap()).toList();
 
     await db.query(
-      'INSERT INTO "accounts" ( "id", "first_name", "last_name", "location", "company_id" )\n'
-      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(autoIncrements[requests.indexOf(r)]['id'])}, ${TypeEncoder.i.encode(r.firstName)}, ${TypeEncoder.i.encode(r.lastName)}, ${TypeEncoder.i.encode(r.location, LatLngConverter())}, ${TypeEncoder.i.encode(r.companyId)} )').join(', ')}\n',
+      'INSERT INTO "accounts" ( "company_id", "id", "first_name", "last_name", "location" )\n'
+      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.companyId)}, ${TypeEncoder.i.encode(autoIncrements[requests.indexOf(r)]['id'])}, ${TypeEncoder.i.encode(r.firstName)}, ${TypeEncoder.i.encode(r.lastName)}, ${TypeEncoder.i.encode(r.location, LatLngConverter())} )').join(', ')}\n',
     );
     await db.billingAddresses.insertMany(requests.where((r) => r.billingAddress != null).map((r) {
       return BillingAddressInsertRequest(
-          accountId: TypeEncoder.i.decode(autoIncrements[requests.indexOf(r)]['id']),
           companyId: null,
+          accountId: TypeEncoder.i.decode(autoIncrements[requests.indexOf(r)]['id']),
           city: r.billingAddress!.city,
           postcode: r.billingAddress!.postcode,
           name: r.billingAddress!.name,
@@ -86,9 +86,9 @@ class _AccountRepository extends BaseRepository
     if (requests.isEmpty) return;
     await db.query(
       'UPDATE "accounts"\n'
-      'SET "first_name" = COALESCE(UPDATED."first_name"::text, "accounts"."first_name"), "last_name" = COALESCE(UPDATED."last_name"::text, "accounts"."last_name"), "location" = COALESCE(UPDATED."location"::jsonb, "accounts"."location"), "company_id" = COALESCE(UPDATED."company_id"::text, "accounts"."company_id")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.firstName)}, ${TypeEncoder.i.encode(r.lastName)}, ${TypeEncoder.i.encode(r.location, LatLngConverter())}, ${TypeEncoder.i.encode(r.companyId)} )').join(', ')} )\n'
-      'AS UPDATED("id", "first_name", "last_name", "location", "company_id")\n'
+      'SET "company_id" = COALESCE(UPDATED."company_id"::text, "accounts"."company_id"), "first_name" = COALESCE(UPDATED."first_name"::text, "accounts"."first_name"), "last_name" = COALESCE(UPDATED."last_name"::text, "accounts"."last_name"), "location" = COALESCE(UPDATED."location"::point, "accounts"."location")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.companyId)}, ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.firstName)}, ${TypeEncoder.i.encode(r.lastName)}, ${TypeEncoder.i.encode(r.location, LatLngConverter())} )').join(', ')} )\n'
+      'AS UPDATED("company_id", "id", "first_name", "last_name", "location")\n'
       'WHERE "accounts"."id" = UPDATED."id"',
     );
     await db.billingAddresses.updateMany(requests.where((r) => r.billingAddress != null).map((r) {
@@ -113,36 +113,36 @@ class _AccountRepository extends BaseRepository
 
 class AccountInsertRequest {
   AccountInsertRequest({
+    this.companyId,
     required this.firstName,
     required this.lastName,
     required this.location,
     this.billingAddress,
-    this.companyId,
   });
 
+  String? companyId;
   String firstName;
   String lastName;
   LatLng location;
   BillingAddress? billingAddress;
-  String? companyId;
 }
 
 class AccountUpdateRequest {
   AccountUpdateRequest({
+    this.companyId,
     required this.id,
     this.firstName,
     this.lastName,
     this.location,
     this.billingAddress,
-    this.companyId,
   });
 
+  String? companyId;
   int id;
   String? firstName;
   String? lastName;
   LatLng? location;
   BillingAddress? billingAddress;
-  String? companyId;
 }
 
 class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> {
@@ -154,14 +154,16 @@ class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> 
 
   @override
   String get query =>
-      'SELECT "accounts".*, "parties"."data" as "parties", "invoices"."data" as "invoices", row_to_json("billingAddress".*) as "billingAddress", row_to_json("company".*) as "company"'
+      'SELECT "accounts".*, row_to_json("company".*) as "company", "parties"."data" as "parties", "invoices"."data" as "invoices", row_to_json("billingAddress".*) as "billingAddress"'
       'FROM "accounts"'
+      'LEFT JOIN (${MemberCompanyViewQueryable().query}) "company"'
+      'ON "accounts"."company_id" = "company"."id"'
       'LEFT JOIN ('
       '  SELECT "parties_accounts"."account_id",'
       '    to_jsonb(array_agg("parties".*)) as data'
       '  FROM "parties_accounts"'
       '  LEFT JOIN (${GuestPartyViewQueryable().query}) "parties"'
-      '  ON "parties_accounts"."id" = "parties_accounts"."party_id"'
+      '  ON "parties"."id" = "parties_accounts"."party_id"'
       '  GROUP BY "parties_accounts"."account_id"'
       ') "parties"'
       'ON "accounts"."id" = "parties"."account_id"'
@@ -173,27 +175,26 @@ class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> 
       ') "invoices"'
       'ON "accounts"."id" = "invoices"."account_id"'
       'LEFT JOIN (${BillingAddressQueryable().query}) "billingAddress"'
-      'ON "accounts"."id" = "billingAddress"."account_id"'
-      'LEFT JOIN (${MemberCompanyViewQueryable().query}) "company"'
-      'ON "accounts"."company_id" = "company"."id"';
+      'ON "accounts"."id" = "billingAddress"."account_id"';
 
   @override
   String get tableAlias => 'accounts';
 
   @override
   FullAccountView decode(TypedMap map) => FullAccountView(
+      company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
       parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
       invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
       id: map.get('id', TypeEncoder.i.decode),
       firstName: map.get('first_name', TypeEncoder.i.decode),
       lastName: map.get('last_name', TypeEncoder.i.decode),
       location: map.get('location', LatLngConverter().decode),
-      billingAddress: map.getOpt('billingAddress', BillingAddressQueryable().decoder),
-      company: map.getOpt('company', MemberCompanyViewQueryable().decoder));
+      billingAddress: map.getOpt('billingAddress', BillingAddressQueryable().decoder));
 }
 
 class FullAccountView {
   FullAccountView({
+    this.company,
     required this.parties,
     required this.invoices,
     required this.id,
@@ -201,9 +202,9 @@ class FullAccountView {
     required this.lastName,
     required this.location,
     this.billingAddress,
-    this.company,
   });
 
+  final MemberCompanyView? company;
   final List<GuestPartyView> parties;
   final List<OwnerInvoiceView> invoices;
   final int id;
@@ -211,7 +212,6 @@ class FullAccountView {
   final String lastName;
   final LatLng location;
   final BillingAddress? billingAddress;
-  final MemberCompanyView? company;
 }
 
 class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> {
@@ -223,14 +223,16 @@ class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> 
 
   @override
   String get query =>
-      'SELECT "accounts".*, "parties"."data" as "parties", "invoices"."data" as "invoices", row_to_json("billingAddress".*) as "billingAddress", row_to_json("company".*) as "company"'
+      'SELECT "accounts".*, row_to_json("company".*) as "company", "parties"."data" as "parties", "invoices"."data" as "invoices", row_to_json("billingAddress".*) as "billingAddress"'
       'FROM "accounts"'
+      'LEFT JOIN (${MemberCompanyViewQueryable().query}) "company"'
+      'ON "accounts"."company_id" = "company"."id"'
       'LEFT JOIN ('
       '  SELECT "parties_accounts"."account_id",'
       '    to_jsonb(array_agg("parties".*)) as data'
       '  FROM "parties_accounts"'
       '  LEFT JOIN (${GuestPartyViewQueryable().query}) "parties"'
-      '  ON "parties_accounts"."id" = "parties_accounts"."party_id"'
+      '  ON "parties"."id" = "parties_accounts"."party_id"'
       '  GROUP BY "parties_accounts"."account_id"'
       ') "parties"'
       'ON "accounts"."id" = "parties"."account_id"'
@@ -242,27 +244,26 @@ class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> 
       ') "invoices"'
       'ON "accounts"."id" = "invoices"."account_id"'
       'LEFT JOIN (${BillingAddressQueryable().query}) "billingAddress"'
-      'ON "accounts"."id" = "billingAddress"."account_id"'
-      'LEFT JOIN (${MemberCompanyViewQueryable().query}) "company"'
-      'ON "accounts"."company_id" = "company"."id"';
+      'ON "accounts"."id" = "billingAddress"."account_id"';
 
   @override
   String get tableAlias => 'accounts';
 
   @override
   UserAccountView decode(TypedMap map) => UserAccountView(
+      company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
       parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
       invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
       id: map.get('id', TypeEncoder.i.decode),
       firstName: map.get('first_name', TypeEncoder.i.decode),
       lastName: map.get('last_name', TypeEncoder.i.decode),
       location: map.get('location', LatLngConverter().decode),
-      billingAddress: map.getOpt('billingAddress', BillingAddressQueryable().decoder),
-      company: map.getOpt('company', MemberCompanyViewQueryable().decoder));
+      billingAddress: map.getOpt('billingAddress', BillingAddressQueryable().decoder));
 }
 
 class UserAccountView {
   UserAccountView({
+    this.company,
     required this.parties,
     required this.invoices,
     required this.id,
@@ -270,9 +271,9 @@ class UserAccountView {
     required this.lastName,
     required this.location,
     this.billingAddress,
-    this.company,
   });
 
+  final MemberCompanyView? company;
   final List<GuestPartyView> parties;
   final List<OwnerInvoiceView> invoices;
   final int id;
@@ -280,7 +281,6 @@ class UserAccountView {
   final String lastName;
   final LatLng location;
   final BillingAddress? billingAddress;
-  final MemberCompanyView? company;
 }
 
 class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView, int> {
@@ -298,7 +298,7 @@ class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView,
       '    to_jsonb(array_agg("parties".*)) as data'
       '  FROM "parties_accounts"'
       '  LEFT JOIN (${CompanyPartyViewQueryable().query}) "parties"'
-      '  ON "parties_accounts"."id" = "parties_accounts"."party_id"'
+      '  ON "parties"."id" = "parties_accounts"."party_id"'
       '  GROUP BY "parties_accounts"."account_id"'
       ') "parties"'
       'ON "accounts"."id" = "parties"."account_id"';

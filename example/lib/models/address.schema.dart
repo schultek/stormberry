@@ -29,9 +29,8 @@ class _BillingAddressRepository extends BaseRepository
     if (requests.isEmpty) return;
 
     await db.query(
-      'INSERT INTO "billing_addresses" ( "account_id", "company_id", "city", "postcode", "name", "street" )\n'
-      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.accountId)}, ${TypeEncoder.i.encode(r.companyId)}, ${TypeEncoder.i.encode(r.city)}, ${TypeEncoder.i.encode(r.postcode)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.street)} )').join(', ')}\n'
-      'ON CONFLICT ( "account_id" ) DO UPDATE SET "city" = EXCLUDED."city", "postcode" = EXCLUDED."postcode", "name" = EXCLUDED."name", "street" = EXCLUDED."street"',
+      'INSERT INTO "billing_addresses" ( "company_id", "account_id", "city", "postcode", "name", "street" )\n'
+      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.companyId)}, ${TypeEncoder.i.encode(r.accountId)}, ${TypeEncoder.i.encode(r.city)}, ${TypeEncoder.i.encode(r.postcode)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.street)} )').join(', ')}\n',
     );
   }
 
@@ -41,25 +40,25 @@ class _BillingAddressRepository extends BaseRepository
     await db.query(
       'UPDATE "billing_addresses"\n'
       'SET "city" = COALESCE(UPDATED."city"::text, "billing_addresses"."city"), "postcode" = COALESCE(UPDATED."postcode"::text, "billing_addresses"."postcode"), "name" = COALESCE(UPDATED."name"::text, "billing_addresses"."name"), "street" = COALESCE(UPDATED."street"::text, "billing_addresses"."street")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.accountId)}, ${TypeEncoder.i.encode(r.companyId)}, ${TypeEncoder.i.encode(r.city)}, ${TypeEncoder.i.encode(r.postcode)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.street)} )').join(', ')} )\n'
-      'AS UPDATED("account_id", "company_id", "city", "postcode", "name", "street")\n'
-      'WHERE "billing_addresses"."account_id" = UPDATED."account_id" AND "billing_addresses"."company_id" = UPDATED."company_id"',
+      'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.companyId)}, ${TypeEncoder.i.encode(r.accountId)}, ${TypeEncoder.i.encode(r.city)}, ${TypeEncoder.i.encode(r.postcode)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.street)} )').join(', ')} )\n'
+      'AS UPDATED("company_id", "account_id", "city", "postcode", "name", "street")\n'
+      'WHERE "billing_addresses"."company_id" = UPDATED."company_id" AND "billing_addresses"."account_id" = UPDATED."account_id"',
     );
   }
 }
 
 class BillingAddressInsertRequest {
   BillingAddressInsertRequest({
-    this.accountId,
     this.companyId,
+    this.accountId,
     required this.city,
     required this.postcode,
     required this.name,
     required this.street,
   });
 
-  int? accountId;
   String? companyId;
+  int? accountId;
   String city;
   String postcode;
   String name;
@@ -68,16 +67,16 @@ class BillingAddressInsertRequest {
 
 class BillingAddressUpdateRequest {
   BillingAddressUpdateRequest({
-    this.accountId,
     this.companyId,
+    this.accountId,
     this.city,
     this.postcode,
     this.name,
     this.street,
   });
 
-  int? accountId;
   String? companyId;
+  int? accountId;
   String? city;
   String? postcode;
   String? name;

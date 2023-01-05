@@ -38,8 +38,7 @@ class _ARepository extends BaseRepository
 
     await db.query(
       'INSERT INTO "as" ( "id", "b_id" )\n'
-      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.bId)} )').join(', ')}\n'
-      'ON CONFLICT ( "id" ) DO UPDATE SET "b_id" = EXCLUDED."b_id"',
+      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.bId)} )').join(', ')}\n',
     );
   }
 
@@ -98,8 +97,7 @@ class _BRepository extends BaseRepository
 
     await db.query(
       'INSERT INTO "bs" ( "a_id", "id" )\n'
-      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.aId)}, ${TypeEncoder.i.encode(r.id)} )').join(', ')}\n'
-      'ON CONFLICT ( "id" ) DO UPDATE SET "a_id" = EXCLUDED."a_id"',
+      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.aId)}, ${TypeEncoder.i.encode(r.id)} )').join(', ')}\n',
     );
   }
 

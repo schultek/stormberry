@@ -87,30 +87,6 @@ class InsertGenerator {
       }
     }
 
-    String? onConflictClause;
-    String? conflictKeyStatement;
-
-    if (table.primaryKeyColumn != null) {
-      if (!table.primaryKeyColumn!.isAutoIncrement) {
-        var conflictColumns = table.columns
-            .whereType<NamedColumnElement>()
-            .where((c) => c != table.primaryKeyColumn && (c is! FieldColumnElement || !c.isAutoIncrement));
-        onConflictClause = '\n\'ON CONFLICT ( "${table.primaryKeyColumn!.columnName}" ) DO UPDATE SET '
-            '${conflictColumns.map((c) => '"${c.columnName}" = EXCLUDED."${c.columnName}"').join(', ')}\'';
-      }
-    } else if (table.columns.where((c) => c is ForeignColumnElement && c.isUnique).length == 1) {
-      var foreignColumn = table.columns.whereType<ForeignColumnElement>().first;
-      var conflictColumns = table.columns.whereType<FieldColumnElement>().where((c) => !c.isAutoIncrement);
-      onConflictClause = '\n\'ON CONFLICT ( "${foreignColumn.columnName}" ) DO UPDATE SET '
-          '${conflictColumns.map((c) => '"${c.columnName}" = EXCLUDED."${c.columnName}"').join(', ')}\'';
-    } else if (table.columns.where((c) => c is ForeignColumnElement && c.isUnique).length > 1) {
-      var conflictColumns = table.columns.whereType<FieldColumnElement>().where((c) => !c.isAutoIncrement);
-      conflictKeyStatement =
-          'var conflictKey = requests.isEmpty ? null : ${table.columns.whereType<ForeignColumnElement>().map((c) => 'requests.first.${c.paramName} != null ? ${c.isUnique ? "'${c.columnName}'" : 'mull'} : ').join()} null;';
-      onConflictClause = "\n'\${conflictKey != null ? 'ON CONFLICT (\"\$conflictKey\" ) DO UPDATE SET "
-          "${conflictColumns.map((c) => '"${c.columnName}" = EXCLUDED."${c.columnName}"').join(', ')}' : ''}'";
-    }
-
     var insertColumns = table.columns.whereType<NamedColumnElement>();
 
     String toInsertValue(NamedColumnElement c) {
@@ -126,10 +102,9 @@ class InsertGenerator {
       Future<${keyReturnStatement != null ? 'List<int>' : 'void'}> insert(Database db, List<${table.element.name}InsertRequest> requests) async {
         if (requests.isEmpty) return${keyReturnStatement != null ? ' []' : ''};
         ${autoIncrementStatement ?? ''}
-        ${conflictKeyStatement ?? ''}
         await db.query(
           'INSERT INTO "${table.tableName}" ( ${insertColumns.map((c) => '"${c.columnName}"').join(', ')} )\\n'
-          'VALUES \${requests.map((r) => '( ${insertColumns.map(toInsertValue).join(', ')} )').join(', ')}\\n'${onConflictClause ?? ''},
+          'VALUES \${requests.map((r) => '( ${insertColumns.map(toInsertValue).join(', ')} )').join(', ')}\\n',
         );
         ${deepInserts.isNotEmpty ? deepInserts.join() : ''}
         ${keyReturnStatement ?? ''}

@@ -40,8 +40,7 @@ class _InvoiceRepository extends BaseRepository
 
     await db.query(
       'INSERT INTO "invoices" ( "id", "title", "invoice_id", "account_id", "company_id" )\n'
-      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.title)}, ${TypeEncoder.i.encode(r.invoiceId)}, ${TypeEncoder.i.encode(r.accountId)}, ${TypeEncoder.i.encode(r.companyId)} )').join(', ')}\n'
-      'ON CONFLICT ( "id" ) DO UPDATE SET "title" = EXCLUDED."title", "invoice_id" = EXCLUDED."invoice_id", "account_id" = EXCLUDED."account_id", "company_id" = EXCLUDED."company_id"',
+      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.title)}, ${TypeEncoder.i.encode(r.invoiceId)}, ${TypeEncoder.i.encode(r.accountId)}, ${TypeEncoder.i.encode(r.companyId)} )').join(', ')}\n',
     );
   }
 

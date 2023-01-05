@@ -16,6 +16,8 @@ Future<void> main() async {
 
   db.debugPrint = true;
 
+  await db.companies.deleteOne('abc');
+
   await db.companies.insertOne(CompanyInsertRequest(
     id: 'abc',
     name: 'Minga',

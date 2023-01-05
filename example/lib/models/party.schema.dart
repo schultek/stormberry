@@ -52,8 +52,7 @@ class _PartyRepository extends BaseRepository
 
     await db.query(
       'INSERT INTO "parties" ( "id", "name", "sponsor_id", "date" )\n'
-      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.sponsorId)}, ${TypeEncoder.i.encode(r.date)} )').join(', ')}\n'
-      'ON CONFLICT ( "id" ) DO UPDATE SET "name" = EXCLUDED."name", "sponsor_id" = EXCLUDED."sponsor_id", "date" = EXCLUDED."date"',
+      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.sponsorId)}, ${TypeEncoder.i.encode(r.date)} )').join(', ')}\n',
     );
   }
 
