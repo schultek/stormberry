@@ -18,7 +18,7 @@ String buildViewQuery(ViewElement view) {
   for (var viewColumn in columns) {
     String? transform;
     if (viewColumn.transformer != null) {
-      '\${${viewColumn.transformer!}.transform(\'${viewColumn.paramName}\', \'$tableName\')}';
+      transform = '\${${viewColumn.transformer!}.transform(\'${viewColumn.paramName}\', \'$tableName\')}';
     }
 
     var column = viewColumn.column;

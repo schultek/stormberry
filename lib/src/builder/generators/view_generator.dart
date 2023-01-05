@@ -59,7 +59,7 @@ class ViewGenerator {
         ''' : ''}
         
         @override
-        String get query => '${buildViewQuery(view).replaceAll("'", "\\'").replaceAll('\n', "'\n'")}';
+        String get query => '${buildViewQuery(view).replaceAll('\n', "'\n'")}';
         
         @override
         String get tableAlias => '${view.table.tableName}';

@@ -120,9 +120,9 @@ class MigrateCommand extends Command<void> {
     var dbUser = resolveProperty<String>(arg: 'username', env: 'DB_USERNAME', prompt: 'Enter the database username: ');
     var dbPassword = resolveProperty<String>(
         arg: 'password', env: 'DB_PASSWORD', prompt: 'Enter the database password: ', obscureInput: true);
-    var useSSL = resolveProperty<bool>(arg: 'ssl', env: 'DB_SSL', prompt: 'Use SSL? (yes/no): ');
+    var useSSL = resolveProperty<bool>(arg: 'ssl', env: 'DB_SSL');
     var isUnixSocket =
-        resolveProperty<bool>(arg: 'unix-socket', env: 'DB_SOCKET', prompt: 'Use unix socket? (yes/no): ');
+        resolveProperty<bool>(arg: 'unix-socket', env: 'DB_SOCKET');
 
     var db = Database(
       host: dbHost,
@@ -210,7 +210,7 @@ class MigrateCommand extends Command<void> {
   T? resolveProperty<T>({
     required String arg,
     required String env,
-    required String prompt,
+    String? prompt,
     bool obscureInput = false,
   }) {
     var result = argResults![arg];
@@ -227,30 +227,32 @@ class MigrateCommand extends Command<void> {
       return null;
     }
 
-    stdout.write(prompt);
+    if (prompt != null) {
+      stdout.write(prompt);
 
-    if (obscureInput) {
-      stdin.echoMode = false;
-    }
+      if (obscureInput) {
+        stdin.echoMode = false;
+      }
 
-    var input = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
+      var input = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
 
-    if (obscureInput) {
-      stdin.echoMode = true;
-      stdout.writeln();
-    }
+      if (obscureInput) {
+        stdin.echoMode = true;
+        stdout.writeln();
+      }
 
-    if (input != null && input.isNotEmpty) {
-      if (T == String) {
-        return input as T;
-      } else if (T == int) {
-        return int.tryParse(input) as T?;
-      } else if (T == bool) {
-        return input == 'yes'
-            ? true as T
-            : input == 'no'
-                ? false as T
-                : null;
+      if (input != null && input.isNotEmpty) {
+        if (T == String) {
+          return input as T;
+        } else if (T == int) {
+          return int.tryParse(input) as T?;
+        } else if (T == bool) {
+          return input == 'yes'
+              ? true as T
+              : input == 'no'
+              ? false as T
+              : null;
+        }
       }
     }
 
