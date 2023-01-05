@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+
 import '../../core/case_style.dart';
 import '../schema.dart';
 import 'table_element.dart';
@@ -10,7 +12,7 @@ class JoinTableElement {
   late final String tableName;
 
   JoinTableElement(TableElement first, TableElement second, this.state) {
-    var sorted = [first, second]..sort((a, b) => a.tableName.compareTo(b.tableName));
+    var sorted = [first, second]..sortBy((e) => e.tableName);
     this.first = sorted.first;
     this.second = sorted.last;
 

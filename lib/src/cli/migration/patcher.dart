@@ -109,6 +109,8 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
       await db.query('CREATE ${index.statement(table.name)}');
     }
   }
+
+  removeUnused(db, diff);
 }
 
 Future<void> removeUnused(Database db, DatabaseSchemaDiff diff) async {

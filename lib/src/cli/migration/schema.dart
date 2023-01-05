@@ -145,7 +145,7 @@ class ForeignKeyConstraint extends TableConstraint {
   @override
   String toString() {
     return 'FOREIGN KEY ( "$srcColumn" ) '
-        'REFERENCES $table ( "$column" ) '
+        'REFERENCES "$table" ( "$column" ) '
         'ON DELETE ${_ac(onDelete)} ON UPDATE ${_ac(onUpdate)}';
   }
 

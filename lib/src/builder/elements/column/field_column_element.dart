@@ -1,6 +1,7 @@
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
+import 'package:source_gen/source_gen.dart';
 
 import '../../../core/case_style.dart';
 import '../../schema.dart';
@@ -70,9 +71,8 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
     }
     var type = isList ? '_' : '';
 
-    var converterSqlType = converter?.getField('type')?.toStringValue();
-    if (converterSqlType != null) {
-      type += converterSqlType;
+    if (converter != null) {
+      type += ConstantReader(converter).read('type').stringValue;
     } else {
       type += getSqlType(dataType);
     }

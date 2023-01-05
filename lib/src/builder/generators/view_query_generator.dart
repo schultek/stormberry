@@ -64,7 +64,7 @@ String buildViewQuery(ViewElement view) {
         '    to_jsonb(array_agg("${column.linkedTable.tableName}".*)) as data\n'
         '  FROM "${column.joinTable.tableName}"\n'
         '  LEFT JOIN $tableReference "${column.linkedTable.tableName}"\n'
-        '  ON "${column.joinTable.tableName}"."${column.linkedTable.primaryKeyColumn!.columnName}" = "${column.joinTable.tableName}"."${column.linkedTable.getForeignKeyName()!}"\n'
+        '  ON "${column.linkedTable.tableName}"."${column.linkedTable.primaryKeyColumn!.columnName}" = "${column.joinTable.tableName}"."${column.linkedTable.getForeignKeyName()!}"\n'
         '  GROUP BY "${column.joinTable.tableName}"."${column.parentTable.getForeignKeyName()!}"\n'
         ') "${column.parameter.name}"\n'
         'ON "$tableName"."$primaryKeyName" = "${column.parameter.name}"."${column.parentTable.getForeignKeyName()!}"',
