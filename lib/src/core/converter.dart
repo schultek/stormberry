@@ -14,4 +14,16 @@ abstract class TypeConverter<T> {
   T decode(dynamic value);
 
   bool canEncodeValue(dynamic value) => value is T;
+
+  dynamic tryEncode(dynamic value) {
+    if (value is T) {
+      return encode(value);
+    } else if (value is List) {
+      return value.map(tryEncode).toList();
+    } else if (value is Map) {
+      return value.map((k, v) => MapEntry(k, tryEncode(v)));
+    } else {
+      return value;
+    }
+  }
 }

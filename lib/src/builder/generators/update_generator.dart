@@ -68,7 +68,12 @@ class UpdateGenerator {
         .where((c) => table.primaryKeyColumn == c || c is! FieldColumnElement || !c.isAutoIncrement);
 
     String toUpdateValue(NamedColumnElement c) {
-      return '\${TypeEncoder.i.encode(r.${c.paramName}${c.converter != null ? ', ${c.converter!.toSource()}' : ''})}';
+      if (c.converter != null) {
+        return '\${values.add(${c.converter!.toSource()}.tryEncode(r.${c.paramName}))}';
+      } else {
+        return '\${values.add(r.${c.paramName})}';
+
+      }
     }
 
     String whereClause;
@@ -87,12 +92,14 @@ class UpdateGenerator {
         @override
         Future<void> update(List<${table.element.name}UpdateRequest> requests) async {
           if (requests.isEmpty) return;
+          var values = QueryValues();
           await db.query(
             'UPDATE "${table.tableName}"\\n'
             'SET ${setColumns.map((c) => '"${c.columnName}" = COALESCE(UPDATED."${c.columnName}"::${c.sqlType}, "${table.tableName}"."${c.columnName}")').join(', ')}\\n'
             'FROM ( VALUES \${requests.map((r) => '( ${updateColumns.map(toUpdateValue).join(', ')} )').join(', ')} )\\n'
             'AS UPDATED(${updateColumns.map((c) => '"${c.columnName}"').join(', ')})\\n'
             'WHERE $whereClause',
+            values.values,
           );
           ${deepUpdates.isNotEmpty ? deepUpdates.join() : ''}
         }

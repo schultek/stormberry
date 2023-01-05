@@ -12,4 +12,4 @@ export 'src/internals/insert_repository.dart';
 export 'src/internals/update_repository.dart';
 export 'src/internals/delete_repository.dart';
 export 'src/internals/view_query.dart';
-export 'src/internals/model_registry.dart';
+export 'src/internals/text_encoder.dart';

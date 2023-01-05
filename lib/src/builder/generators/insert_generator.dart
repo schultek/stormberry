@@ -23,7 +23,7 @@ class InsertGenerator {
           if (c is ForeignColumnElement) {
             if (c.linkedTable == table) {
               if (table.primaryKeyColumn!.isAutoIncrement) {
-                return '${c.paramName}: TypeEncoder.i.decode(autoIncrements[requests.indexOf(r)][\'${table.primaryKeyColumn!.columnName}\'])';
+                return '${c.paramName}: TextEncoder.i.decode(autoIncrements[requests.indexOf(r)][\'${table.primaryKeyColumn!.columnName}\'])';
               } else {
                 return '${c.paramName}: r.${table.primaryKeyColumn!.paramName}';
               }
@@ -47,7 +47,7 @@ class InsertGenerator {
           if (c is ForeignColumnElement) {
             if (c.linkedTable == table) {
               if (table.primaryKeyColumn!.isAutoIncrement) {
-                return '${c.paramName}: TypeEncoder.i.decode(autoIncrements[requests.indexOf(r)][\'${table.primaryKeyColumn!.columnName}\'])';
+                return '${c.paramName}: TextEncoder.i.decode(autoIncrements[requests.indexOf(r)][\'${table.primaryKeyColumn!.columnName}\'])';
               } else {
                 return '${c.paramName}: r.${table.primaryKeyColumn!.paramName}';
               }
@@ -83,7 +83,7 @@ class InsertGenerator {
 
       if (table.primaryKeyColumn?.isAutoIncrement ?? false) {
         keyReturnStatement =
-            "return autoIncrements.map<int>((m) => TypeEncoder.i.decode(m['${table.primaryKeyColumn!.columnName}'])).toList();";
+            "return autoIncrements.map<int>((m) => TextEncoder.i.decode(m['${table.primaryKeyColumn!.columnName}'])).toList();";
       }
     }
 
@@ -91,9 +91,11 @@ class InsertGenerator {
 
     String toInsertValue(NamedColumnElement c) {
       if (c is FieldColumnElement && c.isAutoIncrement) {
-        return '\${TypeEncoder.i.encode(autoIncrements[requests.indexOf(r)][\'${c.columnName}\'])}';
+        return '\${values.add(autoIncrements[requests.indexOf(r)][\'${c.columnName}\'])}';
+      } else if (c.converter != null) {
+        return '\${values.add(${c.converter!.toSource()}.tryEncode(r.${c.paramName}))}';
       } else {
-        return '\${TypeEncoder.i.encode(r.${c.paramName}${c.converter != null ? ', ${c.converter!.toSource()}' : ''})}';
+        return '\${values.add(r.${c.paramName}${c.converter != null ? ', ${c.converter!.toSource()}' : ''})}';
       }
     }
 
@@ -102,9 +104,11 @@ class InsertGenerator {
       Future<${keyReturnStatement != null ? 'List<int>' : 'void'}> insert(List<${table.element.name}InsertRequest> requests) async {
         if (requests.isEmpty) return${keyReturnStatement != null ? ' []' : ''};
         ${autoIncrementStatement ?? ''}
+        var values = QueryValues();
         await db.query(
           'INSERT INTO "${table.tableName}" ( ${insertColumns.map((c) => '"${c.columnName}"').join(', ')} )\\n'
           'VALUES \${requests.map((r) => '( ${insertColumns.map(toInsertValue).join(', ')} )').join(', ')}\\n',
+          values.values,
         );
         ${deepInserts.isNotEmpty ? deepInserts.join() : ''}
         ${keyReturnStatement ?? ''}

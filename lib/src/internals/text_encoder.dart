@@ -56,11 +56,11 @@ class _DateTimeConverter extends TypeConverter<DateTime> {
   String encode(DateTime self) => self.toUtc().toIso8601String();
 }
 
-class TypeEncoder {
+class TextEncoder {
 
-  TypeEncoder();
+  TextEncoder();
 
-  static TypeEncoder i = TypeEncoder();
+  static TextEncoder i = TextEncoder();
 
   T decode<T>(dynamic value) {
     if (value is T) {
@@ -77,7 +77,7 @@ class TypeEncoder {
 
   String encode(dynamic value, [TypeConverter? converter]) {
     try {
-      return PostgresTextEncoder2().convert(convert(value, converter));
+      return _TextEncoder().convert(convert(value, converter));
     } catch (e) {
       throw ConverterException(
         'Cannot encode value $value of type ${value.runtimeType}: $e.\n'
@@ -167,7 +167,7 @@ class TypedMap {
 
 enum QuoteStyle { single, double, none }
 
-class PostgresTextEncoder2 {
+class _TextEncoder {
   String convert(dynamic value, {QuoteStyle quotes = QuoteStyle.single}) {
     if (value == null) {
       return 'null';

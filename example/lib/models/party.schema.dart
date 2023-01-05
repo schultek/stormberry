@@ -50,21 +50,25 @@ class _PartyRepository extends BaseRepository
   Future<void> insert(List<PartyInsertRequest> requests) async {
     if (requests.isEmpty) return;
 
+    var values = QueryValues();
     await db.query(
       'INSERT INTO "parties" ( "id", "name", "sponsor_id", "date" )\n'
-      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.sponsorId)}, ${TypeEncoder.i.encode(r.date)} )').join(', ')}\n',
+      'VALUES ${requests.map((r) => '( ${values.add(r.id)}, ${values.add(r.name)}, ${values.add(r.sponsorId)}, ${values.add(r.date)} )').join(', ')}\n',
+      values.values,
     );
   }
 
   @override
   Future<void> update(List<PartyUpdateRequest> requests) async {
     if (requests.isEmpty) return;
+    var values = QueryValues();
     await db.query(
       'UPDATE "parties"\n'
       'SET "name" = COALESCE(UPDATED."name"::text, "parties"."name"), "sponsor_id" = COALESCE(UPDATED."sponsor_id"::text, "parties"."sponsor_id"), "date" = COALESCE(UPDATED."date"::int8, "parties"."date")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.sponsorId)}, ${TypeEncoder.i.encode(r.date)} )').join(', ')} )\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}, ${values.add(r.name)}, ${values.add(r.sponsorId)}, ${values.add(r.date)} )').join(', ')} )\n'
       'AS UPDATED("id", "name", "sponsor_id", "date")\n'
       'WHERE "parties"."id" = UPDATED."id"',
+      values.values,
     );
   }
 }
@@ -102,7 +106,7 @@ class GuestPartyViewQueryable extends KeyedViewQueryable<GuestPartyView, String>
   String get keyName => 'id';
 
   @override
-  String encodeKey(String key) => TypeEncoder.i.encode(key);
+  String encodeKey(String key) => TextEncoder.i.encode(key);
 
   @override
   String get query => 'SELECT "parties".*, row_to_json("sponsor".*) as "sponsor"'
@@ -115,10 +119,10 @@ class GuestPartyViewQueryable extends KeyedViewQueryable<GuestPartyView, String>
 
   @override
   GuestPartyView decode(TypedMap map) => GuestPartyView(
-      id: map.get('id', TypeEncoder.i.decode),
-      name: map.get('name', TypeEncoder.i.decode),
+      id: map.get('id', TextEncoder.i.decode),
+      name: map.get('name', TextEncoder.i.decode),
       sponsor: map.getOpt('sponsor', MemberCompanyViewQueryable().decoder),
-      date: map.get('date', TypeEncoder.i.decode));
+      date: map.get('date', TextEncoder.i.decode));
 }
 
 class GuestPartyView {
@@ -140,7 +144,7 @@ class CompanyPartyViewQueryable extends KeyedViewQueryable<CompanyPartyView, Str
   String get keyName => 'id';
 
   @override
-  String encodeKey(String key) => TypeEncoder.i.encode(key);
+  String encodeKey(String key) => TextEncoder.i.encode(key);
 
   @override
   String get query => 'SELECT "parties".*'
@@ -151,9 +155,9 @@ class CompanyPartyViewQueryable extends KeyedViewQueryable<CompanyPartyView, Str
 
   @override
   CompanyPartyView decode(TypedMap map) => CompanyPartyView(
-      id: map.get('id', TypeEncoder.i.decode),
-      name: map.get('name', TypeEncoder.i.decode),
-      date: map.get('date', TypeEncoder.i.decode));
+      id: map.get('id', TextEncoder.i.decode),
+      name: map.get('name', TextEncoder.i.decode),
+      date: map.get('date', TextEncoder.i.decode));
 }
 
 class CompanyPartyView {

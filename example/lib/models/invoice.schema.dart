@@ -38,21 +38,25 @@ class _InvoiceRepository extends BaseRepository
   Future<void> insert(List<InvoiceInsertRequest> requests) async {
     if (requests.isEmpty) return;
 
+    var values = QueryValues();
     await db.query(
       'INSERT INTO "invoices" ( "id", "title", "invoice_id", "account_id", "company_id" )\n'
-      'VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.title)}, ${TypeEncoder.i.encode(r.invoiceId)}, ${TypeEncoder.i.encode(r.accountId)}, ${TypeEncoder.i.encode(r.companyId)} )').join(', ')}\n',
+      'VALUES ${requests.map((r) => '( ${values.add(r.id)}, ${values.add(r.title)}, ${values.add(r.invoiceId)}, ${values.add(r.accountId)}, ${values.add(r.companyId)} )').join(', ')}\n',
+      values.values,
     );
   }
 
   @override
   Future<void> update(List<InvoiceUpdateRequest> requests) async {
     if (requests.isEmpty) return;
+    var values = QueryValues();
     await db.query(
       'UPDATE "invoices"\n'
       'SET "title" = COALESCE(UPDATED."title"::text, "invoices"."title"), "invoice_id" = COALESCE(UPDATED."invoice_id"::text, "invoices"."invoice_id"), "account_id" = COALESCE(UPDATED."account_id"::int8, "invoices"."account_id"), "company_id" = COALESCE(UPDATED."company_id"::text, "invoices"."company_id")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.title)}, ${TypeEncoder.i.encode(r.invoiceId)}, ${TypeEncoder.i.encode(r.accountId)}, ${TypeEncoder.i.encode(r.companyId)} )').join(', ')} )\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}, ${values.add(r.title)}, ${values.add(r.invoiceId)}, ${values.add(r.accountId)}, ${values.add(r.companyId)} )').join(', ')} )\n'
       'AS UPDATED("id", "title", "invoice_id", "account_id", "company_id")\n'
       'WHERE "invoices"."id" = UPDATED."id"',
+      values.values,
     );
   }
 }
@@ -94,7 +98,7 @@ class OwnerInvoiceViewQueryable extends KeyedViewQueryable<OwnerInvoiceView, Str
   String get keyName => 'id';
 
   @override
-  String encodeKey(String key) => TypeEncoder.i.encode(key);
+  String encodeKey(String key) => TextEncoder.i.encode(key);
 
   @override
   String get query => 'SELECT "invoices".*'
@@ -105,9 +109,9 @@ class OwnerInvoiceViewQueryable extends KeyedViewQueryable<OwnerInvoiceView, Str
 
   @override
   OwnerInvoiceView decode(TypedMap map) => OwnerInvoiceView(
-      id: map.get('id', TypeEncoder.i.decode),
-      title: map.get('title', TypeEncoder.i.decode),
-      invoiceId: map.get('invoice_id', TypeEncoder.i.decode));
+      id: map.get('id', TextEncoder.i.decode),
+      title: map.get('title', TextEncoder.i.decode),
+      invoiceId: map.get('invoice_id', TextEncoder.i.decode));
 }
 
 class OwnerInvoiceView {

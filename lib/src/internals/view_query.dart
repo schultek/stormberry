@@ -4,7 +4,7 @@ import 'dart:convert';
 import '../core/annotations.dart';
 import '../core/database.dart';
 import '../core/query_params.dart';
-import 'model_registry.dart';
+import 'text_encoder.dart';
 
 abstract class ViewQueryable<T> {
   String get tableAlias;
