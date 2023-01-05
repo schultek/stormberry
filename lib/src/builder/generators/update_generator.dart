@@ -62,6 +62,7 @@ class UpdateGenerator {
     var setColumns = table.columns.whereType<NamedColumnElement>().where((c) =>
         (hasPrimaryKey ? c != table.primaryKeyColumn : c is FieldColumnElement) &&
         (c is! FieldColumnElement || !c.isAutoIncrement));
+
     var updateColumns = table.columns
         .whereType<NamedColumnElement>()
         .where((c) => table.primaryKeyColumn == c || c is! FieldColumnElement || !c.isAutoIncrement);
@@ -84,7 +85,7 @@ class UpdateGenerator {
 
     return '''
         @override
-        Future<void> update(Database db, List<${table.element.name}UpdateRequest> requests) async {
+        Future<void> update(List<${table.element.name}UpdateRequest> requests) async {
           if (requests.isEmpty) return;
           await db.query(
             'UPDATE "${table.tableName}"\\n'

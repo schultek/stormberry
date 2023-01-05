@@ -8,4 +8,8 @@ export 'src/core/transformer.dart';
 export 'src/core/converter.dart';
 
 export 'src/internals/base_repository.dart';
+export 'src/internals/insert_repository.dart';
+export 'src/internals/update_repository.dart';
+export 'src/internals/delete_repository.dart';
+export 'src/internals/view_query.dart';
 export 'src/internals/model_registry.dart';

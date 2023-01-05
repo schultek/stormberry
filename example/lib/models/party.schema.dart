@@ -24,7 +24,7 @@ class _PartyRepository extends BaseRepository
         RepositoryUpdateMixin<PartyUpdateRequest>,
         RepositoryDeleteMixin<String>
     implements PartyRepository {
-  _PartyRepository(Database db) : super(db: db);
+  _PartyRepository(super.db) : super(tableName: 'parties', keyName: 'id');
 
   @override
   Future<GuestPartyView?> queryGuestView(String id) {
@@ -47,7 +47,7 @@ class _PartyRepository extends BaseRepository
   }
 
   @override
-  Future<void> insert(Database db, List<PartyInsertRequest> requests) async {
+  Future<void> insert(List<PartyInsertRequest> requests) async {
     if (requests.isEmpty) return;
 
     await db.query(
@@ -57,7 +57,7 @@ class _PartyRepository extends BaseRepository
   }
 
   @override
-  Future<void> update(Database db, List<PartyUpdateRequest> requests) async {
+  Future<void> update(List<PartyUpdateRequest> requests) async {
     if (requests.isEmpty) return;
     await db.query(
       'UPDATE "parties"\n'
@@ -65,15 +65,6 @@ class _PartyRepository extends BaseRepository
       'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.name)}, ${TypeEncoder.i.encode(r.sponsorId)}, ${TypeEncoder.i.encode(r.date)} )').join(', ')} )\n'
       'AS UPDATED("id", "name", "sponsor_id", "date")\n'
       'WHERE "parties"."id" = UPDATED."id"',
-    );
-  }
-
-  @override
-  Future<void> delete(Database db, List<String> keys) async {
-    if (keys.isEmpty) return;
-    await db.query(
-      'DELETE FROM "parties"\n'
-      'WHERE "parties"."id" IN ( ${keys.map((k) => TypeEncoder.i.encode(k)).join(',')} )',
     );
   }
 }

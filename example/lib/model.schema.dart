@@ -20,7 +20,7 @@ abstract class ARepository
 class _ARepository extends BaseRepository
     with RepositoryInsertMixin<AInsertRequest>, RepositoryUpdateMixin<AUpdateRequest>, RepositoryDeleteMixin<String>
     implements ARepository {
-  _ARepository(Database db) : super(db: db);
+  _ARepository(super.db) : super(tableName: 'as', keyName: 'id');
 
   @override
   Future<A?> queryA(String id) {
@@ -33,7 +33,7 @@ class _ARepository extends BaseRepository
   }
 
   @override
-  Future<void> insert(Database db, List<AInsertRequest> requests) async {
+  Future<void> insert(List<AInsertRequest> requests) async {
     if (requests.isEmpty) return;
 
     await db.query(
@@ -43,7 +43,7 @@ class _ARepository extends BaseRepository
   }
 
   @override
-  Future<void> update(Database db, List<AUpdateRequest> requests) async {
+  Future<void> update(List<AUpdateRequest> requests) async {
     if (requests.isEmpty) return;
     await db.query(
       'UPDATE "as"\n'
@@ -51,15 +51,6 @@ class _ARepository extends BaseRepository
       'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.bId)} )').join(', ')} )\n'
       'AS UPDATED("id", "b_id")\n'
       'WHERE "as"."id" = UPDATED."id"',
-    );
-  }
-
-  @override
-  Future<void> delete(Database db, List<String> keys) async {
-    if (keys.isEmpty) return;
-    await db.query(
-      'DELETE FROM "as"\n'
-      'WHERE "as"."id" IN ( ${keys.map((k) => TypeEncoder.i.encode(k)).join(',')} )',
     );
   }
 }
@@ -79,7 +70,7 @@ abstract class BRepository
 class _BRepository extends BaseRepository
     with RepositoryInsertMixin<BInsertRequest>, RepositoryUpdateMixin<BUpdateRequest>, RepositoryDeleteMixin<String>
     implements BRepository {
-  _BRepository(Database db) : super(db: db);
+  _BRepository(super.db) : super(tableName: 'bs', keyName: 'id');
 
   @override
   Future<B?> queryB(String id) {
@@ -92,7 +83,7 @@ class _BRepository extends BaseRepository
   }
 
   @override
-  Future<void> insert(Database db, List<BInsertRequest> requests) async {
+  Future<void> insert(List<BInsertRequest> requests) async {
     if (requests.isEmpty) return;
 
     await db.query(
@@ -102,7 +93,7 @@ class _BRepository extends BaseRepository
   }
 
   @override
-  Future<void> update(Database db, List<BUpdateRequest> requests) async {
+  Future<void> update(List<BUpdateRequest> requests) async {
     if (requests.isEmpty) return;
     await db.query(
       'UPDATE "bs"\n'
@@ -110,15 +101,6 @@ class _BRepository extends BaseRepository
       'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.aId)}, ${TypeEncoder.i.encode(r.id)} )').join(', ')} )\n'
       'AS UPDATED("a_id", "id")\n'
       'WHERE "bs"."id" = UPDATED."id"',
-    );
-  }
-
-  @override
-  Future<void> delete(Database db, List<String> keys) async {
-    if (keys.isEmpty) return;
-    await db.query(
-      'DELETE FROM "bs"\n'
-      'WHERE "bs"."id" IN ( ${keys.map((k) => TypeEncoder.i.encode(k)).join(',')} )',
     );
   }
 }

@@ -24,6 +24,8 @@ Future<void> main() async {
     addresses: [],
   ));
 
+  await db.accounts.deleteMany([0, 1, 2]);
+
   var accountId = await db.accounts.insertOne(AccountInsertRequest(
     firstName: 'Test',
     lastName: 'User',

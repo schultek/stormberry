@@ -1,6 +1,5 @@
 import '../schema.dart';
 import '../elements/table_element.dart';
-import 'delete_generator.dart';
 import 'insert_generator.dart';
 import 'update_generator.dart';
 import 'view_generator.dart';
@@ -43,15 +42,13 @@ class RepositoryGenerator {
         RepositoryUpdateMixin<${table.element.name}UpdateRequest>
         ${keyType != null ? ', RepositoryDeleteMixin<$keyType>' : ''} 
         implements $repoName {
-        _$repoName(Database db): super(db: db);
+        _$repoName(super.db): super(tableName: '${table.tableName}'${keyType != null ? ", keyName: '${table.primaryKeyColumn!.columnName}'" : ''});
         
         ${ViewGenerator().generateRepositoryMethods(table)}
         
         ${InsertGenerator().generateInsertMethod(table)}
         
         ${UpdateGenerator().generateUpdateMethod(table)}
-        
-        ${DeleteGenerator().generateDeleteMethod(table)}
       }
     ''';
   }

@@ -99,7 +99,7 @@ class InsertGenerator {
 
     return '''
       @override
-      Future<${keyReturnStatement != null ? 'List<int>' : 'void'}> insert(Database db, List<${table.element.name}InsertRequest> requests) async {
+      Future<${keyReturnStatement != null ? 'List<int>' : 'void'}> insert(List<${table.element.name}InsertRequest> requests) async {
         if (requests.isEmpty) return${keyReturnStatement != null ? ' []' : ''};
         ${autoIncrementStatement ?? ''}
         await db.query(

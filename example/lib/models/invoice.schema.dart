@@ -22,7 +22,7 @@ class _InvoiceRepository extends BaseRepository
         RepositoryUpdateMixin<InvoiceUpdateRequest>,
         RepositoryDeleteMixin<String>
     implements InvoiceRepository {
-  _InvoiceRepository(Database db) : super(db: db);
+  _InvoiceRepository(super.db) : super(tableName: 'invoices', keyName: 'id');
 
   @override
   Future<OwnerInvoiceView?> queryOwnerView(String id) {
@@ -35,7 +35,7 @@ class _InvoiceRepository extends BaseRepository
   }
 
   @override
-  Future<void> insert(Database db, List<InvoiceInsertRequest> requests) async {
+  Future<void> insert(List<InvoiceInsertRequest> requests) async {
     if (requests.isEmpty) return;
 
     await db.query(
@@ -45,7 +45,7 @@ class _InvoiceRepository extends BaseRepository
   }
 
   @override
-  Future<void> update(Database db, List<InvoiceUpdateRequest> requests) async {
+  Future<void> update(List<InvoiceUpdateRequest> requests) async {
     if (requests.isEmpty) return;
     await db.query(
       'UPDATE "invoices"\n'
@@ -53,15 +53,6 @@ class _InvoiceRepository extends BaseRepository
       'FROM ( VALUES ${requests.map((r) => '( ${TypeEncoder.i.encode(r.id)}, ${TypeEncoder.i.encode(r.title)}, ${TypeEncoder.i.encode(r.invoiceId)}, ${TypeEncoder.i.encode(r.accountId)}, ${TypeEncoder.i.encode(r.companyId)} )').join(', ')} )\n'
       'AS UPDATED("id", "title", "invoice_id", "account_id", "company_id")\n'
       'WHERE "invoices"."id" = UPDATED."id"',
-    );
-  }
-
-  @override
-  Future<void> delete(Database db, List<String> keys) async {
-    if (keys.isEmpty) return;
-    await db.query(
-      'DELETE FROM "invoices"\n'
-      'WHERE "invoices"."id" IN ( ${keys.map((k) => TypeEncoder.i.encode(k)).join(',')} )',
     );
   }
 }
