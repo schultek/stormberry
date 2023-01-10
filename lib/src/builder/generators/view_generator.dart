@@ -69,7 +69,7 @@ class ViewGenerator {
       }
       
       ${view.table.annotateWith ?? ''}
-      class ${view.className}${implementsBase ? ' implements ${view.table.element.name}' : ''} {
+      class ${view.className}${implementsBase ? ' extends ${view.table.element.name}' : ''} {
         ${view.className}(${view.columns.isEmpty ? '' : '{${view.columns.map((c) => '${c.isNullable ? '' : 'required '}this.${c.paramName}').join(', ')},}'});
         
         ${view.columns.map((c) => '${implementsBase ? '@override ' : ''}final ${c.dartType} ${c.paramName};').join('\n')}
