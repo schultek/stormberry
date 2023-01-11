@@ -1,3 +1,6 @@
+import 'package:recase/recase.dart';
+import 'package:path/path.dart' as p;
+
 import '../schema.dart';
 import '../elements/table_element.dart';
 import 'insert_generator.dart';
@@ -7,7 +10,7 @@ import 'view_generator.dart';
 class RepositoryGenerator {
   String generateRepositories(AssetState state) {
     return '''
-    extension Repositories on Database {
+    extension ${p.withoutExtension(state.filename).pascalCase}Repositories on Database {
       ${state.tables.values.map((b) => '  ${b.element.name}Repository get ${b.repoName} => ${b.element.name}Repository._(this);\n').join()}
     }
     
