@@ -173,7 +173,7 @@ class AQueryable extends KeyedViewQueryable<A, String> {
   A decode(TypedMap map) => AView(id: map.get('id', TextEncoder.i.decode), b: map.get('b', BQueryable().decoder));
 }
 
-class AView implements A {
+class AView with A {
   AView({
     required this.id,
     required this.b,
@@ -205,7 +205,7 @@ class BQueryable extends KeyedViewQueryable<B, String> {
   B decode(TypedMap map) => BView(a: map.getOpt('a', AQueryable().decoder), id: map.get('id', TextEncoder.i.decode));
 }
 
-class BView implements B {
+class BView with B {
   BView({
     this.a,
     required this.id,
