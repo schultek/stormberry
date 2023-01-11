@@ -89,8 +89,9 @@ class TableElement {
       : null;
 
   void prepareColumns() {
-    final allFields =
-        element.fields.followedBy(element.allSupertypes.expand((t) => t.isDartCoreObject ? [] : t.element.fields));
+    final allFields = element.fields
+        .cast<FieldElement>()
+        .followedBy(element.allSupertypes.expand((t) => t.isDartCoreObject ? [] : t.element.fields));
 
     for (var param in allFields) {
       if (columns.any((c) => c.parameter == param)) {
@@ -124,7 +125,8 @@ class TableElement {
         }
 
         if (selfHasKey && otherHasKey && !selfIsList && !otherIsList) {
-          var eitherNullable = param.type.nullabilitySuffix != NullabilitySuffix.none || otherParam!.type.nullabilitySuffix != NullabilitySuffix.none;
+          var eitherNullable = param.type.nullabilitySuffix != NullabilitySuffix.none ||
+              otherParam!.type.nullabilitySuffix != NullabilitySuffix.none;
           if (!eitherNullable) {
             throw 'Model ${otherBuilder.element.name} cannot have a one-to-one relation to model ${element.name} with '
                 'both sides being non-nullable. At least one side has to be nullable, to insert one model before the other.\n'
