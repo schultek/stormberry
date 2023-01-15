@@ -16,7 +16,6 @@ dependencies:
   dart_style: ^2.2.4
   path: ^1.8.2
   postgres: ^2.5.1
-  recase: ^4.1.0
   source_gen: ^1.2.3
   yaml: ^3.1.1
 
