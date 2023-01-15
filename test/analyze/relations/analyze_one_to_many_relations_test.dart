@@ -127,7 +127,6 @@ void main() {
         linkedTo: tableA,
         references: tableA.columns[1],
       );
-
     });
   });
 }
