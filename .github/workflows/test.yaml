@@ -20,6 +20,7 @@ jobs:
 
       - name: Bootstrap
         run: |
+          dart pub get
           dart pub global activate coverage
           
       - name: Check formatting
