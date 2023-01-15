@@ -13,9 +13,13 @@ class SchemaState {
   bool _didFinalize = false;
 
   Map<Element, TableElement> get tables =>
-      _assets.values.map((a) => a.tables).reduce((a, b) => {...a, ...b});
+      _assets.values.map((a) => a.tables).fold({}, (a, b) => a..addAll(b));
   Map<String, JoinTableElement> get joinTables =>
-      _assets.values.map((a) => a.joinTables).reduce((a, b) => {...a, ...b});
+      _assets.values.map((a) => a.joinTables).fold({}, (a, b) => a..addAll(b));
+
+  bool hasAsset(AssetId assetId) {
+    return _assets.containsKey(assetId);
+  }
 
   AssetState createForAsset(AssetId assetId) {
     assert(!_didFinalize, 'Schema was already finalized.');

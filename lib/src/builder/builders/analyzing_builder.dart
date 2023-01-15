@@ -21,7 +21,8 @@ class AnalyzingBuilder implements Builder {
         return;
       }
       var library = await buildStep.inputLibrary;
-      await analyze(library, buildStep);
+      SchemaState schema = await buildStep.fetchResource(schemaResource);
+      await analyze(schema, library, buildStep.inputId);
     } catch (e, st) {
       print('\x1B[31mFailed to build database schema:\n\n$e\x1B[0m\n');
       print(st);
@@ -33,15 +34,13 @@ class AnalyzingBuilder implements Builder {
         '.dart': ['___']
       };
 
-  Future<void> analyze(LibraryElement library, BuildStep buildStep) async {
-    SchemaState schema = await buildStep.fetchResource(schemaResource);
+  Future<void> analyze(SchemaState schema, LibraryElement library, AssetId assetId) async {
+    if (schema.hasAsset(assetId)) return;
 
-    var asset = schema.createForAsset(buildStep.inputId);
-
+    var asset = schema.createForAsset(assetId);
     var builderState = BuilderState(options, schema, asset);
 
     var reader = LibraryReader(library);
-
     var tables = reader.annotatedWith(tableChecker);
 
     for (var table in tables) {
@@ -50,6 +49,25 @@ class AnalyzingBuilder implements Builder {
         table.annotation,
         builderState,
       );
+    }
+
+    var packageName = library.source.uri.pathSegments.first;
+
+    for (var import in library.importedLibraries) {
+      var libUri = import.source.uri;
+      if (!isPackage(packageName, libUri)) {
+        continue;
+      }
+
+      await analyze(schema, import, AssetId.resolve(libUri));
+    }
+  }
+
+  bool isPackage(String packageName, Uri lib) {
+    if (lib.scheme == 'package' || lib.scheme == 'asset') {
+      return lib.pathSegments.first == packageName;
+    } else {
+      return false;
     }
   }
 }
