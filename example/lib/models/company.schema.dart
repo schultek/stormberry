@@ -1,6 +1,6 @@
 part of 'company.dart';
 
-extension Repositories on Database {
+extension CompanyRepositories on Database {
   CompanyRepository get companies => CompanyRepository._(this);
 }
 
@@ -58,7 +58,7 @@ class _CompanyRepository extends BaseRepository
     );
     await db.billingAddresses.insertMany(requests.expand((r) {
       return r.addresses.map((rr) => BillingAddressInsertRequest(
-          accountId: null, companyId: r.id, city: rr.city, postcode: rr.postcode, name: rr.name, street: rr.street));
+          companyId: r.id, accountId: null, city: rr.city, postcode: rr.postcode, name: rr.name, street: rr.street));
     }).toList());
   }
 
@@ -76,7 +76,7 @@ class _CompanyRepository extends BaseRepository
     );
     await db.billingAddresses.updateMany(requests.where((r) => r.addresses != null).expand((r) {
       return r.addresses!.map((rr) => BillingAddressUpdateRequest(
-          companyId: r.id, city: rr.city, postcode: rr.postcode, name: rr.name, street: rr.street));
+          city: rr.city, postcode: rr.postcode, name: rr.name, street: rr.street, companyId: r.id));
     }).toList());
   }
 }
@@ -155,7 +155,7 @@ class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, Strin
       invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
       id: map.get('id', TextEncoder.i.decode),
       name: map.get('name', TextEncoder.i.decode),
-      addresses: map.getListOpt('addresses', BillingAddressQueryable().decoder) ?? const []);
+      addresses: map.getListOpt('addresses', BillingAddressQueryable().decoder) ?? const [],);
 }
 
 class FullCompanyView {
@@ -199,8 +199,8 @@ class MemberCompanyViewQueryable extends KeyedViewQueryable<MemberCompanyView, S
 
   @override
   MemberCompanyView decode(TypedMap map) => MemberCompanyView(
-      id: map.get('id', TextEncoder.i.decode),
-      name: map.get('name', TextEncoder.i.decode),
+      id: map.get('id'),
+      name: map.get('name'),
       addresses: map.getListOpt('addresses', BillingAddressQueryable().decoder) ?? const []);
 }
 

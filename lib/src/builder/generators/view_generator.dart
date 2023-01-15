@@ -98,17 +98,17 @@ class ViewGenerator {
     }
 
     var key = column is FieldColumnElement ? column.columnName : c.paramName;
-    str += "('$key', ";
+    str += "('$key'";
 
     if (c.view != null) {
-      str += '${c.view!.entityName}Queryable().decoder)';
+      str += ', ${c.view!.entityName}Queryable().decoder)';
     } else if (c.column.converter != null) {
-      str += '${c.column.converter!.toSource()}.decode)';
+      str += ', ${c.column.converter!.toSource()}.decode)';
     } else if (c.column is FieldColumnElement && (c.column as FieldColumnElement).dataType.isEnum) {
       var e = (c.column as FieldColumnElement).dataType.element as EnumElement;
-      str += 'EnumTypeConverter<${e.name}>(${e.name}.values).decode)';
+      str += ', EnumTypeConverter<${e.name}>(${e.name}.values).decode)';
     } else {
-      str += 'TextEncoder.i.decode)';
+      str += ')';
     }
 
     if (defVal != null) {

@@ -14,6 +14,10 @@ abstract class OutputBuilder implements Builder {
 
   @override
   Future<void> build(BuildStep buildStep) async {
+    if (!await buildStep.resolver.isLibrary(buildStep.inputId)) {
+      return;
+    }
+
     await buildStep.inputLibrary;
 
     try {
