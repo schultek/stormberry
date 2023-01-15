@@ -92,7 +92,11 @@ class TableIndex {
 
   @override
   int get hashCode =>
-      joinedColumns.hashCode ^ name.hashCode ^ unique.hashCode ^ algorithm.hashCode ^ condition.hashCode;
+      joinedColumns.hashCode ^
+      name.hashCode ^
+      unique.hashCode ^
+      algorithm.hashCode ^
+      condition.hashCode;
 }
 
 // ignore: constant_identifier_names

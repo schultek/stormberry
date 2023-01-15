@@ -1,4 +1,3 @@
-
 import 'package:build/build.dart';
 import 'package:path/path.dart' as path;
 import '../generators/repository_generator.dart';

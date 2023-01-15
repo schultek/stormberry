@@ -19,11 +19,14 @@ class DatabaseSchema {
         key,
         columns: (table['columns'] as Map<String, dynamic>)
             .map((k, v) => MapEntry(k, ColumnSchema.fromMap(k, v as Map<String, dynamic>))),
-        constraints:
-            (table['constraints'] as List?)?.map((c) => TableConstraint.fromMap(c as Map<String, dynamic>)).toList() ??
-                [],
-        indexes:
-            (table['indexes'] as List?)?.map((i) => TableIndexParser.fromMap(i as Map<String, dynamic>)).toList() ?? [],
+        constraints: (table['constraints'] as List?)
+                ?.map((c) => TableConstraint.fromMap(c as Map<String, dynamic>))
+                .toList() ??
+            [],
+        indexes: (table['indexes'] as List?)
+                ?.map((i) => TableIndexParser.fromMap(i as Map<String, dynamic>))
+                .toList() ??
+            [],
       );
     }
     return DatabaseSchema(tables);
@@ -75,7 +78,8 @@ class ColumnSchema {
   final bool isNullable;
   final bool isAutoIncrement;
 
-  const ColumnSchema(this.name, {required this.type, this.isNullable = false, bool? isAutoIncrement})
+  const ColumnSchema(this.name,
+      {required this.type, this.isNullable = false, bool? isAutoIncrement})
       : isAutoIncrement = isAutoIncrement ?? (type == 'serial');
 
   factory ColumnSchema.fromMap(String name, Map<String, dynamic> map) {
@@ -139,7 +143,8 @@ class ForeignKeyConstraint extends TableConstraint {
   final ForeignKeyAction onDelete;
   final ForeignKeyAction onUpdate;
 
-  const ForeignKeyConstraint(String? name, this.srcColumn, this.table, this.column, this.onDelete, this.onUpdate)
+  const ForeignKeyConstraint(
+      String? name, this.srcColumn, this.table, this.column, this.onDelete, this.onUpdate)
       : super(name);
 
   @override
@@ -169,7 +174,8 @@ class ForeignKeyConstraint extends TableConstraint {
           onUpdate == other.onUpdate;
 
   @override
-  int get hashCode => name.hashCode ^ table.hashCode ^ column.hashCode ^ onDelete.hashCode ^ onUpdate.hashCode;
+  int get hashCode =>
+      name.hashCode ^ table.hashCode ^ column.hashCode ^ onDelete.hashCode ^ onUpdate.hashCode;
 }
 
 class UniqueConstraint extends TableConstraint {
@@ -183,7 +189,8 @@ class UniqueConstraint extends TableConstraint {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is UniqueConstraint && runtimeType == other.runtimeType && column == other.column;
+      identical(this, other) ||
+      other is UniqueConstraint && runtimeType == other.runtimeType && column == other.column;
 
   @override
   int get hashCode => name.hashCode;

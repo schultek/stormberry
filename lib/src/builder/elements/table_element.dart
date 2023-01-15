@@ -37,7 +37,9 @@ class TableElement {
     repoName = _getRepoName();
 
     primaryKeyParameter = element.fields
-        .where((p) => primaryKeyChecker.hasAnnotationOf(p) || primaryKeyChecker.hasAnnotationOf(p.getter ?? p))
+        .where((p) =>
+            primaryKeyChecker.hasAnnotationOf(p) ||
+            primaryKeyChecker.hasAnnotationOf(p.getter ?? p))
         .firstOrNull;
 
     views = {};
@@ -85,7 +87,10 @@ class TableElement {
   List<ColumnElement> columns = [];
 
   FieldColumnElement? get primaryKeyColumn => primaryKeyParameter != null
-      ? columns.whereType<FieldColumnElement>().where((c) => c.parameter == primaryKeyParameter).firstOrNull
+      ? columns
+          .whereType<FieldColumnElement>()
+          .where((c) => c.parameter == primaryKeyParameter)
+          .firstOrNull
       : null;
 
   late List<FieldElement> allFields = element.fields
@@ -111,7 +116,8 @@ class TableElement {
 
         var otherParam = otherBuilder.findMatchingParam(param);
         var selfIsList = param.type.isDartCoreList;
-        var otherIsList = otherParam != null ? otherParam.type.isDartCoreList : otherHasKey && !selfIsList;
+        var otherIsList =
+            otherParam != null ? otherParam.type.isDartCoreList : otherHasKey && !selfIsList;
 
         if (!selfHasKey && !otherHasKey) {
           throw 'Model ${otherBuilder.element.name} cannot have a relation to model ${element.name} because neither model'

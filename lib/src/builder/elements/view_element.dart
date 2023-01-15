@@ -24,7 +24,8 @@ class ViewColumn {
     var c = column;
     if (c is LinkedColumnElement) {
       if (viewAs != null) {
-        return c.linkedTable.views.values.firstWhere((v) => v.name.toLowerCase() == viewAs!.toLowerCase());
+        return c.linkedTable.views.values
+            .firstWhere((v) => v.name.toLowerCase() == viewAs!.toLowerCase());
       } else {
         return c.linkedTable.views.values.firstWhere((v) => v.isDefaultView);
       }
@@ -58,12 +59,13 @@ class ViewElement {
 
   bool get isDefaultView => name.isEmpty;
 
-  String get className =>
-      CaseStyle.pascalCase.transform('${!isDefaultView ? '${name}_' : ''}${table.element.name}_view');
+  String get className => CaseStyle.pascalCase
+      .transform('${!isDefaultView ? '${name}_' : ''}${table.element.name}_view');
 
   String get entityName => isDefaultView ? table.element.name : className;
 
-  String get viewName => CaseStyle.pascalCase.transform(isDefaultView ? entityName : '${name}_view');
+  String get viewName =>
+      CaseStyle.pascalCase.transform(isDefaultView ? entityName : '${name}_view');
 
   String get viewTableName =>
       CaseStyle.snakeCase.transform('${!isDefaultView ? '${name}_' : ''}${table.tableName}_view');
@@ -76,15 +78,20 @@ class ViewElement {
         continue;
       }
 
-      var modifiers = column.modifiers
-          .where((m) => m.read('name').objectValue.toSymbolValue()!.toLowerCase() == name.toLowerCase());
+      var modifiers = column.modifiers.where(
+          (m) => m.read('name').objectValue.toSymbolValue()!.toLowerCase() == name.toLowerCase());
       if (modifiers.isNotEmpty) {
         var isHidden = modifiers.any((m) => m.instanceOf(hiddenInChecker));
         if (isHidden) {
           continue;
         }
 
-        var viewAs = modifiers.where((m) => m.instanceOf(viewedInChecker)).firstOrNull?.read('as').objectValue.toSymbolValue();
+        var viewAs = modifiers
+            .where((m) => m.instanceOf(viewedInChecker))
+            .firstOrNull
+            ?.read('as')
+            .objectValue
+            .toSymbolValue();
 
         if (viewAs == null && column is LinkedColumnElement) {
           if (!column.linkedTable.views.values.any((v) => v.isDefaultView)) {
@@ -92,7 +99,8 @@ class ViewElement {
           }
         }
 
-        var transformer = modifiers.where((m) => m.instanceOf(transformedInChecker)).firstOrNull?.read('by');
+        var transformer =
+            modifiers.where((m) => m.instanceOf(transformedInChecker)).firstOrNull?.read('by');
 
         String? transformerCode;
         if (transformer != null && !transformer.isNull) {

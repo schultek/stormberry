@@ -14,7 +14,8 @@ class JoinColumnElement extends ColumnElement with RelationalColumnElement, Link
 
   late JoinColumnElement referencedColumn;
 
-  JoinColumnElement(this.parameter, this.linkedTable, this.joinTable, TableElement parentBuilder, BuilderState state)
+  JoinColumnElement(this.parameter, this.linkedTable, this.joinTable, TableElement parentBuilder,
+      BuilderState state)
       : super(parentBuilder, state) {
     if (converter != null) {
       print('Relational field was annotated with @UseConverter(...), which is not supported.\n'

@@ -70,7 +70,8 @@ void testColumn(
     (column as FieldColumnElement);
     expect(column.dartType, equals(dartType));
   } else {
-    expect(column, isNot(isA<FieldColumnElement>()), reason: 'Missing [dartType] param for field column.');
+    expect(column, isNot(isA<FieldColumnElement>()),
+        reason: 'Missing [dartType] param for field column.');
   }
 
   if (paramName != null) {
@@ -78,7 +79,8 @@ void testColumn(
     (column as ParameterColumnElement);
     expect(column.paramName, equals(paramName));
   } else {
-    expect(column, isNot(isA<ParameterColumnElement>()), reason: 'Missing [paramName] param for parameter column.');
+    expect(column, isNot(isA<ParameterColumnElement>()),
+        reason: 'Missing [paramName] param for parameter column.');
   }
 
   expect(column.isList, equals(isList));
@@ -88,7 +90,8 @@ void testColumn(
     (column as LinkedColumnElement);
     expect(column.linkedTable, equals(linkedTo));
   } else {
-    expect(column, isNot(isA<LinkedColumnElement>()), reason: 'Missing [linkedTo] param for linked column.');
+    expect(column, isNot(isA<LinkedColumnElement>()),
+        reason: 'Missing [linkedTo] param for linked column.');
   }
 
   if (references != null && joinedTo == null) {
@@ -109,7 +112,8 @@ void testColumn(
     expect(references, isA<JoinColumnElement>());
     expect(column.referencedColumn, equals(references));
   } else {
-    expect(column, isNot(isA<JoinColumnElement>()), reason: 'Missing [joinedTo] param for join column.');
+    expect(column, isNot(isA<JoinColumnElement>()),
+        reason: 'Missing [joinedTo] param for join column.');
   }
 
   if (column.parameter != null) {

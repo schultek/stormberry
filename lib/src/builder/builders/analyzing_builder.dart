@@ -7,7 +7,6 @@ import '../elements/table_element.dart';
 import '../schema.dart';
 import '../utils.dart';
 
-
 /// The main builder used for code generation
 class AnalyzingBuilder implements Builder {
   /// The global options defined in the 'build.yaml' file
@@ -30,7 +29,9 @@ class AnalyzingBuilder implements Builder {
   }
 
   @override
-  Map<String, List<String>> get buildExtensions => const {'.dart': ['___']};
+  Map<String, List<String>> get buildExtensions => const {
+        '.dart': ['___']
+      };
 
   Future<void> analyze(LibraryElement library, BuildStep buildStep) async {
     SchemaState schema = await buildStep.fetchResource(schemaResource);
@@ -52,4 +53,3 @@ class AnalyzingBuilder implements Builder {
     }
   }
 }
-

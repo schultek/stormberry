@@ -67,7 +67,8 @@ class CaseStyle {
   static const unmodified = 'unmodified';
 
   /// Transforms to 'fieldName'
-  static const camelCase = CaseStyle(head: TextTransform.lowerCase, tail: TextTransform.capitalCase);
+  static const camelCase =
+      CaseStyle(head: TextTransform.lowerCase, tail: TextTransform.capitalCase);
 
   /// Transforms to 'FieldName'
   static const pascalCase = CaseStyle(tail: TextTransform.capitalCase);
@@ -94,7 +95,10 @@ extension CaseStyleTransform on CaseStyle? {
     } else {
       var words = text.split(splitter);
       if (style.head != null) {
-        words = [style.head.transform(words[0]), ...words.skip(1).map((w) => style.tail.transform(w))];
+        words = [
+          style.head.transform(words[0]),
+          ...words.skip(1).map((w) => style.tail.transform(w))
+        ];
       } else if (style.tail != null) {
         words = words.map((w) => style.tail.transform(w)).toList();
       }

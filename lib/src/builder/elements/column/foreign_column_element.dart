@@ -6,7 +6,8 @@ import '../../schema.dart';
 import '../table_element.dart';
 import 'column_element.dart';
 
-class ForeignColumnElement extends ColumnElement with RelationalColumnElement, ReferencingColumnElement, NamedColumnElement {
+class ForeignColumnElement extends ColumnElement
+    with RelationalColumnElement, ReferencingColumnElement, NamedColumnElement {
   @override
   final FieldElement? parameter;
   @override
@@ -15,7 +16,8 @@ class ForeignColumnElement extends ColumnElement with RelationalColumnElement, R
   @override
   late ReferencingColumnElement referencedColumn;
 
-  ForeignColumnElement(this.parameter, this.linkedTable, TableElement parentTable, BuilderState state)
+  ForeignColumnElement(
+      this.parameter, this.linkedTable, TableElement parentTable, BuilderState state)
       : super(parentTable, state);
 
   @override

@@ -68,7 +68,8 @@ Future<void> outputSchema(Directory dir, DatabaseSchemaDiff diff) async {
         }),
       ];
 
-      for (var c in table.columns.modified.where((c) => c.prev.type != 'serial' && c.newly.type == 'serial')) {
+      for (var c in table.columns.modified
+          .where((c) => c.prev.type != 'serial' && c.newly.type == 'serial')) {
         appendStatement('CREATE SEQUENCE IF NOT EXISTS ${table.name}_${c.newly.name}_seq '
             'OWNED BY "public"."${table.name}"."${c.newly.name}";');
       }
@@ -79,8 +80,9 @@ Future<void> outputSchema(Directory dir, DatabaseSchemaDiff diff) async {
   }
 
   for (var table in diff.tables.modified) {
-    var uniqueConstraints =
-        table.constraints.added.where((c) => c is PrimaryKeyConstraint || c is UniqueConstraint).toList();
+    var uniqueConstraints = table.constraints.added
+        .where((c) => c is PrimaryKeyConstraint || c is UniqueConstraint)
+        .toList();
     if (uniqueConstraints.isNotEmpty) {
       appendStatement('ALTER TABLE "${table.name}"\n'
           '  ${uniqueConstraints.map((c) => 'ADD ${c.toString()}').join(",\n  ")};');
@@ -88,7 +90,8 @@ Future<void> outputSchema(Directory dir, DatabaseSchemaDiff diff) async {
   }
 
   for (var table in diff.tables.added) {
-    var uniqueConstraints = table.constraints.where((c) => c is PrimaryKeyConstraint || c is UniqueConstraint).toList();
+    var uniqueConstraints =
+        table.constraints.where((c) => c is PrimaryKeyConstraint || c is UniqueConstraint).toList();
     if (uniqueConstraints.isNotEmpty) {
       appendStatement('ALTER TABLE "${table.name}"\n'
           '  ${uniqueConstraints.map((c) => 'ADD ${c.toString()}').join(",\n  ")};');

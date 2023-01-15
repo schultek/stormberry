@@ -14,6 +14,6 @@ class QueryValues {
   String add(dynamic value) {
     values[key.toString()] = value;
     key += 1;
-    return '@${key-1}';
+    return '@${key - 1}';
   }
 }

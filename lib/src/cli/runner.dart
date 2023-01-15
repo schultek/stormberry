@@ -113,16 +113,21 @@ class MigrateCommand extends Command<void> {
       exit(1);
     }
 
-    var dbName = resolveProperty<String>(arg: 'db', env: 'DB_NAME', prompt: 'Select a database to update: ');
-    var dbHost =
-        resolveProperty<String>(arg: 'host', env: 'DB_HOST_ADDRESS', prompt: 'Enter the database host address: ');
-    var dbPort = resolveProperty<int>(arg: 'port', env: 'DB_PORT', prompt: 'Enter the database port: ');
-    var dbUser = resolveProperty<String>(arg: 'username', env: 'DB_USERNAME', prompt: 'Enter the database username: ');
+    var dbName =
+        resolveProperty<String>(arg: 'db', env: 'DB_NAME', prompt: 'Select a database to update: ');
+    var dbHost = resolveProperty<String>(
+        arg: 'host', env: 'DB_HOST_ADDRESS', prompt: 'Enter the database host address: ');
+    var dbPort =
+        resolveProperty<int>(arg: 'port', env: 'DB_PORT', prompt: 'Enter the database port: ');
+    var dbUser = resolveProperty<String>(
+        arg: 'username', env: 'DB_USERNAME', prompt: 'Enter the database username: ');
     var dbPassword = resolveProperty<String>(
-        arg: 'password', env: 'DB_PASSWORD', prompt: 'Enter the database password: ', obscureInput: true);
+        arg: 'password',
+        env: 'DB_PASSWORD',
+        prompt: 'Enter the database password: ',
+        obscureInput: true);
     var useSSL = resolveProperty<bool>(arg: 'ssl', env: 'DB_SSL');
-    var isUnixSocket =
-        resolveProperty<bool>(arg: 'unix-socket', env: 'DB_SOCKET');
+    var isUnixSocket = resolveProperty<bool>(arg: 'unix-socket', env: 'DB_SOCKET');
 
     var db = Database(
       host: dbHost,
@@ -250,8 +255,8 @@ class MigrateCommand extends Command<void> {
           return input == 'yes'
               ? true as T
               : input == 'no'
-              ? false as T
-              : null;
+                  ? false as T
+                  : null;
         }
       }
     }

@@ -12,7 +12,8 @@ class SchemaState {
   final Map<AssetId, AssetState> _assets = {};
   bool _didFinalize = false;
 
-  Map<Element, TableElement> get tables => _assets.values.map((a) => a.tables).reduce((a, b) => {...a, ...b});
+  Map<Element, TableElement> get tables =>
+      _assets.values.map((a) => a.tables).reduce((a, b) => {...a, ...b});
   Map<String, JoinTableElement> get joinTables =>
       _assets.values.map((a) => a.joinTables).reduce((a, b) => {...a, ...b});
 

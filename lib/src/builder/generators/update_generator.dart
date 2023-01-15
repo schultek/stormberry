@@ -9,8 +9,9 @@ class UpdateGenerator {
   String generateUpdateMethod(TableElement table) {
     var deepUpdates = <String>[];
 
-    for (var column
-        in table.columns.whereType<ReferenceColumnElement>().where((c) => c.linkedTable.primaryKeyColumn == null)) {
+    for (var column in table.columns
+        .whereType<ReferenceColumnElement>()
+        .where((c) => c.linkedTable.primaryKeyColumn == null)) {
       if (column.linkedTable.columns
           .where((c) => c is ForeignColumnElement && c.linkedTable != table && !c.isNullable)
           .isNotEmpty) {
@@ -63,9 +64,8 @@ class UpdateGenerator {
         (hasPrimaryKey ? c != table.primaryKeyColumn : c is FieldColumnElement) &&
         (c is! FieldColumnElement || !c.isAutoIncrement));
 
-    var updateColumns = table.columns
-        .whereType<NamedColumnElement>()
-        .where((c) => table.primaryKeyColumn == c || c is! FieldColumnElement || !c.isAutoIncrement);
+    var updateColumns = table.columns.whereType<NamedColumnElement>().where(
+        (c) => table.primaryKeyColumn == c || c is! FieldColumnElement || !c.isAutoIncrement);
 
     String toUpdateValue(NamedColumnElement c) {
       if (c.converter != null) {
@@ -143,8 +143,9 @@ class UpdateGenerator {
       }
     }
 
-    final constructorParameters =
-        requestFields.map((f) => '${f.key.endsWith('?') ? '' : 'required '}this.${f.value},').join(' ');
+    final constructorParameters = requestFields
+        .map((f) => '${f.key.endsWith('?') ? '' : 'required '}this.${f.value},')
+        .join(' ');
 
     return '''
       ${table.annotateWith ?? ''}

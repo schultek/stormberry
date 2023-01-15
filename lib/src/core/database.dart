@@ -43,8 +43,7 @@ class Database {
         user = user ?? Platform.environment['DB_USERNAME'] ?? DB_USERNAME,
         password = password ?? Platform.environment['DB_PASSWORD'] ?? DB_PASSWORD,
         useSSL = useSSL ?? (Platform.environment['DB_SSL'] != DB_SSL),
-        isUnixSocket = isUnixSocket ?? (Platform.environment['DB_SOCKET'] == DB_SOCKET)
-  {
+        isUnixSocket = isUnixSocket ?? (Platform.environment['DB_SOCKET'] == DB_SOCKET) {
     _cachedConnection ??= connection();
   }
 
@@ -68,11 +67,13 @@ class Database {
   String get name => _cachedConnection!.databaseName;
 
   Future<void> open() => _tryOpen();
-  Future<void> close() async => !_cachedConnection!.isClosed ? await _cachedConnection!.close() : null;
+  Future<void> close() async =>
+      !_cachedConnection!.isClosed ? await _cachedConnection!.close() : null;
 
   Future<void> _tryOpen() async {
     if (_cachedConnection!.isClosed) {
-      print('Database: connecting to ${_cachedConnection!.databaseName} at ${_cachedConnection!.host}...');
+      print(
+          'Database: connecting to ${_cachedConnection!.databaseName} at ${_cachedConnection!.host}...');
       try {
         await _cachedConnection!.open();
       } catch (e) {

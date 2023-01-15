@@ -58,7 +58,7 @@ class _CompanyRepository extends BaseRepository
     );
     await db.billingAddresses.insertMany(requests.expand((r) {
       return r.addresses.map((rr) => BillingAddressInsertRequest(
-          companyId: r.id, accountId: null, city: rr.city, postcode: rr.postcode, name: rr.name, street: rr.street));
+          city: rr.city, postcode: rr.postcode, name: rr.name, street: rr.street, accountId: null, companyId: r.id));
     }).toList());
   }
 
@@ -150,12 +150,12 @@ class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, Strin
 
   @override
   FullCompanyView decode(TypedMap map) => FullCompanyView(
+      id: map.get('id'),
+      name: map.get('name'),
+      addresses: map.getListOpt('addresses', BillingAddressQueryable().decoder) ?? const [],
       members: map.getListOpt('members', CompanyAccountViewQueryable().decoder) ?? const [],
-      parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
       invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
-      id: map.get('id', TextEncoder.i.decode),
-      name: map.get('name', TextEncoder.i.decode),
-      addresses: map.getListOpt('addresses', BillingAddressQueryable().decoder) ?? const [],);
+      parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const []);
 }
 
 class FullCompanyView {
