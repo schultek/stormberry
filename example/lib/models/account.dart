@@ -7,7 +7,7 @@ import 'latlng.dart';
 import 'party.dart';
 
 part 'account.schema.dart';
-
+//a
 @Model(views: [#Full, #User, #Company])
 abstract class Account {
   @PrimaryKey()

@@ -97,10 +97,7 @@ class BillingAddressQueryable extends ViewQueryable<BillingAddress> {
 
   @override
   BillingAddress decode(TypedMap map) => BillingAddressView(
-      city: map.get('city', TextEncoder.i.decode),
-      postcode: map.get('postcode', TextEncoder.i.decode),
-      name: map.get('name', TextEncoder.i.decode),
-      street: map.get('street', TextEncoder.i.decode));
+      city: map.get('city'), postcode: map.get('postcode'), name: map.get('name'), street: map.get('street'));
 }
 
 class BillingAddressView implements BillingAddress {

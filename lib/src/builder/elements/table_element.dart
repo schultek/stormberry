@@ -88,11 +88,12 @@ class TableElement {
       ? columns.whereType<FieldColumnElement>().where((c) => c.parameter == primaryKeyParameter).firstOrNull
       : null;
 
-  void prepareColumns() {
-    final allFields = element.fields
-        .cast<FieldElement>()
-        .followedBy(element.allSupertypes.expand((t) => t.isDartCoreObject ? [] : t.element.fields));
+  late List<FieldElement> allFields = element.fields
+      .cast<FieldElement>()
+      .followedBy(element.allSupertypes.expand((t) => t.isDartCoreObject ? [] : t.element.fields))
+      .toList();
 
+  void prepareColumns() {
     for (var param in allFields) {
       if (columns.any((c) => c.parameter == param)) {
         continue;
@@ -171,8 +172,7 @@ class TableElement {
 
           if (selfHasKey && !otherIsList) {
             otherColumn = ForeignColumnElement(otherParam, this, otherBuilder, state);
-            var insertIndex = otherBuilder.columns.lastIndexWhere((c) => c is ForeignColumnElement) + 1;
-            otherBuilder.columns.insert(insertIndex, otherColumn);
+            otherBuilder.columns.add(otherColumn);
           } else {
             otherColumn = ReferenceColumnElement(otherParam, this, otherBuilder, state);
             otherBuilder.columns.add(otherColumn);
@@ -194,6 +194,27 @@ class TableElement {
         }
       }
     }
+  }
+
+  void sortColumns() {
+    columns.sortBy((column) {
+      var key = '';
+
+      if (column.parameter != null) {
+        // first: columns related to a model field, in declared order
+        key += '0_';
+        key += allFields.indexOf(column.parameter!).toString();
+      } else if (column is ParameterColumnElement) {
+        // then: foreign or reference columns with no field, in alphabetical order
+        key += '1_';
+        key += column.paramName;
+      } else {
+        // then: rest
+        key += '2';
+      }
+
+      return key;
+    });
   }
 
   FieldElement? findMatchingParam(FieldElement param) {

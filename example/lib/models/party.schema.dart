@@ -154,10 +154,8 @@ class CompanyPartyViewQueryable extends KeyedViewQueryable<CompanyPartyView, Str
   String get tableAlias => 'parties';
 
   @override
-  CompanyPartyView decode(TypedMap map) => CompanyPartyView(
-      id: map.get('id', TextEncoder.i.decode),
-      name: map.get('name', TextEncoder.i.decode),
-      date: map.get('date', TextEncoder.i.decode));
+  CompanyPartyView decode(TypedMap map) =>
+      CompanyPartyView(id: map.get('id'), name: map.get('name'), date: map.get('date'));
 }
 
 class CompanyPartyView {

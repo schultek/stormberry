@@ -72,12 +72,13 @@ class _AccountRepository extends BaseRepository
     );
     await db.billingAddresses.insertMany(requests.where((r) => r.billingAddress != null).map((r) {
       return BillingAddressInsertRequest(
-          companyId: null,
-          accountId: TextEncoder.i.decode(autoIncrements[requests.indexOf(r)]['id']),
-          city: r.billingAddress!.city,
-          postcode: r.billingAddress!.postcode,
-          name: r.billingAddress!.name,
-          street: r.billingAddress!.street);
+        companyId: null,
+        accountId: TextEncoder.i.decode(autoIncrements[requests.indexOf(r)]['id']),
+        city: r.billingAddress!.city,
+        postcode: r.billingAddress!.postcode,
+        name: r.billingAddress!.name,
+        street: r.billingAddress!.street,
+      );
     }).toList());
 
     return autoIncrements.map<int>((m) => TextEncoder.i.decode(m['id'])).toList();
@@ -97,11 +98,11 @@ class _AccountRepository extends BaseRepository
     );
     await db.billingAddresses.updateMany(requests.where((r) => r.billingAddress != null).map((r) {
       return BillingAddressUpdateRequest(
-          accountId: r.id,
           city: r.billingAddress!.city,
           postcode: r.billingAddress!.postcode,
           name: r.billingAddress!.name,
-          street: r.billingAddress!.street);
+          street: r.billingAddress!.street,
+          accountId: r.id);
     }).toList());
   }
 }
@@ -160,6 +161,8 @@ class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> 
       '  GROUP BY "invoices"."account_id"'
       ') "invoices"'
       'ON "accounts"."id" = "invoices"."account_id"'
+      'LEFT JOIN (${MemberCompanyViewQueryable().query}) "company"'
+      'ON "accounts"."company_id" = "company"."id"'
       'LEFT JOIN ('
       '  SELECT "accounts_parties"."account_id",'
       '    to_jsonb(array_agg("parties".*)) as data'
@@ -229,6 +232,8 @@ class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> 
       '  GROUP BY "invoices"."account_id"'
       ') "invoices"'
       'ON "accounts"."id" = "invoices"."account_id"'
+      'LEFT JOIN (${MemberCompanyViewQueryable().query}) "company"'
+      'ON "accounts"."company_id" = "company"."id"'
       'LEFT JOIN ('
       '  SELECT "accounts_parties"."account_id",'
       '    to_jsonb(array_agg("parties".*)) as data'
@@ -304,25 +309,25 @@ class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView,
 
   @override
   CompanyAccountView decode(TypedMap map) => CompanyAccountView(
-      parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
-      id: map.get('id', TextEncoder.i.decode),
-      firstName: map.get('first_name', TextEncoder.i.decode),
-      lastName: map.get('last_name', TextEncoder.i.decode),
-      location: map.get('location', LatLngConverter().decode));
+      id: map.get('id'),
+      firstName: map.get('first_name'),
+      lastName: map.get('last_name'),
+      location: map.get('location', LatLngConverter().decode),
+      parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const []);
 }
 
 class CompanyAccountView {
   CompanyAccountView({
-    required this.parties,
     required this.id,
     required this.firstName,
     required this.lastName,
     required this.location,
+    required this.parties,
   });
 
-  final List<CompanyPartyView> parties;
   final int id;
   final String firstName;
   final String lastName;
   final LatLng location;
+  final List<CompanyPartyView> parties;
 }
