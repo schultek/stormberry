@@ -105,7 +105,7 @@ class BillingAddressQueryable extends ViewQueryable<BillingAddress> {
       street: map.get('street'));
 }
 
-class BillingAddressView implements BillingAddress {
+class BillingAddressView with BillingAddress {
   BillingAddressView({
     required this.city,
     required this.postcode,

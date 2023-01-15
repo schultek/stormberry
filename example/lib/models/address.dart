@@ -10,7 +10,7 @@ class Address {
 }
 
 @Model()
-abstract class BillingAddress extends Address {
+abstract class BillingAddress implements Address {
   String get city;
   String get postcode;
 

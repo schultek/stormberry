@@ -61,8 +61,7 @@ class _AccountRepository extends BaseRepository
   @override
   Future<List<int>> insert(List<AccountInsertRequest> requests) async {
     if (requests.isEmpty) return [];
-    var rows = await db.query(
-        requests.map((r) => "SELECT nextval('accounts_id_seq') as \"id\"").join('\nUNION ALL\n'));
+    var rows = await db.query(requests.map((r) => "SELECT nextval('accounts_id_seq') as \"id\"").join('\nUNION ALL\n'));
     var autoIncrements = rows.map((r) => r.toColumnMap()).toList();
 
     var values = QueryValues();
@@ -305,9 +304,9 @@ class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView,
 
   @override
   CompanyAccountView decode(TypedMap map) => CompanyAccountView(
-      id: map.get('id'),
-      firstName: map.get('first_name'),
-      lastName: map.get('last_name'),
+      id: map.get('id', TextEncoder.i.decode),
+      firstName: map.get('first_name', TextEncoder.i.decode),
+      lastName: map.get('last_name', TextEncoder.i.decode),
       location: map.get('location', LatLngConverter().decode),
       parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const []);
 }
