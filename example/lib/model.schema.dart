@@ -92,8 +92,8 @@ class _BRepository extends BaseRepository
 
     var values = QueryValues();
     await db.query(
-      'INSERT INTO "bs" ( "a_id", "id" )\n'
-      'VALUES ${requests.map((r) => '( ${values.add(r.aId)}, ${values.add(r.id)} )').join(', ')}\n',
+      'INSERT INTO "bs" ( "id", "a_id" )\n'
+      'VALUES ${requests.map((r) => '( ${values.add(r.id)}, ${values.add(r.aId)} )').join(', ')}\n',
       values.values,
     );
   }
@@ -105,8 +105,8 @@ class _BRepository extends BaseRepository
     await db.query(
       'UPDATE "bs"\n'
       'SET "a_id" = COALESCE(UPDATED."a_id"::text, "bs"."a_id")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.aId)}, ${values.add(r.id)} )').join(', ')} )\n'
-      'AS UPDATED("a_id", "id")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}, ${values.add(r.aId)} )').join(', ')} )\n'
+      'AS UPDATED("id", "a_id")\n'
       'WHERE "bs"."id" = UPDATED."id"',
       values.values,
     );
@@ -125,12 +125,12 @@ class AInsertRequest {
 
 class BInsertRequest {
   BInsertRequest({
-    this.aId,
     required this.id,
+    this.aId,
   });
 
-  String? aId;
   String id;
+  String? aId;
 }
 
 class AUpdateRequest {
@@ -145,12 +145,12 @@ class AUpdateRequest {
 
 class BUpdateRequest {
   BUpdateRequest({
-    this.aId,
     required this.id,
+    this.aId,
   });
 
-  String? aId;
   String id;
+  String? aId;
 }
 
 class AQueryable extends KeyedViewQueryable<A, String> {
@@ -202,17 +202,17 @@ class BQueryable extends KeyedViewQueryable<B, String> {
   String get tableAlias => 'bs';
 
   @override
-  B decode(TypedMap map) => BView(a: map.getOpt('a', AQueryable().decoder), id: map.get('id'));
+  B decode(TypedMap map) => BView(id: map.get('id'), a: map.getOpt('a', AQueryable().decoder));
 }
 
 class BView implements B {
   BView({
-    this.a,
     required this.id,
+    this.a,
   });
 
   @override
-  final A? a;
-  @override
   final String id;
+  @override
+  final A? a;
 }

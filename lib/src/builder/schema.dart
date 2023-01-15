@@ -31,6 +31,9 @@ class SchemaState {
       for (var element in tables.values) {
         element.prepareColumns();
       }
+      for (var element in tables.values) {
+        element.sortColumns();
+      }
       _didFinalize = true;
     }
   }
