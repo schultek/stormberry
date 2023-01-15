@@ -144,12 +144,12 @@ class UpdateGenerator {
     }
 
     final constructorParameters =
-        requestFields.map((f) => '${f.key.endsWith('?') ? '' : 'required '}this.${f.value}').join(', ');
+        requestFields.map((f) => '${f.key.endsWith('?') ? '' : 'required '}this.${f.value},').join(' ');
 
     return '''
       ${table.annotateWith ?? ''}
       class $requestClassName {
-        $requestClassName(${constructorParameters.isNotEmpty ? '{$constructorParameters,}' : ''});
+        $requestClassName(${constructorParameters.isNotEmpty ? '{$constructorParameters}' : ''});
         
         ${requestFields.map((f) => '${f.key} ${f.value};').join('\n')}
       }
