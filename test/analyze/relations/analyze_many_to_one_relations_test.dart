@@ -45,11 +45,13 @@ void main() {
         paramName: 'b',
         isList: true,
         linkedTo: tableB,
-        references: tableB.columns[0],
+        references: tableB.columns[1],
       );
 
+      testIdColumn(tableB.columns[0]);
+
       testColumn(
-        tableB.columns[0],
+        tableB.columns[1],
         null,
         columnName: 'a_id',
         sqlType: 'text',
@@ -59,8 +61,6 @@ void main() {
         linkedTo: tableA,
         references: tableA.columns[1],
       );
-
-      testIdColumn(tableB.columns[1]);
     });
 
     test('analyzes one-sided single-keyed many-to-one relation', () async {
@@ -103,11 +103,13 @@ void main() {
         paramName: 'b',
         isList: true,
         linkedTo: tableB,
-        references: tableB.columns[0],
+        references: tableB.columns[1],
       );
 
+      testIdColumn(tableB.columns[0], name: 'name');
+
       testColumn(
-        tableB.columns[0],
+        tableB.columns[1],
         null,
         columnName: 'a_id',
         sqlType: 'text',
@@ -117,8 +119,6 @@ void main() {
         linkedTo: tableA,
         references: tableA.columns[1],
       );
-
-      testIdColumn(tableB.columns[1], name: 'name');
     });
 
     test('analyzes two-sided double-keyed many-to-one relation', () async {
@@ -164,11 +164,13 @@ void main() {
         paramName: 'b',
         isList: true,
         linkedTo: tableB,
-        references: tableB.columns[0],
+        references: tableB.columns[1],
       );
 
+      testIdColumn(tableB.columns[0]);
+
       testColumn(
-        tableB.columns[0],
+        tableB.columns[1],
         {
           'type': 'foreign_column',
           'param_name': 'a',
@@ -183,8 +185,6 @@ void main() {
         linkedTo: tableA,
         references: tableA.columns[1],
       );
-
-      testIdColumn(tableB.columns[1]);
     });
 
     test('analyzes two-sided single-keyed many-to-one relation', () async {
@@ -229,11 +229,13 @@ void main() {
         paramName: 'b',
         isList: true,
         linkedTo: tableB,
-        references: tableB.columns[0],
+        references: tableB.columns[1],
       );
 
+      testIdColumn(tableB.columns[0], name: 'name');
+
       testColumn(
-        tableB.columns[0],
+        tableB.columns[1],
         {
           'type': 'foreign_column',
           'param_name': 'a',
@@ -248,8 +250,6 @@ void main() {
         linkedTo: tableA,
         references: tableA.columns[1],
       );
-
-      testIdColumn(tableB.columns[1], name: 'name');
     });
   });
 }

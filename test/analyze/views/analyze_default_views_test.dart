@@ -57,7 +57,6 @@ void main() {
           'param_name': 'b',
           'column_name': 'b_id',
           'link_primary_key_name': 'id',
-          'table_name': 'bs_view',
         },
         paramName: 'b',
         dartType: 'B',

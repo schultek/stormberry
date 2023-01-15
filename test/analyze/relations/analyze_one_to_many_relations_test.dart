@@ -48,19 +48,19 @@ void main() {
         isList: false,
         isNullable: false,
         linkedTo: tableB,
-        references: tableB.columns[0],
+        references: tableB.columns[1],
       );
 
+      testIdColumn(tableB.columns[0]);
+
       testColumn(
-        tableB.columns[0],
+        tableB.columns[1],
         null,
         paramName: '',
         isList: true,
         linkedTo: tableA,
         references: tableA.columns[1],
       );
-
-      testIdColumn(tableB.columns[1]);
     });
 
     test('analyzes two-sided double-keyed one-to-many relation', () async {
@@ -109,11 +109,13 @@ void main() {
         isList: false,
         isNullable: false,
         linkedTo: tableB,
-        references: tableB.columns[0],
+        references: tableB.columns[1],
       );
 
+      testIdColumn(tableB.columns[0]);
+
       testColumn(
-        tableB.columns[0],
+        tableB.columns[1],
         {
           'type': 'multi_reference_column',
           'param_name': 'a',
@@ -126,7 +128,6 @@ void main() {
         references: tableA.columns[1],
       );
 
-      testIdColumn(tableB.columns[1]);
     });
   });
 }

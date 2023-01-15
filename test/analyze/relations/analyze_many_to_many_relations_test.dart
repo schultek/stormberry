@@ -53,12 +53,14 @@ void main() {
         },
         isList: true,
         linkedTo: tableB,
-        references: tableB.columns[0],
+        references: tableB.columns[1],
         joinedTo: join,
       );
 
+      testIdColumn(tableB.columns[0]);
+
       testColumn(
-        tableB.columns[0],
+        tableB.columns[1],
         {
           'type': 'join_column',
           'param_name': 'a',
@@ -73,8 +75,6 @@ void main() {
         references: tableA.columns[1],
         joinedTo: join,
       );
-
-      testIdColumn(tableB.columns[1]);
     });
 
     test('analyzes two-sided single-keyed many-to-many relation', () async {
