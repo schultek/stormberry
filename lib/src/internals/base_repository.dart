@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:collection/collection.dart';
 
 import '../core/annotations.dart';
 import '../core/database.dart';
 import '../core/query_params.dart';
-import 'text_encoder.dart';
 import 'view_query.dart';
 
 typedef Runnable<T> = FutureOr<T> Function();

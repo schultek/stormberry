@@ -1,4 +1,3 @@
-import '../core/database.dart';
 import 'base_repository.dart';
 
 abstract class ModelRepositoryUpdate<UpdateRequest> {

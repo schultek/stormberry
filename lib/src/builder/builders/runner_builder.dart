@@ -4,7 +4,6 @@ import 'package:build/build.dart';
 import '../generators/join_json_generator.dart';
 import '../generators/table_json_generator.dart';
 import '../schema.dart';
-import '../elements/view_element.dart';
 import 'output_builder.dart';
 
 class RunnerBuilder extends OutputBuilder {
