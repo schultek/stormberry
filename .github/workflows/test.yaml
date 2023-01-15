@@ -1,0 +1,39 @@
+name: Dart CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:  
+  test:
+    name: Analyze and Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dart-lang/setup-dart@v1.3
+
+      - name: Bootstrap
+        run: |
+          dart pub global activate coverage
+          
+      - name: Check formatting
+        run: dart format . --set-exit-if-changed --line-length=100
+
+      - name: Lint
+        run: dart analyze . --fatal-infos
+
+      - name: Run Unit tests
+        run: |
+          dart test --coverage=coverage
+          dart pub global run coverage:format_coverage --check-ignore --packages=.dart_tool/package_config.json --report-on=lib --lcov -o "./coverage/lcov.info" -i ./coverage
+
+      - name: Upload Coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: coverage/lcov.info

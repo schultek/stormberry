@@ -1,8 +1,24 @@
-# Stormberry
+<h1 align="center">Stormberry</h1>
 
-Stormberry is a strongly-typed ORM-like code-generation package to provide easy bindings between
-your dart classes and postgres database. It supports all kinds of relations without any complex
-configuration.
+<p align="center">
+  <a href="https://pub.dev/packages/stormberry">
+    <img src="https://img.shields.io/pub/v/stormberry?label=pub.dev&labelColor=333940&logo=dart">
+  </a>
+  <a href="https://github.com/schultek/stormberry/actions/workflows/test.yaml">
+    <img src="https://img.shields.io/github/actions/workflow/status/schultek/stormberry/test.yaml?branch=main&label=tests&labelColor=333940&logo=github">
+  </a>
+  <a href="https://app.codecov.io/gh/schultek/stormberry">
+    <img src="https://img.shields.io/codecov/c/github/schultek/stormberry?logo=codecov&logoColor=fff&labelColor=333940">
+  </a>
+  <!--<a href="https://twitter.com/schultek_dev">
+    <img src="https://img.shields.io/twitter/follow/schultek_dev?style=flat&label=Follow&color=1DA1F2&labelColor=333940&logo=twitter&logoColor=fff">
+  </a>-->
+</p>
+
+<p align="center">
+A strongly-typed postgres ORM to provide easy bindings between your dart classes and postgres database. 
+It supports all kinds of relations without any complex configuration.
+</p>
 
 # Outline
 
