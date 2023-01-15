@@ -108,8 +108,8 @@ class OwnerInvoiceViewQueryable extends KeyedViewQueryable<OwnerInvoiceView, Str
   String get tableAlias => 'invoices';
 
   @override
-  OwnerInvoiceView decode(TypedMap map) => OwnerInvoiceView(
-      id: map.get('id'), title: map.get('title'), invoiceId: map.get('invoice_id'));
+  OwnerInvoiceView decode(TypedMap map) =>
+      OwnerInvoiceView(id: map.get('id'), title: map.get('title'), invoiceId: map.get('invoice_id'));
 }
 
 class OwnerInvoiceView {

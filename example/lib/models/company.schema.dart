@@ -58,12 +58,7 @@ class _CompanyRepository extends BaseRepository
     );
     await db.billingAddresses.insertMany(requests.expand((r) {
       return r.addresses.map((rr) => BillingAddressInsertRequest(
-          city: rr.city,
-          postcode: rr.postcode,
-          name: rr.name,
-          street: rr.street,
-          accountId: null,
-          companyId: r.id));
+          city: rr.city, postcode: rr.postcode, name: rr.name, street: rr.street, accountId: null, companyId: r.id));
     }).toList());
   }
 
@@ -119,15 +114,8 @@ class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, Strin
 
   @override
   String get query =>
-      'SELECT "companies".*, "addresses"."data" as "addresses", "members"."data" as "members", "invoices"."data" as "invoices", "parties"."data" as "parties"'
+      'SELECT "companies".*, "members"."data" as "members", "parties"."data" as "parties", "invoices"."data" as "invoices", "addresses"."data" as "addresses"'
       'FROM "companies"'
-      'LEFT JOIN ('
-      '  SELECT "billing_addresses"."company_id",'
-      '    to_jsonb(array_agg("billing_addresses".*)) as data'
-      '  FROM (${BillingAddressQueryable().query}) "billing_addresses"'
-      '  GROUP BY "billing_addresses"."company_id"'
-      ') "addresses"'
-      'ON "companies"."id" = "addresses"."company_id"'
       'LEFT JOIN ('
       '  SELECT "accounts"."company_id",'
       '    to_jsonb(array_agg("accounts".*)) as data'
@@ -136,6 +124,13 @@ class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, Strin
       ') "members"'
       'ON "companies"."id" = "members"."company_id"'
       'LEFT JOIN ('
+      '  SELECT "parties"."sponsor_id",'
+      '    to_jsonb(array_agg("parties".*)) as data'
+      '  FROM (${CompanyPartyViewQueryable().query}) "parties"'
+      '  GROUP BY "parties"."sponsor_id"'
+      ') "parties"'
+      'ON "companies"."id" = "parties"."sponsor_id"'
+      'LEFT JOIN ('
       '  SELECT "invoices"."company_id",'
       '    to_jsonb(array_agg("invoices".*)) as data'
       '  FROM (${OwnerInvoiceViewQueryable().query}) "invoices"'
@@ -143,12 +138,12 @@ class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, Strin
       ') "invoices"'
       'ON "companies"."id" = "invoices"."company_id"'
       'LEFT JOIN ('
-      '  SELECT "parties"."sponsor_id",'
-      '    to_jsonb(array_agg("parties".*)) as data'
-      '  FROM (${CompanyPartyViewQueryable().query}) "parties"'
-      '  GROUP BY "parties"."sponsor_id"'
-      ') "parties"'
-      'ON "companies"."id" = "parties"."sponsor_id"';
+      '  SELECT "billing_addresses"."company_id",'
+      '    to_jsonb(array_agg("billing_addresses".*)) as data'
+      '  FROM (${BillingAddressQueryable().query}) "billing_addresses"'
+      '  GROUP BY "billing_addresses"."company_id"'
+      ') "addresses"'
+      'ON "companies"."id" = "addresses"."company_id"';
 
   @override
   String get tableAlias => 'companies';
@@ -165,20 +160,20 @@ class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, Strin
 
 class FullCompanyView {
   FullCompanyView({
+    required this.members,
+    required this.parties,
+    required this.invoices,
     required this.id,
     required this.name,
     required this.addresses,
-    required this.members,
-    required this.invoices,
-    required this.parties,
   });
 
+  final List<CompanyAccountView> members;
+  final List<CompanyPartyView> parties;
+  final List<OwnerInvoiceView> invoices;
   final String id;
   final String name;
   final List<BillingAddress> addresses;
-  final List<CompanyAccountView> members;
-  final List<OwnerInvoiceView> invoices;
-  final List<CompanyPartyView> parties;
 }
 
 class MemberCompanyViewQueryable extends KeyedViewQueryable<MemberCompanyView, String> {
