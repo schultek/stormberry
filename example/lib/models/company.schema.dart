@@ -1,6 +1,6 @@
 part of 'company.dart';
 
-extension Repositories on Database {
+extension CompanyRepositories on Database {
   CompanyRepository get companies => CompanyRepository._(this);
 }
 
@@ -58,7 +58,7 @@ class _CompanyRepository extends BaseRepository
     );
     await db.billingAddresses.insertMany(requests.expand((r) {
       return r.addresses.map((rr) => BillingAddressInsertRequest(
-          city: rr.city, postcode: rr.postcode, name: rr.name, street: rr.street, accountId: null, companyId: r.id));
+          companyId: r.id, accountId: null, city: rr.city, postcode: rr.postcode, name: rr.name, street: rr.street));
     }).toList());
   }
 
@@ -150,8 +150,8 @@ class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, Strin
 
   @override
   FullCompanyView decode(TypedMap map) => FullCompanyView(
-      id: map.get('id'),
-      name: map.get('name'),
+      id: map.get('id', TextEncoder.i.decode),
+      name: map.get('name', TextEncoder.i.decode),
       addresses: map.getListOpt('addresses', BillingAddressQueryable().decoder) ?? const [],
       members: map.getListOpt('members', CompanyAccountViewQueryable().decoder) ?? const [],
       invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],

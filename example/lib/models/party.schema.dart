@@ -1,6 +1,6 @@
 part of 'party.dart';
 
-extension Repositories on Database {
+extension PartyRepositories on Database {
   PartyRepository get parties => PartyRepository._(this);
 }
 
@@ -52,8 +52,8 @@ class _PartyRepository extends BaseRepository
 
     var values = QueryValues();
     await db.query(
-      'INSERT INTO "parties" ( "id", "name", "sponsor_id", "date" )\n'
-      'VALUES ${requests.map((r) => '( ${values.add(r.id)}, ${values.add(r.name)}, ${values.add(r.sponsorId)}, ${values.add(r.date)} )').join(', ')}\n',
+      'INSERT INTO "parties" ( "sponsor_id", "id", "name", "date" )\n'
+      'VALUES ${requests.map((r) => '( ${values.add(r.sponsorId)}, ${values.add(r.id)}, ${values.add(r.name)}, ${values.add(r.date)} )').join(', ')}\n',
       values.values,
     );
   }
@@ -64,9 +64,9 @@ class _PartyRepository extends BaseRepository
     var values = QueryValues();
     await db.query(
       'UPDATE "parties"\n'
-      'SET "name" = COALESCE(UPDATED."name"::text, "parties"."name"), "sponsor_id" = COALESCE(UPDATED."sponsor_id"::text, "parties"."sponsor_id"), "date" = COALESCE(UPDATED."date"::int8, "parties"."date")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}, ${values.add(r.name)}, ${values.add(r.sponsorId)}, ${values.add(r.date)} )').join(', ')} )\n'
-      'AS UPDATED("id", "name", "sponsor_id", "date")\n'
+      'SET "sponsor_id" = COALESCE(UPDATED."sponsor_id"::text, "parties"."sponsor_id"), "name" = COALESCE(UPDATED."name"::text, "parties"."name"), "date" = COALESCE(UPDATED."date"::int8, "parties"."date")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.sponsorId)}, ${values.add(r.id)}, ${values.add(r.name)}, ${values.add(r.date)} )').join(', ')} )\n'
+      'AS UPDATED("sponsor_id", "id", "name", "date")\n'
       'WHERE "parties"."id" = UPDATED."id"',
       values.values,
     );
@@ -75,29 +75,29 @@ class _PartyRepository extends BaseRepository
 
 class PartyInsertRequest {
   PartyInsertRequest({
+    this.sponsorId,
     required this.id,
     required this.name,
-    this.sponsorId,
     required this.date,
   });
 
+  String? sponsorId;
   String id;
   String name;
-  String? sponsorId;
   int date;
 }
 
 class PartyUpdateRequest {
   PartyUpdateRequest({
+    this.sponsorId,
     required this.id,
     this.name,
-    this.sponsorId,
     this.date,
   });
 
+  String? sponsorId;
   String id;
   String? name;
-  String? sponsorId;
   int? date;
 }
 
@@ -119,23 +119,23 @@ class GuestPartyViewQueryable extends KeyedViewQueryable<GuestPartyView, String>
 
   @override
   GuestPartyView decode(TypedMap map) => GuestPartyView(
-      id: map.get('id'),
-      name: map.get('name'),
       sponsor: map.getOpt('sponsor', MemberCompanyViewQueryable().decoder),
-      date: map.get('date'));
+      id: map.get('id', TextEncoder.i.decode),
+      name: map.get('name', TextEncoder.i.decode),
+      date: map.get('date', TextEncoder.i.decode));
 }
 
 class GuestPartyView {
   GuestPartyView({
+    this.sponsor,
     required this.id,
     required this.name,
-    this.sponsor,
     required this.date,
   });
 
+  final MemberCompanyView? sponsor;
   final String id;
   final String name;
-  final MemberCompanyView? sponsor;
   final int date;
 }
 

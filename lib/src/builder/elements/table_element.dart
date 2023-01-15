@@ -89,6 +89,7 @@ class TableElement {
       : null;
 
   late List<FieldElement> allFields = element.fields
+      .cast<FieldElement>()
       .followedBy(element.allSupertypes.expand((t) => t.isDartCoreObject ? [] : t.element.fields))
       .toList();
 

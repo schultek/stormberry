@@ -1,6 +1,6 @@
 part of 'model.dart';
 
-extension Repositories on Database {
+extension ModelRepositories on Database {
   ARepository get as => ARepository._(this);
   BRepository get bs => BRepository._(this);
 }
