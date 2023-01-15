@@ -116,48 +116,48 @@ class TypedMap {
 
   TypedMap(this.map);
 
-  T get<T>(String key, Decoder<T> decode) {
+  T get<T>(String key, [Decoder<T>? decode]) {
     if (map[key] == null) {
       throw ConverterException('Parameter $key is required.');
     }
-    return decode(map[key]);
+    return (decode ?? TextEncoder.i.decode<T>)(map[key]);
   }
 
-  T? getOpt<T>(String key, Decoder<T> decode) {
+  T? getOpt<T>(String key, [Decoder<T>? decode]) {
     if (map[key] == null) {
       return null;
     }
     return get<T>(key, decode);
   }
 
-  List<T> getList<T>(String key, Decoder<T> decode) {
+  List<T> getList<T>(String key, [Decoder<T>? decode]) {
     if (map[key] == null) {
       throw ConverterException('Parameter $key is required.');
     } else if (map[key] is! List) {
       throw ConverterException('Parameter $key is not a List');
     }
     List value = map[key] as List<dynamic>;
-    return value.map((dynamic item) => decode(item)).toList();
+    return value.map((dynamic item) => (decode ?? TextEncoder.i.decode<T>)(item)).toList();
   }
 
-  List<T>? getListOpt<T>(String key, Decoder<T> decode) {
+  List<T>? getListOpt<T>(String key, [Decoder<T>? decode]) {
     if (map[key] == null) {
       return null;
     }
     return getList<T>(key, decode);
   }
 
-  Map<K, V> getMap<K, V>(String key, Decoder<Map<K, V>> decode) {
+  Map<K, V> getMap<K, V>(String key, [Decoder<Map<K, V>>? decode]) {
     if (map[key] == null) {
       throw ConverterException('Parameter $key is required.');
     } else if (map[key] is! Map) {
       throw ConverterException('Parameter ${map[key]} with key $key is not a Map');
     }
     Map value = map[key] as Map<dynamic, dynamic>;
-    return decode(value);
+    return (decode ?? TextEncoder.i.decode)(value);
   }
 
-  Map<K, V>? getMapOpt<K, V>(String key, Decoder<Map<K, V>> decode) {
+  Map<K, V>? getMapOpt<K, V>(String key, [Decoder<Map<K, V>>? decode]) {
     if (map[key] == null) {
       return null;
     }

@@ -153,8 +153,8 @@ class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, Strin
       invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
       parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
       members: map.getListOpt('members', CompanyAccountViewQueryable().decoder) ?? const [],
-      id: map.get('id', TextEncoder.i.decode),
-      name: map.get('name', TextEncoder.i.decode),
+      id: map.get('id'),
+      name: map.get('name'),
       addresses: map.getListOpt('addresses', BillingAddressQueryable().decoder) ?? const []);
 }
 
@@ -199,8 +199,8 @@ class MemberCompanyViewQueryable extends KeyedViewQueryable<MemberCompanyView, S
 
   @override
   MemberCompanyView decode(TypedMap map) => MemberCompanyView(
-      id: map.get('id', TextEncoder.i.decode),
-      name: map.get('name', TextEncoder.i.decode),
+      id: map.get('id'),
+      name: map.get('name'),
       addresses: map.getListOpt('addresses', BillingAddressQueryable().decoder) ?? const []);
 }
 

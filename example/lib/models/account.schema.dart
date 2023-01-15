@@ -179,9 +179,9 @@ class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> 
   FullAccountView decode(TypedMap map) => FullAccountView(
       invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
       parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
-      id: map.get('id', TextEncoder.i.decode),
-      firstName: map.get('first_name', TextEncoder.i.decode),
-      lastName: map.get('last_name', TextEncoder.i.decode),
+      id: map.get('id'),
+      firstName: map.get('first_name'),
+      lastName: map.get('last_name'),
       location: map.get('location', LatLngConverter().decode),
       billingAddress: map.getOpt('billingAddress', BillingAddressQueryable().decoder),
       company: map.getOpt('company', MemberCompanyViewQueryable().decoder));
@@ -248,9 +248,9 @@ class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> 
   UserAccountView decode(TypedMap map) => UserAccountView(
       invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
       parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
-      id: map.get('id', TextEncoder.i.decode),
-      firstName: map.get('first_name', TextEncoder.i.decode),
-      lastName: map.get('last_name', TextEncoder.i.decode),
+      id: map.get('id'),
+      firstName: map.get('first_name'),
+      lastName: map.get('last_name'),
       location: map.get('location', LatLngConverter().decode),
       billingAddress: map.getOpt('billingAddress', BillingAddressQueryable().decoder),
       company: map.getOpt('company', MemberCompanyViewQueryable().decoder));
@@ -305,9 +305,9 @@ class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView,
   @override
   CompanyAccountView decode(TypedMap map) => CompanyAccountView(
       parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
-      id: map.get('id', TextEncoder.i.decode),
-      firstName: map.get('first_name', TextEncoder.i.decode),
-      lastName: map.get('last_name', TextEncoder.i.decode),
+      id: map.get('id'),
+      firstName: map.get('first_name'),
+      lastName: map.get('last_name'),
       location: map.get('location', LatLngConverter().decode));
 }
 

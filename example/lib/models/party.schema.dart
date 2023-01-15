@@ -119,10 +119,10 @@ class GuestPartyViewQueryable extends KeyedViewQueryable<GuestPartyView, String>
 
   @override
   GuestPartyView decode(TypedMap map) => GuestPartyView(
-      id: map.get('id', TextEncoder.i.decode),
-      name: map.get('name', TextEncoder.i.decode),
+      id: map.get('id'),
+      name: map.get('name'),
       sponsor: map.getOpt('sponsor', MemberCompanyViewQueryable().decoder),
-      date: map.get('date', TextEncoder.i.decode));
+      date: map.get('date'));
 }
 
 class GuestPartyView {
@@ -154,10 +154,8 @@ class CompanyPartyViewQueryable extends KeyedViewQueryable<CompanyPartyView, Str
   String get tableAlias => 'parties';
 
   @override
-  CompanyPartyView decode(TypedMap map) => CompanyPartyView(
-      id: map.get('id', TextEncoder.i.decode),
-      name: map.get('name', TextEncoder.i.decode),
-      date: map.get('date', TextEncoder.i.decode));
+  CompanyPartyView decode(TypedMap map) =>
+      CompanyPartyView(id: map.get('id'), name: map.get('name'), date: map.get('date'));
 }
 
 class CompanyPartyView {

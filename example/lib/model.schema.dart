@@ -170,7 +170,7 @@ class AQueryable extends KeyedViewQueryable<A, String> {
   String get tableAlias => 'as';
 
   @override
-  A decode(TypedMap map) => AView(id: map.get('id', TextEncoder.i.decode), b: map.get('b', BQueryable().decoder));
+  A decode(TypedMap map) => AView(id: map.get('id'), b: map.get('b', BQueryable().decoder));
 }
 
 class AView implements A {
@@ -202,7 +202,7 @@ class BQueryable extends KeyedViewQueryable<B, String> {
   String get tableAlias => 'bs';
 
   @override
-  B decode(TypedMap map) => BView(a: map.getOpt('a', AQueryable().decoder), id: map.get('id', TextEncoder.i.decode));
+  B decode(TypedMap map) => BView(a: map.getOpt('a', AQueryable().decoder), id: map.get('id'));
 }
 
 class BView implements B {
