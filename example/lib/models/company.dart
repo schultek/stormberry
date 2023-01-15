@@ -9,7 +9,6 @@ part 'company.schema.dart';
 
 @Model(views: [#Full, #Member])
 abstract class Company {
-
   @PrimaryKey()
   String get id;
 

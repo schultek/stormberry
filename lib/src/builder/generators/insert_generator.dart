@@ -9,8 +9,9 @@ class InsertGenerator {
   String generateInsertMethod(TableElement table) {
     var deepInserts = <String>[];
 
-    for (var column
-        in table.columns.whereType<ReferenceColumnElement>().where((c) => c.linkedTable.primaryKeyColumn == null)) {
+    for (var column in table.columns
+        .whereType<ReferenceColumnElement>()
+        .where((c) => c.linkedTable.primaryKeyColumn == null)) {
       if (column.linkedTable.columns
           .where((c) => c is ForeignColumnElement && c.linkedTable != table && !c.isNullable)
           .isNotEmpty) {
@@ -69,7 +70,8 @@ class InsertGenerator {
       }
     }
 
-    var autoIncrementCols = table.columns.whereType<FieldColumnElement>().where((c) => c.isAutoIncrement);
+    var autoIncrementCols =
+        table.columns.whereType<FieldColumnElement>().where((c) => c.isAutoIncrement);
     String? autoIncrementStatement, keyReturnStatement;
 
     if (autoIncrementCols.isNotEmpty) {
@@ -123,7 +125,8 @@ class InsertGenerator {
     for (var column in table.columns) {
       if (column is FieldColumnElement) {
         if (!column.isAutoIncrement) {
-          requestFields.add(MapEntry(column.parameter.type.getDisplayString(withNullability: true), column.paramName));
+          requestFields.add(MapEntry(
+              column.parameter.type.getDisplayString(withNullability: true), column.paramName));
         }
       } else if (column is ReferenceColumnElement && column.linkedTable.primaryKeyColumn == null) {
         if (column.linkedTable.columns
@@ -131,7 +134,8 @@ class InsertGenerator {
             .isNotEmpty) {
           continue;
         }
-        requestFields.add(MapEntry(column.parameter!.type.getDisplayString(withNullability: true), column.paramName));
+        requestFields.add(MapEntry(
+            column.parameter!.type.getDisplayString(withNullability: true), column.paramName));
       } else if (column is ForeignColumnElement) {
         var fieldNullSuffix = column.isNullable ? '?' : '';
         String fieldType;
@@ -147,8 +151,9 @@ class InsertGenerator {
       }
     }
 
-    var constructorParameters =
-        requestFields.map((f) => '${f.key.endsWith('?') ? '' : 'required '}this.${f.value},').join(' ');
+    var constructorParameters = requestFields
+        .map((f) => '${f.key.endsWith('?') ? '' : 'required '}this.${f.value},')
+        .join(' ');
 
     return '''
       ${table.annotateWith ?? ''}

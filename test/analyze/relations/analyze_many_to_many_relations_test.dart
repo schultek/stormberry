@@ -99,7 +99,8 @@ void main() {
 
       expect(
         caller,
-        throwsA('Model B cannot have a many-to-many relation to model A without specifying a primary key.\n'
+        throwsA(
+            'Model B cannot have a many-to-many relation to model A without specifying a primary key.\n'
             'Either define a primary key for B or change the relation by changing field "List<A> a" to have a non-list type.'),
       );
     });

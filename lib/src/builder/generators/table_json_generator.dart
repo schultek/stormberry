@@ -24,7 +24,8 @@ class TableJsonGenerator {
             {
               'type': 'foreign_key',
               'column': column.columnName,
-              'target': '${column.linkedTable.tableName}.${column.linkedTable.primaryKeyColumn!.columnName}',
+              'target':
+                  '${column.linkedTable.tableName}.${column.linkedTable.primaryKeyColumn!.columnName}',
               'on_delete': table.primaryKeyColumn != null ? 'set_null' : 'cascade',
               'on_update': 'cascade',
             },

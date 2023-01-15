@@ -6,8 +6,8 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
   //ignore: prefer_const_constructors
   var schema = DatabaseSchema({});
 
-  var tables = await db
-      .query("SELECT * FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'");
+  var tables = await db.query(
+      "SELECT * FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'");
   for (var row in tables) {
     var tableMap = row.toColumnMap();
     var tableName = tableMap['table_name'] as String;
@@ -15,13 +15,15 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
     var tableScheme = TableSchema(tableName, columns: {}, constraints: [], indexes: []);
     schema.tables[tableName] = tableScheme;
 
-    var columns = await db.query("SELECT * FROM information_schema.columns WHERE table_name = '$tableName'");
+    var columns =
+        await db.query("SELECT * FROM information_schema.columns WHERE table_name = '$tableName'");
     for (var row in columns) {
       var columnMap = row.toColumnMap();
       var columnName = columnMap['column_name'] as String;
       var columnType = columnMap['udt_name'] as String;
       var columnIsNullable = columnMap['is_nullable'];
-      var columnIsAutoIncrement = (columnMap['column_default'] as String?)?.startsWith('nextval') ?? false;
+      var columnIsAutoIncrement =
+          (columnMap['column_default'] as String?)?.startsWith('nextval') ?? false;
       tableScheme.columns[columnName] = ColumnSchema(
         columnName,
         type: columnIsAutoIncrement && columnType == 'int8' ? 'serial' : columnType,
@@ -68,8 +70,12 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
         srcColumns[0] as String,
         constraintMap['target_table'] as String,
         targetColumns[0] as String,
-        constraintMap['delete_rule'] == 'CASCADE' ? ForeignKeyAction.cascade : ForeignKeyAction.setNull,
-        constraintMap['update_rule'] == 'CASCADE' ? ForeignKeyAction.cascade : ForeignKeyAction.setNull,
+        constraintMap['delete_rule'] == 'CASCADE'
+            ? ForeignKeyAction.cascade
+            : ForeignKeyAction.setNull,
+        constraintMap['update_rule'] == 'CASCADE'
+            ? ForeignKeyAction.cascade
+            : ForeignKeyAction.setNull,
       );
     }
     if (constraint != null) {
@@ -85,7 +91,8 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
     var indexMap = row.toColumnMap();
     var indexName = (indexMap['indexname'] as String).substring(2);
     var tableName = indexMap['tablename'];
-    var defRegex = RegExp(r'^CREATE( UNIQUE)? INDEX \w+ ON public.\w+ USING (\w+) \((\w+)\)(?: WHERE (.+))?$');
+    var defRegex =
+        RegExp(r'^CREATE( UNIQUE)? INDEX \w+ ON public.\w+ USING (\w+) \((\w+)\)(?: WHERE (.+))?$');
     var defMatch = defRegex.firstMatch(indexMap['indexdef'] as String);
     if (defMatch == null || defMatch.groupCount != 4) continue;
     var unique = defMatch.group(1) != null;

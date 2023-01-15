@@ -1,4 +1,3 @@
-
 abstract class Transformer {
   const Transformer();
 

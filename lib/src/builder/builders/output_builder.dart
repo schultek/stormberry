@@ -5,7 +5,8 @@ import '../schema.dart';
 import '../utils.dart';
 
 abstract class OutputBuilder implements Builder {
-  OutputBuilder(this.target, BuilderOptions options) : options = GlobalOptions.parse(options.config);
+  OutputBuilder(this.target, BuilderOptions options)
+      : options = GlobalOptions.parse(options.config);
 
   final String target;
   final GlobalOptions options;

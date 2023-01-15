@@ -18,7 +18,8 @@ String buildViewQuery(ViewElement view) {
   for (var viewColumn in columns) {
     String? transform;
     if (viewColumn.transformer != null) {
-      transform = '\${${viewColumn.transformer!}.transform(\'${viewColumn.paramName}\', \'$tableName\')}';
+      transform =
+          '\${${viewColumn.transformer!}.transform(\'${viewColumn.paramName}\', \'$tableName\')}';
     }
 
     var column = viewColumn.column;
@@ -42,18 +43,18 @@ String buildViewQuery(ViewElement view) {
         joins.add(MapEntry(
           transform ?? 'row_to_json("${column.parameter!.name}".*) as "${column.parameter!.name}"',
           'LEFT JOIN $tableReference "${column.parameter!.name}"\n'
-              'ON "$tableName"."$primaryKeyName" = "${column.parameter!.name}"."${column.referencedColumn.columnName}"',
+          'ON "$tableName"."$primaryKeyName" = "${column.parameter!.name}"."${column.referencedColumn.columnName}"',
         ));
       } else {
         joins.add(MapEntry(
           transform ?? '"${column.parameter!.name}"."data" as "${column.parameter!.name}"',
           'LEFT JOIN (\n'
-              '  SELECT "${column.linkedTable.tableName}"."${column.referencedColumn.columnName}",\n'
-              '    to_jsonb(array_agg("${column.linkedTable.tableName}".*)) as data\n'
-              '  FROM $tableReference "${column.linkedTable.tableName}"\n'
-              '  GROUP BY "${column.linkedTable.tableName}"."${column.referencedColumn.columnName}"\n'
-              ') "${column.parameter!.name}"\n'
-              'ON "$tableName"."$primaryKeyName" = "${column.parameter!.name}"."${column.referencedColumn.columnName}"',
+          '  SELECT "${column.linkedTable.tableName}"."${column.referencedColumn.columnName}",\n'
+          '    to_jsonb(array_agg("${column.linkedTable.tableName}".*)) as data\n'
+          '  FROM $tableReference "${column.linkedTable.tableName}"\n'
+          '  GROUP BY "${column.linkedTable.tableName}"."${column.referencedColumn.columnName}"\n'
+          ') "${column.parameter!.name}"\n'
+          'ON "$tableName"."$primaryKeyName" = "${column.parameter!.name}"."${column.referencedColumn.columnName}"',
         ));
       }
     } else if (column is JoinColumnElement) {

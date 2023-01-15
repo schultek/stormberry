@@ -12,7 +12,8 @@ final _baseConverters = <Type, TypeConverter>{
   typeOf<int>(): _PrimitiveTypeConverter<int>((dynamic v) => num.parse(v.toString()).round()),
   typeOf<double>(): _PrimitiveTypeConverter<double>((dynamic v) => double.parse(v.toString())),
   typeOf<num>(): _PrimitiveTypeConverter<num>((dynamic v) => num.parse(v.toString())),
-  typeOf<bool>(): _PrimitiveTypeConverter<bool>((dynamic v) => v is num ? v != 0 : v.toString() == 'true'),
+  typeOf<bool>():
+      _PrimitiveTypeConverter<bool>((dynamic v) => v is num ? v != 0 : v.toString() == 'true'),
   typeOf<DateTime>(): _DateTimeConverter(),
 };
 
@@ -57,7 +58,6 @@ class _DateTimeConverter extends TypeConverter<DateTime> {
 }
 
 class TextEncoder {
-
   TextEncoder();
 
   static TextEncoder i = TextEncoder();
@@ -263,7 +263,8 @@ class _TextEncoder {
   }
 
   String _encodePoint(PgPoint value, QuoteStyle quotes) {
-    return _encodeString('(${_encodeNumber(value.latitude)},${_encodeNumber(value.longitude)})', quotes);
+    return _encodeString(
+        '(${_encodeNumber(value.latitude)},${_encodeNumber(value.longitude)})', quotes);
   }
 
   String _sharedType(List values) {

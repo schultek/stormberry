@@ -22,11 +22,13 @@ class GlobalOptions {
   int lineLength;
 
   GlobalOptions.parse(Map<String, dynamic> options)
-      : tableCaseStyle = CaseStyle.fromString(
-            options['tableCaseStyle'] as String? ?? options['table_case_style'] as String? ?? 'snakeCase'),
-        columnCaseStyle = CaseStyle.fromString(
-            options['columnCaseStyle'] as String? ?? options['column_case_style'] as String? ?? 'snakeCase'),
-        lineLength = options['lineLength'] as int? ?? options['line_length'] as int? ?? 120;
+      : tableCaseStyle = CaseStyle.fromString(options['tableCaseStyle'] as String? ??
+            options['table_case_style'] as String? ??
+            'snakeCase'),
+        columnCaseStyle = CaseStyle.fromString(options['columnCaseStyle'] as String? ??
+            options['column_case_style'] as String? ??
+            'snakeCase'),
+        lineLength = options['lineLength'] as int? ?? options['line_length'] as int? ?? 100;
 }
 
 extension GetNode on Element {
@@ -60,8 +62,9 @@ String? getAnnotationCode(Element annotatedElement, Type annotationType, String 
 
   for (var annotation in annotations) {
     if (annotation.name.name == annotationType.toString()) {
-      var props =
-          annotation.arguments!.arguments.whereType<NamedExpression>().where((e) => e.name.label.name == property);
+      var props = annotation.arguments!.arguments
+          .whereType<NamedExpression>()
+          .where((e) => e.name.label.name == property);
 
       if (props.isNotEmpty) {
         return props.first.expression.toSource();
@@ -154,7 +157,8 @@ String writeImports(Set<Uri> imports, AssetId input) {
   package.sort();
   relative.sort();
 
-  String joined(List<String> s) => s.isNotEmpty ? '${s.map((s) => "import '$s';").join('\n')}\n\n' : '';
+  String joined(List<String> s) =>
+      s.isNotEmpty ? '${s.map((s) => "import '$s';").join('\n')}\n\n' : '';
 
   return joined(sdk) + joined(package) + joined(relative);
 }

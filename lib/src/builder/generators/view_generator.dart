@@ -27,11 +27,13 @@ class ViewGenerator {
         }
       }
 
-      var signature = 'Future<List<${view.entityName}>> query$viewName${viewName.endsWith('s') ? 'e' : ''}s([QueryParams? params])';
+      var signature =
+          'Future<List<${view.entityName}>> query$viewName${viewName.endsWith('s') ? 'e' : ''}s([QueryParams? params])';
       if (abstract) {
         str.writeln('$signature;');
       } else {
-        str.writeln('@override $signature {\nreturn queryMany(${view.entityName}Queryable(), params);\n}');
+        str.writeln(
+            '@override $signature {\nreturn queryMany(${view.entityName}Queryable(), params);\n}');
       }
     }
 

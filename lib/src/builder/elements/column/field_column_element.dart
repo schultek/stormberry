@@ -15,15 +15,15 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
 
   late final bool isAutoIncrement;
 
-  FieldColumnElement(this.parameter, TableElement parentTable, BuilderState state) : super(parentTable, state) {
+  FieldColumnElement(this.parameter, TableElement parentTable, BuilderState state)
+      : super(parentTable, state) {
     isAutoIncrement = (autoIncrementChecker.firstAnnotationOf(parameter) ??
-        autoIncrementChecker.firstAnnotationOf(parameter.getter ?? parameter)) !=
+            autoIncrementChecker.firstAnnotationOf(parameter.getter ?? parameter)) !=
         null;
 
     if (isAutoIncrement && !parameter.type.isDartCoreInt) {
       throw 'The following field is annotated with @AutoIncrement() but has an unallowed type:\n'
-          '  - "${parameter.getDisplayString(withNullability: true)}" in class "${parentTable.element
-          .getDisplayString(withNullability: true)}"\n'
+          '  - "${parameter.getDisplayString(withNullability: true)}" in class "${parentTable.element.getDisplayString(withNullability: true)}"\n'
           'A field annotated with @AutoIncrement() must be of type int.';
     }
   }
@@ -46,7 +46,8 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
   @override
   void checkModifiers() {
     if (modifiers.isNotEmpty) {
-      print('Column field was annotated with "${modifiers.first.toSource()}", which is not supported.\n'
+      print(
+          'Column field was annotated with "${modifiers.first.toSource()}", which is not supported.\n'
           '  - ${parameter.getDisplayString(withNullability: true)}');
     }
   }

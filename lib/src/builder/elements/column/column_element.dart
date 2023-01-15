@@ -25,7 +25,8 @@ abstract class RelationalColumnElement implements ColumnElement {
 
   @override
   void checkModifiers() {
-    var groupedModifiers = modifiers.groupListsBy((m) => Object.hash(m.read('name').objectValue.toSymbolValue(), m.objectValue.type));
+    var groupedModifiers = modifiers.groupListsBy(
+        (m) => Object.hash(m.read('name').objectValue.toSymbolValue(), m.objectValue.type));
     if (groupedModifiers.values.any((l) => l.length > 1)) {
       var duplicated = groupedModifiers.values.where((l) => l.length > 1).first;
       throw 'Column field was annotated with duplicate view modifiers, which is not supported.\n'

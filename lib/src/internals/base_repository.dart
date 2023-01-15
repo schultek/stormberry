@@ -25,7 +25,8 @@ abstract class BaseRepository implements ModelRepository {
   BaseRepository(this.db, {required this.tableName, this.keyName});
 
   Future<T?> queryOne<T, K>(K key, KeyedViewQueryable<T, K> q) async {
-    var params = QueryParams(where: '"${q.tableAlias}"."${q.keyName}" = ${q.encodeKey(key)}', limit: 1);
+    var params =
+        QueryParams(where: '"${q.tableAlias}"."${q.keyName}" = ${q.encodeKey(key)}', limit: 1);
     return (await queryMany(q, params)).firstOrNull;
   }
 
@@ -47,4 +48,3 @@ abstract class BaseRepository implements ModelRepository {
     return transaction(() => action.apply(db, request));
   }
 }
-

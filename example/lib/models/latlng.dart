@@ -1,4 +1,3 @@
-
 import 'package:stormberry/stormberry.dart';
 
 class LatLng {

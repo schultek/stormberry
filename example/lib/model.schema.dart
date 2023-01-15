@@ -18,7 +18,10 @@ abstract class ARepository
 }
 
 class _ARepository extends BaseRepository
-    with RepositoryInsertMixin<AInsertRequest>, RepositoryUpdateMixin<AUpdateRequest>, RepositoryDeleteMixin<String>
+    with
+        RepositoryInsertMixin<AInsertRequest>,
+        RepositoryUpdateMixin<AUpdateRequest>,
+        RepositoryDeleteMixin<String>
     implements ARepository {
   _ARepository(super.db) : super(tableName: 'as', keyName: 'id');
 
@@ -72,7 +75,10 @@ abstract class BRepository
 }
 
 class _BRepository extends BaseRepository
-    with RepositoryInsertMixin<BInsertRequest>, RepositoryUpdateMixin<BUpdateRequest>, RepositoryDeleteMixin<String>
+    with
+        RepositoryInsertMixin<BInsertRequest>,
+        RepositoryUpdateMixin<BUpdateRequest>,
+        RepositoryDeleteMixin<String>
     implements BRepository {
   _BRepository(super.db) : super(tableName: 'bs', keyName: 'id');
 

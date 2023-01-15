@@ -4,16 +4,16 @@ import 'package:build_test/build_test.dart';
 import 'package:build_resolvers/build_resolvers.dart';
 
 Future testBuilder2(
-    Builder builder,
-    Map<String, /*String|List<int>*/ Object> sourceAssets, {
-      Set<String>? generateFor,
-      bool Function(String assetId)? isInput,
-      String? rootPackage,
-      MultiPackageAssetReader? reader,
-      RecordingAssetWriter? writer,
-      ResourceManager? resourceManager,
-      Map<String, /*String|List<int>|Matcher<List<int>>*/ Object>? outputs,
-    }) async {
+  Builder builder,
+  Map<String, /*String|List<int>*/ Object> sourceAssets, {
+  Set<String>? generateFor,
+  bool Function(String assetId)? isInput,
+  String? rootPackage,
+  MultiPackageAssetReader? reader,
+  RecordingAssetWriter? writer,
+  ResourceManager? resourceManager,
+  Map<String, /*String|List<int>|Matcher<List<int>>*/ Object>? outputs,
+}) async {
   writer ??= InMemoryAssetWriter();
 
   var inputIds = {for (var descriptor in sourceAssets.keys) makeAssetId(descriptor)};
@@ -56,7 +56,8 @@ Future testBuilder2(
       WrittenAssetReader(writer, spyForStep),
     ]);
 
-    await runBuilder(builder, {input}, readerForStep, spyForStep, resolvers, resourceManager: resourceManager);
+    await runBuilder(builder, {input}, readerForStep, spyForStep, resolvers,
+        resourceManager: resourceManager);
   }
 
   var actualOutputs = writerSpy.assetsWritten;

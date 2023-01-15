@@ -84,8 +84,10 @@ void printDiff(DatabaseSchemaDiff diff) {
     for (var column in table.columns.modified) {
       var prev = column.prev;
       var newly = column.newly;
-      print("-  COLUMN ${table.name}.${prev.name} ${prev.type} ${prev.isNullable ? 'NULL' : 'NOT NULL'}");
-      print("+  COLUMN ${table.name}.${newly.name} ${newly.type} ${newly.isNullable ? 'NULL' : 'NOT NULL'}");
+      print(
+          "-  COLUMN ${table.name}.${prev.name} ${prev.type} ${prev.isNullable ? 'NULL' : 'NOT NULL'}");
+      print(
+          "+  COLUMN ${table.name}.${newly.name} ${newly.type} ${newly.isNullable ? 'NULL' : 'NOT NULL'}");
     }
 
     for (var column in table.columns.removed) {
@@ -93,11 +95,13 @@ void printDiff(DatabaseSchemaDiff diff) {
     }
 
     for (var constr in table.constraints.added) {
-      print("++ CONSTRAINT ON ${table.name} ${constr.toString().replaceAll(RegExp("[\n\\s]+"), " ")}");
+      print(
+          "++ CONSTRAINT ON ${table.name} ${constr.toString().replaceAll(RegExp("[\n\\s]+"), " ")}");
     }
 
     for (var constr in table.constraints.removed) {
-      print("-- CONSTRAINT ON ${table.name} ${constr.toString().replaceAll(RegExp("[\n\\s]+"), " ")}");
+      print(
+          "-- CONSTRAINT ON ${table.name} ${constr.toString().replaceAll(RegExp("[\n\\s]+"), " ")}");
     }
 
     for (var index in table.indexes.added) {
@@ -142,7 +146,9 @@ class Diff<T, U> {
   List<T> removed = [];
 
   bool hasChanges([bool Function(U modified)? fn]) {
-    return added.isNotEmpty || removed.isNotEmpty || (fn != null ? modified.any(fn) : modified.isNotEmpty);
+    return added.isNotEmpty ||
+        removed.isNotEmpty ||
+        (fn != null ? modified.any(fn) : modified.isNotEmpty);
   }
 }
 

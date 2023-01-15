@@ -1,4 +1,3 @@
-
 import '../core/query_params.dart';
 import 'base_repository.dart';
 
@@ -7,14 +6,14 @@ abstract class ModelRepositoryDelete<DeleteRequest> {
   Future<void> deleteMany(List<DeleteRequest> ids);
 }
 
-
-mixin RepositoryDeleteMixin<DeleteRequest> on BaseRepository implements ModelRepositoryDelete<DeleteRequest> {
+mixin RepositoryDeleteMixin<DeleteRequest> on BaseRepository
+    implements ModelRepositoryDelete<DeleteRequest> {
   Future<void> delete(List<DeleteRequest> keys) async {
     if (keys.isEmpty) return;
     var values = QueryValues();
     await db.query(
       'DELETE FROM "$tableName"\n'
-          'WHERE "$tableName"."$keyName" IN ( ${keys.map((k) => values.add(k)).join(', ')} )',
+      'WHERE "$tableName"."$keyName" IN ( ${keys.map((k) => values.add(k)).join(', ')} )',
       values.values,
     );
   }
