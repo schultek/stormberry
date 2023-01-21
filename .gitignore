@@ -12,4 +12,5 @@ pubspec.lock
 coverage/
 doc/api/
 
+test/**.schema.dart
 
