@@ -14,7 +14,6 @@ Future<DatabaseSchemaDiff> getSchemaDiff(Database db, DatabaseSchema dbSchema) a
     if (newSchema.tables.containsKey(extTable.name)) {
       var newTable = newSchema.tables.remove(extTable.name)!;
       var tableDiff = TableSchemaDiff(newTable.name);
-      diff.tables.modified.add(tableDiff);
 
       for (var extColumn in extTable.columns.values) {
         var newColumn = newTable.columns.values.where((c) => c.name == extColumn.name).firstOrNull;
@@ -58,6 +57,10 @@ Future<DatabaseSchemaDiff> getSchemaDiff(Database db, DatabaseSchema dbSchema) a
 
       for (var newIndex in newTable.indexes) {
         tableDiff.indexes.added.add(newIndex);
+      }
+
+      if (tableDiff.hasChanges) {
+        diff.tables.modified.add(tableDiff);
       }
     } else {
       diff.tables.removed.add(extTable);

@@ -43,9 +43,7 @@ class Database {
         user = user ?? Platform.environment['DB_USERNAME'] ?? DB_USERNAME,
         password = password ?? Platform.environment['DB_PASSWORD'] ?? DB_PASSWORD,
         useSSL = useSSL ?? (Platform.environment['DB_SSL'] != DB_SSL),
-        isUnixSocket = isUnixSocket ?? (Platform.environment['DB_SOCKET'] == DB_SOCKET) {
-    _cachedConnection ??= connection();
-  }
+        isUnixSocket = isUnixSocket ?? (Platform.environment['DB_SOCKET'] == DB_SOCKET);
 
   PostgreSQLConnection connection() {
     return PostgreSQLConnection(
@@ -64,26 +62,24 @@ class Database {
     );
   }
 
-  String get name => _cachedConnection!.databaseName;
-
   Future<void> open() => _tryOpen();
-  Future<void> close() async =>
-      !_cachedConnection!.isClosed ? await _cachedConnection!.close() : null;
+  Future<void> close() async {
+    if (_cachedConnection != null && !_cachedConnection!.isClosed) {
+      await _cachedConnection!.close();
+      _cachedConnection = null;
+    }
+  }
 
   Future<void> _tryOpen() async {
-    if (_cachedConnection!.isClosed) {
-      print(
-          'Database: connecting to ${_cachedConnection!.databaseName} at ${_cachedConnection!.host}...');
-      try {
-        await _cachedConnection!.open();
-      } catch (e) {
-        print('Error on connection: $e');
-        print('Database: retrying connecting...');
-        _cachedConnection = connection();
-        await _cachedConnection!.open();
-      }
-      print('Database: connected');
+    if (_cachedConnection != null && !_cachedConnection!.isClosed) {
+      return;
     }
+
+    var c = connection();
+    print('Database: connecting to ${c.databaseName} at ${c.host}...');
+    await c.open();
+    _cachedConnection = c;
+    print('Database: connected');
   }
 
   Future<PostgreSQLResult> query(String query, [Map<String, dynamic>? values]) async {

@@ -1,4 +1,11 @@
+// ignore_for_file: depend_on_referenced_packages
+
+import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
+
+import 'package:glob/glob.dart';
+import 'package:file/local.dart';
 
 import '../../../stormberry.dart';
 
@@ -34,6 +41,22 @@ class DatabaseSchema {
 
   factory DatabaseSchema.empty() {
     return DatabaseSchema({});
+  }
+
+  static Future<DatabaseSchema> load(String glob) async {
+    var runners = Glob(glob);
+    var files = runners.listFileSystem(LocalFileSystem()).handleError((_) {});
+
+    var schema = DatabaseSchema.empty();
+
+    await for (var file in files) {
+      var schemaMap = jsonDecode(await File.fromUri(file.absolute.uri).readAsString());
+      var targetSchema = DatabaseSchema.fromMap(schemaMap as Map<String, dynamic>);
+
+      schema = schema.mergeWith(targetSchema);
+    }
+
+    return schema;
   }
 
   DatabaseSchema mergeWith(DatabaseSchema targetSchema) {

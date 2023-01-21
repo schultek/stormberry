@@ -14,11 +14,3 @@ mixin RepositoryUpdateMixin<UpdateRequest> on BaseRepository
 
   Future<void> update(List<UpdateRequest> requests);
 }
-
-class UpdateColumns<T, UpdateRequest> {
-  final String columnName;
-  final String columnType;
-  final T Function(UpdateRequest) getValue;
-
-  UpdateColumns(this.columnName, this.columnType, this.getValue);
-}

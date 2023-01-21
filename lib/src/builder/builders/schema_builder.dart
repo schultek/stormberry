@@ -5,7 +5,7 @@ import '../schema.dart';
 import 'output_builder.dart';
 
 class SchemaBuilder extends OutputBuilder {
-  SchemaBuilder(BuilderOptions options) : super('schema', options);
+  SchemaBuilder(BuilderOptions options) : super('dart', options);
 
   @override
   String buildTarget(BuildStep buildStep, AssetState asset) {

@@ -5,10 +5,9 @@ import '../schema.dart';
 import '../utils.dart';
 
 abstract class OutputBuilder implements Builder {
-  OutputBuilder(this.target, BuilderOptions options)
-      : options = GlobalOptions.parse(options.config);
+  OutputBuilder(this.ext, BuilderOptions options) : options = GlobalOptions.parse(options.config);
 
-  final String target;
+  final String ext;
   final GlobalOptions options;
 
   String buildTarget(BuildStep buildStep, AssetState asset);
@@ -26,12 +25,13 @@ abstract class OutputBuilder implements Builder {
       var asset = state.getForAsset(buildStep.inputId);
 
       if (asset != null && asset.tables.isNotEmpty) {
-        var formatter = DartFormatter(pageWidth: options.lineLength);
+        var output = buildTarget(buildStep, asset);
+        if (ext == 'dart') {
+          var formatter = DartFormatter(pageWidth: options.lineLength);
+          output = formatter.format(output);
+        }
 
-        await buildStep.writeAsString(
-          buildStep.inputId.changeExtension('.$target.dart'),
-          formatter.format(buildTarget(buildStep, asset)),
-        );
+        await buildStep.writeAsString(buildStep.inputId.changeExtension('.schema.$ext'), output);
       }
     } catch (e, st) {
       print('\x1B[31mFailed to build database schema:\n\n$e\x1B[0m\n');
@@ -41,6 +41,6 @@ abstract class OutputBuilder implements Builder {
 
   @override
   Map<String, List<String>> get buildExtensions => {
-        '.dart': ['.$target.dart']
+        '.dart': ['.schema.$ext']
       };
 }

@@ -1,8 +1,5 @@
-// ignore_for_file: depend_on_referenced_packages
-
 import 'dart:convert';
 import 'dart:io';
-import 'dart:isolate';
 
 import 'package:args/command_runner.dart';
 import 'package:yaml/yaml.dart';
@@ -12,8 +9,6 @@ import 'migration/differentiator.dart';
 import 'migration/output.dart';
 import 'migration/patcher.dart';
 import 'migration/schema.dart';
-import 'package:glob/glob.dart';
-import 'package:file/local.dart';
 
 class MigrateCommand extends Command<void> {
   MigrateCommand() {
@@ -86,27 +81,7 @@ class MigrateCommand extends Command<void> {
 
     var packageName = loadYaml(await pubspecYaml.readAsString())['name'] as String;
 
-    var runners = Glob('.dart_tool/build/generated/$packageName/lib/**.stormberry.dart');
-
-    var files = runners.listFileSystem(LocalFileSystem());
-
-    var schema = DatabaseSchema.empty();
-
-    await for (var file in files) {
-      var port = ReceivePort();
-      await Isolate.spawnUri(
-        file.absolute.uri,
-        [],
-        port.sendPort,
-        packageConfig: Uri.parse('.dart_tool/package_config.json'),
-        //automaticPackageResolution: true,
-      );
-
-      var schemaMap = jsonDecode(await port.first as String);
-      var targetSchema = DatabaseSchema.fromMap(schemaMap as Map<String, dynamic>);
-
-      schema = schema.mergeWith(targetSchema);
-    }
+    var schema = await DatabaseSchema.load('.dart_tool/build/generated/$packageName/lib/**.schema.json');
 
     if (schema.tables.isEmpty) {
       print('Could not run migration, because there are no models found. Did you run the build?');
@@ -141,7 +116,7 @@ class MigrateCommand extends Command<void> {
 
     await db.open();
 
-    print('Getting schema changes of ${db.name}');
+    print('Getting schema changes of ${dbName}');
     print('=========================');
 
     var diff = await getSchemaDiff(db, schema);

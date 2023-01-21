@@ -10,7 +10,7 @@ on:
       - main
       - develop
 
-jobs:  
+jobs:
   test:
     name: Analyze and Test
     runs-on: ubuntu-latest
@@ -26,13 +26,21 @@ jobs:
       - name: Check formatting
         run: dart format . --set-exit-if-changed --line-length=100
 
+      - name: Run Code Gen
+        run: dart run build_runner build
+
       - name: Lint
         run: dart analyze . --fatal-infos
 
-      - name: Run Unit tests
-        run: |
-          dart test --coverage=coverage
-          dart pub global run coverage:format_coverage --check-ignore --packages=.dart_tool/package_config.json --report-on=lib --lcov -o "./coverage/lcov.info" -i ./coverage
+      - name: Pull Postgres Image
+        run: docker pull postgres:latest
+
+      - name: Run Tests
+        run: dart test --concurrency=1 --coverage=coverage
+
+      - name: Format Coverage
+        run: dart pub global run coverage:format_coverage --check-ignore --packages=.dart_tool/package_config.json --report-on=lib --lcov -o "./coverage/lcov.info" -i ./coverage
+           # genhtml coverage/lcov.info -o coverage/report
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v3
