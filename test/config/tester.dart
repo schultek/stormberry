@@ -8,12 +8,16 @@ class StormberryTester {
   late Database db;
 }
 
-
 StormberryTester useTester({String? schema, bool cleanup = false}) {
   var tester = StormberryTester();
 
   setUp(() async {
-    tester.db = Database(host: 'localhost', port: 5432, database: 'postgres', user: 'postgres', password: 'postgres');
+    tester.db = Database(
+        host: 'localhost',
+        port: 5432,
+        database: 'postgres',
+        user: 'postgres',
+        password: 'postgres');
     if (schema != null) {
       await tester.db.migrateTo(schema);
     }
@@ -31,7 +35,7 @@ StormberryTester useTester({String? schema, bool cleanup = false}) {
 }
 
 extension SchemaChanger on Database {
-  Future<DatabaseSchemaDiff> migrateTo(String glob, {bool log = true})async {
+  Future<DatabaseSchemaDiff> migrateTo(String glob, {bool log = true}) async {
     var schema = await DatabaseSchema.load(
       '.dart_tool/build/generated/stormberry/test/$glob.schema.json',
     );

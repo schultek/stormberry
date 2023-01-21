@@ -81,7 +81,8 @@ class MigrateCommand extends Command<void> {
 
     var packageName = loadYaml(await pubspecYaml.readAsString())['name'] as String;
 
-    var schema = await DatabaseSchema.load('.dart_tool/build/generated/$packageName/lib/**.schema.json');
+    var schema =
+        await DatabaseSchema.load('.dart_tool/build/generated/$packageName/lib/**.schema.json');
 
     if (schema.tables.isEmpty) {
       print('Could not run migration, because there are no models found. Did you run the build?');

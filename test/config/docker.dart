@@ -48,8 +48,7 @@ void usePostgresDocker() {
       ];
       final res = await dp.exec(args);
       if (res.exitCode != 0) {
-        final message =
-            'Failed to setup PostgreSQL database due to the following error:\n'
+        final message = 'Failed to setup PostgreSQL database due to the following error:\n'
             '${res.stderr}';
         throw ProcessException(
           'docker exec $_kContainerName',
@@ -71,11 +70,7 @@ Future<bool> _isPostgresContainerRunning() async {
     'docker',
     ['ps', '--format', '{{.Names}}'],
   );
-  return pr.stdout
-      .toString()
-      .split('\n')
-      .map((s) => s.trim())
-      .contains(_kContainerName);
+  return pr.stdout.toString().split('\n').map((s) => s.trim()).contains(_kContainerName);
 }
 
 // This setup supports old and new test

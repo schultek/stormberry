@@ -32,6 +32,5 @@ void testMigrations() {
       expect(diff2Cols.added, hasLength(1));
       expect(diff2Cols.added.first.name, equals('rating'));
     });
-
   });
 }
