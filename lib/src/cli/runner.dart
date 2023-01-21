@@ -117,7 +117,7 @@ class MigrateCommand extends Command<void> {
 
     await db.open();
 
-    print('Getting schema changes of ${dbName}');
+    print('Getting schema changes of $dbName');
     print('=========================');
 
     var diff = await getSchemaDiff(db, schema);

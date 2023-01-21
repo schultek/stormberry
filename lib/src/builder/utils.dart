@@ -2,9 +2,7 @@ import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
-import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
-import 'package:path/path.dart' as path;
 import '../../stormberry.dart';
 import '../core/case_style.dart';
 
