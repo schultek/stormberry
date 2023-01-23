@@ -1,3 +1,19 @@
+# 0.10.0
+
+- [BREAKING] Switched to generating `part` files for each model.
+  - Migrate by adding `part <myfile>.schema.dart` on top of each model file.
+- [BREAKING] Changed how **View**s are defined.
+  - The `@Model()` annotation now only defines the names of existing views as `Symbol`s: 
+    `@Model(views: [#Full, #Reduced, #Other])`.
+  - Field modifications are done by annotating the specific field with either `@HiddenIn(#MyView)`, 
+    `@ViewedIn(#MyView, as: #OtherView)` and `@TransformedIn(#MyView, by: MyTransformer())`.
+- The CLI supports setting connection values via command args or prompts missing values.
+- Views are now virtual (queries) and not written to the database. This enables more flexibility for queries 
+  and fixes some migration issues.
+- All query inputs are now properly parameterized to prevent sql injections.
+- [BREAKING] The `on conflict` clause for inserts is removed. Inserts now fail when a given key already exists.
+- Added proper testing.
+
 # 0.9.2
 
 - Fixed bug with email encoding.

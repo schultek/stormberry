@@ -1,6 +1,5 @@
 import 'package:build/build.dart';
 import 'package:build_test/build_test.dart';
-// ignore: depend_on_referenced_packages
 import 'package:build_resolvers/build_resolvers.dart';
 
 Future testBuilder2(
