@@ -88,6 +88,10 @@ extension ReaderSource on ConstantReader {
       return literalValue!.toString();
     }
 
+    if (isType) {
+      return typeValue.getDisplayString(withNullability: true);
+    }
+
     var rev = revive();
 
     var str = '';
