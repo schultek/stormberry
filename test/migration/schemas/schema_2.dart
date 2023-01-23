@@ -10,10 +10,13 @@ abstract class Author {
   String get name;
 }
 
-@Model()
+@Model(indexes: [
+  TableIndex(name: 'rating_index', columns: ['rating'])
+])
 abstract class Book {
+  @AutoIncrement()
   @PrimaryKey()
-  String get id;
+  int get id;
 
   String get title;
 

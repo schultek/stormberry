@@ -26,7 +26,9 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
           (columnMap['column_default'] as String?)?.startsWith('nextval') ?? false;
       tableScheme.columns[columnName] = ColumnSchema(
         columnName,
-        type: columnIsAutoIncrement && columnType == 'int8' ? 'serial' : columnType,
+        type: columnIsAutoIncrement && (columnType == 'int4' || columnType == 'int8')
+            ? 'serial'
+            : columnType,
         isNullable: columnIsNullable == 'YES',
         isAutoIncrement: columnIsAutoIncrement,
       );

@@ -31,6 +31,13 @@ void testMigrations() {
       expect(diff2Cols.modified, isEmpty);
       expect(diff2Cols.added, hasLength(1));
       expect(diff2Cols.added.first.name, equals('rating'));
+
+      var diff2Idx = diff2.tables.modified.first.indexes;
+
+      expect(diff2Idx.removed, isEmpty);
+      expect(diff2Idx.modified, isEmpty);
+      expect(diff2Idx.added, hasLength(1));
+      expect(diff2Idx.added.first.name, equals('rating_index'));
     });
   });
 }

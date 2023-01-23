@@ -12,8 +12,9 @@ abstract class Author {
 
 @Model()
 abstract class Book {
+  @AutoIncrement()
   @PrimaryKey()
-  String get id;
+  int get id;
 
   String get title;
 
