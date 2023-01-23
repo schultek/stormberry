@@ -2,6 +2,7 @@ import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:source_gen/source_gen.dart';
 import '../../stormberry.dart';
 import '../core/case_style.dart';
@@ -89,7 +90,8 @@ extension ReaderSource on ConstantReader {
     }
 
     if (isType) {
-      return typeValue.getDisplayString(withNullability: true);
+      return typeValue.getDisplayString(
+          withNullability: typeValue.nullabilitySuffix != NullabilitySuffix.star);
     }
 
     var rev = revive();
