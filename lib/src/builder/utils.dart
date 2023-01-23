@@ -85,6 +85,8 @@ extension ReaderSource on ConstantReader {
     if (isLiteral) {
       if (isString) {
         return "'$literalValue'";
+      } else if (isList) {
+        return '[${listValue.map((o) => o.toSource()).join(', ')}]';
       }
       return literalValue!.toString();
     }
