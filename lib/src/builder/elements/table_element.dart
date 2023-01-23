@@ -30,7 +30,7 @@ class TableElement {
   late FieldElement? primaryKeyParameter;
   late Map<String, ViewElement> views;
   late List<IndexElement> indexes;
-  String? annotateWith;
+  ConstantReader? meta;
 
   TableElement(this.element, this.annotation, this.state) {
     tableName = _getTableName();
@@ -57,8 +57,8 @@ class TableElement {
       return IndexElement(this, o);
     }).toList();
 
-    if (!annotation.read('annotateWith').isNull) {
-      annotateWith = '@${annotation.read('annotateWith').toSource()}';
+    if (!annotation.read('meta').isNull) {
+      meta = annotation.read('meta');
     }
   }
 

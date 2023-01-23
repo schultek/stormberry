@@ -1,3 +1,4 @@
+/// Specify a converter to be used for the annotated field.
 class UseConverter {
   final TypeConverter converter;
 

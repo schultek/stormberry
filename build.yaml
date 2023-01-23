@@ -5,13 +5,14 @@ builders:
     build_extensions: { ".dart": ["___"] }
     auto_apply: dependents
     build_to: cache
-    runs_before: ["stormberry|schema", "stormberry|runner"]
+    runs_before: [":schema", ":runner"]
   schema:
     import: "package:stormberry/builder.dart"
     builder_factories: [ "buildSchema" ]
     build_extensions: { ".dart": [ ".schema.dart" ] }
     auto_apply: dependents
     build_to: source
+    runs_before: ["dart_mappable_builder", "freezed", "json_serializable"]
   runner:
     import: "package:stormberry/builder.dart"
     builder_factories: [ "buildRunner" ]

@@ -148,8 +148,7 @@ class UpdateGenerator {
         .join(' ');
 
     return '''
-      ${table.annotateWith ?? ''}
-      class $requestClassName {
+      ${defineClassWithMeta(requestClassName, table.meta?.read('update'))}
         $requestClassName(${constructorParameters.isNotEmpty ? '{$constructorParameters}' : ''});
         
         ${requestFields.map((f) => '${f.key} ${f.value};').join('\n')}

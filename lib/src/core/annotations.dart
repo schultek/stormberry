@@ -3,35 +3,82 @@ import 'transformer.dart';
 
 /// Used to annotate a class as a database model
 class Model {
+  /// The list of views this model defined.
   final List<Symbol> views;
+
+  /// A list of indexes that should be created for this table.
   final List<TableIndex> indexes;
+
+  /// A custom name for this table.
   final String? tableName;
-  final dynamic annotateWith;
+
+  /// Metadata for the generated classes in order to use serialization for these classes.
+  final ModelMeta? meta;
 
   const Model({
     this.views = const [],
     this.indexes = const [],
     this.tableName,
-    this.annotateWith,
+    this.meta,
   });
 }
 
+/// Metadata for the generated classes in order to use serialization for these classes.
+class ModelMeta {
+  /// Metadata for the insert request class.
+  final ClassMeta? insert;
+
+  /// Metadata for the update request class.
+  final ClassMeta? update;
+
+  /// Metadata for the view classes.
+  final ClassMeta? view;
+
+  const ModelMeta({this.insert, this.update, this.view});
+
+  const ModelMeta.all(ClassMeta meta)
+      : insert = meta,
+        update = meta,
+        view = meta;
+}
+
+/// Metadata for a generated class.
+class ClassMeta {
+  /// An annotation to be applied to the generated class.
+  final Object? annotation;
+
+  /// Additional mixins for the generated class.
+  final String? mixin;
+
+  /// Extends clause for the generated class.
+  final String? extend;
+
+  /// Additional interfaces for the generated class.
+  final String? implement;
+
+  const ClassMeta({this.annotation, this.mixin, this.extend, this.implement});
+}
+
+/// Base class for the view modifiers.
 class ChangedIn {
   final Symbol name;
 
   const ChangedIn(this.name);
 }
 
+/// Hides the annotated field in the given view.
 class HiddenIn extends ChangedIn {
   const HiddenIn(Symbol name) : super(name);
 }
 
+/// Modified the annotated field in the given view.
 class ViewedIn extends ChangedIn {
   final Symbol as;
 
   const ViewedIn(Symbol name, {required this.as}) : super(name);
 }
 
+/// Applies the transformer on the annotated field in the given view.
 class TransformedIn extends ChangedIn {
   final Transformer by;
 
@@ -99,5 +146,6 @@ class TableIndex {
       condition.hashCode;
 }
 
+/// The algorithm for an index.
 // ignore: constant_identifier_names
 enum IndexAlgorithm { BTREE, GIST, HASH, GIN, BRIN, SPGIST }

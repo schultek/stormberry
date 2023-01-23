@@ -123,3 +123,23 @@ extension ReaderSource on ConstantReader {
     return str;
   }
 }
+
+String defineClassWithMeta(String className, ConstantReader? meta, {String? mixin}) {
+  if (meta == null || meta.isNull) {
+    return 'class $className${mixin != null ? ' with $mixin' : ''} {\n';
+  }
+
+  String readClause(String field, String keyword, [String? additional]) {
+    var items = [
+      if (!meta.read(field).isNull) meta.read(field).stringValue.replaceAll('{name}', className),
+      if (additional != null) additional,
+    ];
+    return items.isEmpty ? '' : ' $keyword ${items.join(', ')}';
+  }
+
+  var annotation = meta.read('annotation').isNull ? '' : '@${meta.read('annotation').toSource()}\n';
+  var extendClause = readClause('extend', 'extends');
+  var withClause = readClause('mixin', 'with', mixin);
+  var implementClause = readClause('implement', 'implements');
+  return '${annotation}class $className$extendClause$withClause$implementClause {\n';
+}

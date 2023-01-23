@@ -48,8 +48,6 @@ class ViewGenerator {
     var hasKey = view.table.primaryKeyColumn != null;
     var keyType = hasKey ? view.table.primaryKeyColumn!.dartType : null;
 
-    var implementsBase = view.name.isEmpty;
-
     return '''
       class ${view.entityName}Queryable extends ${hasKey ? 'Keyed' : ''}ViewQueryable<${view.entityName}${hasKey ? ', $keyType' : ''}> {
         ${hasKey ? '''
@@ -70,11 +68,10 @@ class ViewGenerator {
         ${view.entityName} decode(TypedMap map) => ${view.className}(${view.columns.map((c) => '${c.paramName}: ${_getInitializer(c)}').join(',')});
       }
       
-      ${view.table.annotateWith ?? ''}
-      class ${view.className}${implementsBase ? ' with ${view.table.element.name}' : ''} {
+      ${defineClassWithMeta(view.className, view.table.meta?.read('view'), mixin: view.isDefaultView ? view.table.element.name : null)}
         ${view.className}(${view.columns.isEmpty ? '' : '{${view.columns.map((c) => '${c.isNullable ? '' : 'required '}this.${c.paramName}').join(', ')},}'});
         
-        ${view.columns.map((c) => '${implementsBase ? '@override ' : ''}final ${c.dartType} ${c.paramName};').join('\n')}
+        ${view.columns.map((c) => '${view.isDefaultView ? '@override ' : ''}final ${c.dartType} ${c.paramName};').join('\n')}
       }
     ''';
   }
