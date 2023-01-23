@@ -90,7 +90,7 @@ abstract class ColumnElement {
   Map<String, dynamic> toMap();
 }
 
-String getSqlType(DartType type) {
+String? getSqlType(DartType type) {
   if (type.isDartCoreString) {
     return 'text';
   } else if (type.isDartCoreInt) {
@@ -104,6 +104,6 @@ String getSqlType(DartType type) {
   } else if (type.element?.name == 'PgPoint') {
     return 'point';
   } else {
-    return 'jsonb';
+    return null;
   }
 }

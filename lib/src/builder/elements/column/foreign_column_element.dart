@@ -21,7 +21,7 @@ class ForeignColumnElement extends ColumnElement
       : super(parentTable, state);
 
   @override
-  String get sqlType => getSqlType(linkedTable.primaryKeyParameter!.type);
+  String get sqlType => getSqlType(linkedTable.primaryKeyParameter!.type)!;
 
   @override
   String get paramName => CaseStyle.camelCase.transform(columnName);

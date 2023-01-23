@@ -34,7 +34,7 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
       var type = converter!.type as InterfaceType;
       var converterType = type.superclass!.typeArguments[0];
 
-      if (dataType != converterType) {
+      if (dataType.element != converterType.element) {
         throw 'The following field is annotated with @UseConverter(...) with a custom converter '
             'that has a different type than the field:\n'
             '  - Field "${parameter.getDisplayString(withNullability: true)}" in class "${parentTable.element.getDisplayString(withNullability: true)}"\n'
@@ -75,7 +75,14 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
     if (converter != null) {
       type += ConstantReader(converter).read('type').stringValue;
     } else {
-      type += getSqlType(dataType);
+      var t = getSqlType(dataType);
+      if (t != null) {
+        type += t;
+      } else {
+        throw 'The following field has an unsupported type:\n'
+            '  - Field "${parameter.getDisplayString(withNullability: true)}" in class "${parentTable.element.getDisplayString(withNullability: true)}"\n'
+            'Either change the type to a supported column type, make the class a [Model] or use a custom [TypeConverter] with [@UseConverter].';
+      }
     }
     return type;
   }
