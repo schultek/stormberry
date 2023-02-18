@@ -1,3 +1,9 @@
+# 0.11.0
+
+- Fixed wrong column types in update query.
+- Improved handling of auto-increment ids.
+- Added `ModelMeta` annotation to customize generated entity classes.
+
 # 0.10.0
 
 - [BREAKING] Switched to generating `part` files for each model.
