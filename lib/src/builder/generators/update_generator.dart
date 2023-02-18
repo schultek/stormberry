@@ -69,9 +69,9 @@ class UpdateGenerator {
 
     String toUpdateValue(NamedColumnElement c) {
       if (c.converter != null) {
-        return '\${values.add(${c.converter!.toSource()}.tryEncode(r.${c.paramName}))}';
+        return '\${values.add(${c.converter!.toSource()}.tryEncode(r.${c.paramName}))}:${c.rawSqlType}';
       } else {
-        return '\${values.add(r.${c.paramName})}';
+        return '\${values.add(r.${c.paramName})}:${c.rawSqlType}';
       }
     }
 
@@ -94,7 +94,7 @@ class UpdateGenerator {
           var values = QueryValues();
           await db.query(
             'UPDATE "${table.tableName}"\\n'
-            'SET ${setColumns.map((c) => '"${c.columnName}" = COALESCE(UPDATED."${c.columnName}"::${c.sqlType}, "${table.tableName}"."${c.columnName}")').join(', ')}\\n'
+            'SET ${setColumns.map((c) => '"${c.columnName}" = COALESCE(UPDATED."${c.columnName}", "${table.tableName}"."${c.columnName}")').join(', ')}\\n'
             'FROM ( VALUES \${requests.map((r) => '( ${updateColumns.map(toUpdateValue).join(', ')} )').join(', ')} )\\n'
             'AS UPDATED(${updateColumns.map((c) => '"${c.columnName}"').join(', ')})\\n'
             'WHERE $whereClause',

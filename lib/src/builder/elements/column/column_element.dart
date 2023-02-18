@@ -12,6 +12,7 @@ abstract class NamedColumnElement implements ParameterColumnElement {
   String get columnName;
   bool get isNullable;
   String get sqlType;
+  String get rawSqlType;
 }
 
 abstract class RelationalColumnElement implements ColumnElement {

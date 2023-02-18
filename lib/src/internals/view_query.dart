@@ -11,17 +11,15 @@ abstract class ViewQueryable<T> {
 
   T decode(TypedMap map);
 
-  T Function(dynamic v) get decoder {
-    return (v) {
-      if (v is T) return v;
-      if (v is Map) return decode(TypedMap(v.cast<String, dynamic>()));
-      if (v is String) {
-        try {
-          decoder(jsonDecode(v));
-        } catch (_) {}
-      }
-      throw 'Cannot decode value of type ${v.runtimeType} to $T';
-    };
+  T decoder(dynamic v) {
+    if (v is T) return v;
+    if (v is Map) return decode(TypedMap(v.cast<String, dynamic>()));
+    if (v is String) {
+      try {
+        decoder(jsonDecode(v));
+      } catch (_) {}
+    }
+    throw 'Cannot decode value of type ${v.runtimeType} to $T';
   }
 }
 

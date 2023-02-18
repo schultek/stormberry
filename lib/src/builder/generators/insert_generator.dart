@@ -24,7 +24,7 @@ class InsertGenerator {
           if (c is ForeignColumnElement) {
             if (c.linkedTable == table) {
               if (table.primaryKeyColumn!.isAutoIncrement) {
-                return '${c.paramName}: TextEncoder.i.decode(autoIncrements[requests.indexOf(r)][\'${table.primaryKeyColumn!.columnName}\'])';
+                return '${c.paramName}: result[requests.indexOf(r)]';
               } else {
                 return '${c.paramName}: r.${table.primaryKeyColumn!.paramName}';
               }
@@ -48,7 +48,7 @@ class InsertGenerator {
           if (c is ForeignColumnElement) {
             if (c.linkedTable == table) {
               if (table.primaryKeyColumn!.isAutoIncrement) {
-                return '${c.paramName}: TextEncoder.i.decode(autoIncrements[requests.indexOf(r)][\'${table.primaryKeyColumn!.columnName}\'])';
+                return '${c.paramName}: result[requests.indexOf(r)]';
               } else {
                 return '${c.paramName}: r.${table.primaryKeyColumn!.paramName}';
               }
@@ -70,34 +70,26 @@ class InsertGenerator {
       }
     }
 
-    var autoIncrementCols =
-        table.columns.whereType<FieldColumnElement>().where((c) => c.isAutoIncrement);
     String? autoIncrementStatement, keyReturnStatement;
 
-    if (autoIncrementCols.isNotEmpty) {
+    if (table.primaryKeyColumn?.isAutoIncrement ?? false) {
+      var name = table.primaryKeyColumn!.columnName;
       autoIncrementStatement = '''
-        var rows = await db.query(requests
-          .map((r) => "SELECT ${autoIncrementCols.map((c) => "nextval('${c.parentTable.tableName}_${c.columnName}_seq') as \\\"${c.columnName}\\\"").join(', ')}")
-          .join('\\nUNION ALL\\n')
-        );
-        var autoIncrements = rows.map((r) => r.toColumnMap()).toList();
+        var result = rows.map<int>((r) => TextEncoder.i.decode(r.toColumnMap()['$name'])).toList();
       ''';
 
-      if (table.primaryKeyColumn?.isAutoIncrement ?? false) {
-        keyReturnStatement =
-            "return autoIncrements.map<int>((m) => TextEncoder.i.decode(m['${table.primaryKeyColumn!.columnName}'])).toList();";
-      }
+      keyReturnStatement = 'return result;';
     }
 
-    var insertColumns = table.columns.whereType<NamedColumnElement>();
+    var insertColumns = table.columns
+        .whereType<NamedColumnElement>()
+        .where((c) => c is! FieldColumnElement || !c.isAutoIncrement);
 
     String toInsertValue(NamedColumnElement c) {
-      if (c is FieldColumnElement && c.isAutoIncrement) {
-        return '\${values.add(autoIncrements[requests.indexOf(r)][\'${c.columnName}\'])}';
-      } else if (c.converter != null) {
-        return '\${values.add(${c.converter!.toSource()}.tryEncode(r.${c.paramName}))}';
+      if (c.converter != null) {
+        return '\${values.add(${c.converter!.toSource()}.tryEncode(r.${c.paramName}))}:${c.rawSqlType}';
       } else {
-        return '\${values.add(r.${c.paramName}${c.converter != null ? ', ${c.converter!.toSource()}' : ''})}';
+        return '\${values.add(r.${c.paramName}${c.converter != null ? ', ${c.converter!.toSource()}' : ''})}:${c.rawSqlType}';
       }
     }
 
@@ -105,13 +97,14 @@ class InsertGenerator {
       @override
       Future<${keyReturnStatement != null ? 'List<int>' : 'void'}> insert(List<${table.element.name}InsertRequest> requests) async {
         if (requests.isEmpty) return${keyReturnStatement != null ? ' []' : ''};
-        ${autoIncrementStatement ?? ''}
         var values = QueryValues();
-        await db.query(
+        ${autoIncrementStatement != null ? 'var rows = ' : ''}await db.query(
           'INSERT INTO "${table.tableName}" ( ${insertColumns.map((c) => '"${c.columnName}"').join(', ')} )\\n'
-          'VALUES \${requests.map((r) => '( ${insertColumns.map(toInsertValue).join(', ')} )').join(', ')}\\n',
+          'VALUES \${requests.map((r) => '( ${insertColumns.map(toInsertValue).join(', ')} )').join(', ')}\\n'
+          ${autoIncrementStatement != null ? "'RETURNING \"${table.primaryKeyColumn!.columnName}\"'" : ''},
           values.values,
         );
+        ${autoIncrementStatement ?? ''}
         ${deepInserts.isNotEmpty ? deepInserts.join() : ''}
         ${keyReturnStatement ?? ''}
       }

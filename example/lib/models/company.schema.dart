@@ -49,13 +49,13 @@ class _CompanyRepository extends BaseRepository
   @override
   Future<void> insert(List<CompanyInsertRequest> requests) async {
     if (requests.isEmpty) return;
-
     var values = QueryValues();
     await db.query(
       'INSERT INTO "companies" ( "id", "name" )\n'
-      'VALUES ${requests.map((r) => '( ${values.add(r.id)}, ${values.add(r.name)} )').join(', ')}\n',
+      'VALUES ${requests.map((r) => '( ${values.add(r.id)}:text, ${values.add(r.name)}:text )').join(', ')}\n',
       values.values,
     );
+
     await db.billingAddresses.insertMany(requests.expand((r) {
       return r.addresses.map((rr) => BillingAddressInsertRequest(
           city: rr.city,
@@ -73,8 +73,8 @@ class _CompanyRepository extends BaseRepository
     var values = QueryValues();
     await db.query(
       'UPDATE "companies"\n'
-      'SET "name" = COALESCE(UPDATED."name"::text, "companies"."name")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}, ${values.add(r.name)} )').join(', ')} )\n'
+      'SET "name" = COALESCE(UPDATED."name", "companies"."name")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:text, ${values.add(r.name)}:text )').join(', ')} )\n'
       'AS UPDATED("id", "name")\n'
       'WHERE "companies"."id" = UPDATED."id"',
       values.values,

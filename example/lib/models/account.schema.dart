@@ -61,27 +61,26 @@ class _AccountRepository extends BaseRepository
   @override
   Future<List<int>> insert(List<AccountInsertRequest> requests) async {
     if (requests.isEmpty) return [];
-    var rows = await db.query(
-        requests.map((r) => "SELECT nextval('accounts_id_seq') as \"id\"").join('\nUNION ALL\n'));
-    var autoIncrements = rows.map((r) => r.toColumnMap()).toList();
-
     var values = QueryValues();
-    await db.query(
-      'INSERT INTO "accounts" ( "id", "first_name", "last_name", "location", "company_id" )\n'
-      'VALUES ${requests.map((r) => '( ${values.add(autoIncrements[requests.indexOf(r)]['id'])}, ${values.add(r.firstName)}, ${values.add(r.lastName)}, ${values.add(LatLngConverter().tryEncode(r.location))}, ${values.add(r.companyId)} )').join(', ')}\n',
+    var rows = await db.query(
+      'INSERT INTO "accounts" ( "first_name", "last_name", "location", "company_id" )\n'
+      'VALUES ${requests.map((r) => '( ${values.add(r.firstName)}:text, ${values.add(r.lastName)}:text, ${values.add(LatLngConverter().tryEncode(r.location))}:point, ${values.add(r.companyId)}:text )').join(', ')}\n'
+      'RETURNING "id"',
       values.values,
     );
+    var result = rows.map<int>((r) => TextEncoder.i.decode(r.toColumnMap()['id'])).toList();
+
     await db.billingAddresses.insertMany(requests.where((r) => r.billingAddress != null).map((r) {
       return BillingAddressInsertRequest(
           city: r.billingAddress!.city,
           postcode: r.billingAddress!.postcode,
           name: r.billingAddress!.name,
           street: r.billingAddress!.street,
-          accountId: TextEncoder.i.decode(autoIncrements[requests.indexOf(r)]['id']),
+          accountId: result[requests.indexOf(r)],
           companyId: null);
     }).toList());
 
-    return autoIncrements.map<int>((m) => TextEncoder.i.decode(m['id'])).toList();
+    return result;
   }
 
   @override
@@ -90,8 +89,8 @@ class _AccountRepository extends BaseRepository
     var values = QueryValues();
     await db.query(
       'UPDATE "accounts"\n'
-      'SET "first_name" = COALESCE(UPDATED."first_name"::text, "accounts"."first_name"), "last_name" = COALESCE(UPDATED."last_name"::text, "accounts"."last_name"), "location" = COALESCE(UPDATED."location"::point, "accounts"."location"), "company_id" = COALESCE(UPDATED."company_id"::text, "accounts"."company_id")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}, ${values.add(r.firstName)}, ${values.add(r.lastName)}, ${values.add(LatLngConverter().tryEncode(r.location))}, ${values.add(r.companyId)} )').join(', ')} )\n'
+      'SET "first_name" = COALESCE(UPDATED."first_name", "accounts"."first_name"), "last_name" = COALESCE(UPDATED."last_name", "accounts"."last_name"), "location" = COALESCE(UPDATED."location", "accounts"."location"), "company_id" = COALESCE(UPDATED."company_id", "accounts"."company_id")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:int8, ${values.add(r.firstName)}:text, ${values.add(r.lastName)}:text, ${values.add(LatLngConverter().tryEncode(r.location))}:point, ${values.add(r.companyId)}:text )').join(', ')} )\n'
       'AS UPDATED("id", "first_name", "last_name", "location", "company_id")\n'
       'WHERE "accounts"."id" = UPDATED."id"',
       values.values,

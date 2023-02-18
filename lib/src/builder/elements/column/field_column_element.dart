@@ -70,6 +70,11 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
     if (isAutoIncrement) {
       return 'serial';
     }
+    return rawSqlType;
+  }
+
+  @override
+  String get rawSqlType {
     var type = isList ? '_' : '';
 
     if (converter != null) {

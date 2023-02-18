@@ -49,11 +49,10 @@ class _PartyRepository extends BaseRepository
   @override
   Future<void> insert(List<PartyInsertRequest> requests) async {
     if (requests.isEmpty) return;
-
     var values = QueryValues();
     await db.query(
       'INSERT INTO "parties" ( "id", "name", "sponsor_id", "date" )\n'
-      'VALUES ${requests.map((r) => '( ${values.add(r.id)}, ${values.add(r.name)}, ${values.add(r.sponsorId)}, ${values.add(r.date)} )').join(', ')}\n',
+      'VALUES ${requests.map((r) => '( ${values.add(r.id)}:text, ${values.add(r.name)}:text, ${values.add(r.sponsorId)}:text, ${values.add(r.date)}:int8 )').join(', ')}\n',
       values.values,
     );
   }
@@ -64,8 +63,8 @@ class _PartyRepository extends BaseRepository
     var values = QueryValues();
     await db.query(
       'UPDATE "parties"\n'
-      'SET "name" = COALESCE(UPDATED."name"::text, "parties"."name"), "sponsor_id" = COALESCE(UPDATED."sponsor_id"::text, "parties"."sponsor_id"), "date" = COALESCE(UPDATED."date"::int8, "parties"."date")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}, ${values.add(r.name)}, ${values.add(r.sponsorId)}, ${values.add(r.date)} )').join(', ')} )\n'
+      'SET "name" = COALESCE(UPDATED."name", "parties"."name"), "sponsor_id" = COALESCE(UPDATED."sponsor_id", "parties"."sponsor_id"), "date" = COALESCE(UPDATED."date", "parties"."date")\n'
+      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:text, ${values.add(r.name)}:text, ${values.add(r.sponsorId)}:text, ${values.add(r.date)}:int8 )').join(', ')} )\n'
       'AS UPDATED("id", "name", "sponsor_id", "date")\n'
       'WHERE "parties"."id" = UPDATED."id"',
       values.values,
