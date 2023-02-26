@@ -6,6 +6,7 @@ import 'package:source_gen/source_gen.dart';
 
 import '../../core/case_style.dart';
 import '../schema.dart';
+import '../utils.dart';
 import 'column/column_element.dart';
 import 'column/field_column_element.dart';
 import 'column/foreign_column_element.dart';
@@ -13,7 +14,6 @@ import 'column/join_column_element.dart';
 import 'column/reference_column_element.dart';
 import 'index_element.dart';
 import 'join_table_element.dart';
-import '../utils.dart';
 import 'view_element.dart';
 
 extension EnumType on DartType {
@@ -225,6 +225,12 @@ class TableElement {
 
   FieldElement? findMatchingParam(FieldElement param) {
     // TODO add binding
+
+    if (allFields.contains(param)) {
+      // self relation
+      return null;
+    }
+
     return element.fields.where((p) {
       var pType = p.type.isDartCoreList ? (p.type as InterfaceType).typeArguments[0] : p.type;
       return pType.element == param.enclosingElement;
