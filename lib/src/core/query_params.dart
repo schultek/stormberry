@@ -3,8 +3,9 @@ class QueryParams {
   final String? orderBy;
   final int? limit;
   final int? offset;
+  final Map<String, dynamic>? values;
 
-  const QueryParams({this.where, this.orderBy, this.limit, this.offset});
+  const QueryParams({this.where, this.orderBy, this.limit, this.offset, this.values});
 }
 
 class QueryValues {

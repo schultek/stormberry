@@ -43,7 +43,7 @@ class ViewQuery<Result> implements Query<List<Result>, QueryParams> {
       ${params.orderBy != null ? "ORDER BY ${params.orderBy}" : ""}
       ${params.limit != null ? "LIMIT ${params.limit}" : ""}
       ${params.offset != null ? "OFFSET ${params.offset}" : ""}
-    """);
+    """, params.values);
 
     var results = res.map((row) => queryable.decode(TypedMap(row.toColumnMap()))).toList();
     print('Queried ${results.length} rows in ${DateTime.now().difference(time)}');
