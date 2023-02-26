@@ -53,70 +53,76 @@ void main() {
 
       expect(table.columns, hasLength(6));
 
-      testColumn(
+      expect(
         table.columns[0],
-        {'type': 'field_column', 'column_name': 'my_string'},
-        columnName: 'my_string',
-        sqlType: 'text',
-        dartType: 'String',
-        paramName: 'myString',
-        isList: false,
-        isNullable: false,
+        isFieldColumn(
+          columnName: 'my_string',
+          sqlType: 'text',
+          dartType: 'String',
+          paramName: 'myString',
+          isList: false,
+          isNullable: false,
+        ),
       );
 
-      testColumn(
+      expect(
         table.columns[1],
-        {'type': 'field_column', 'column_name': 'some_numbers'},
-        columnName: 'some_numbers',
-        sqlType: '_int8',
-        dartType: 'int',
-        paramName: 'someNumbers',
-        isList: true,
-        isNullable: false,
+        isFieldColumn(
+          columnName: 'some_numbers',
+          sqlType: '_int8',
+          dartType: 'int',
+          paramName: 'someNumbers',
+          isList: true,
+          isNullable: false,
+        ),
       );
 
-      testColumn(
+      expect(
         table.columns[2],
-        {'type': 'field_column', 'column_name': 'random_float'},
-        columnName: 'random_float',
-        sqlType: 'float8',
-        dartType: 'double',
-        paramName: 'randomFloat',
-        isList: false,
-        isNullable: true,
+        isFieldColumn(
+          columnName: 'random_float',
+          sqlType: 'float8',
+          dartType: 'double',
+          paramName: 'randomFloat',
+          isList: false,
+          isNullable: true,
+        ),
       );
 
-      testColumn(
+      expect(
         table.columns[3],
-        {'type': 'field_column', 'column_name': 'is_enabled'},
-        columnName: 'is_enabled',
-        sqlType: 'bool',
-        dartType: 'bool',
-        paramName: 'isEnabled',
-        isList: false,
-        isNullable: false,
+        isFieldColumn(
+          columnName: 'is_enabled',
+          sqlType: 'bool',
+          dartType: 'bool',
+          paramName: 'isEnabled',
+          isList: false,
+          isNullable: false,
+        ),
       );
 
-      testColumn(
+      expect(
         table.columns[4],
-        {'type': 'field_column', 'column_name': 'how_late'},
-        columnName: 'how_late',
-        sqlType: 'timestamp',
-        dartType: 'DateTime',
-        paramName: 'howLate',
-        isList: false,
-        isNullable: false,
+        isFieldColumn(
+          columnName: 'how_late',
+          sqlType: 'timestamp',
+          dartType: 'DateTime',
+          paramName: 'howLate',
+          isList: false,
+          isNullable: false,
+        ),
       );
 
-      testColumn(
+      expect(
         table.columns[5],
-        {'type': 'field_column', 'column_name': 'where_to'},
-        columnName: 'where_to',
-        sqlType: 'point',
-        dartType: 'PgPoint',
-        paramName: 'whereTo',
-        isList: false,
-        isNullable: false,
+        isFieldColumn(
+          columnName: 'where_to',
+          sqlType: 'point',
+          dartType: 'PgPoint',
+          paramName: 'whereTo',
+          isList: false,
+          isNullable: false,
+        ),
       );
     });
 

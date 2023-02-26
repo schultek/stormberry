@@ -30,15 +30,16 @@ void main() {
       var table = schema.tables.values.first;
       var column = table.columns.last;
 
-      testColumn(
+      expect(
         column,
-        {'type': 'field_column', 'column_name': 'b'},
-        columnName: 'b',
-        sqlType: 'jsonb',
-        dartType: 'B',
-        paramName: 'b',
-        isNullable: false,
-        isList: false,
+        isFieldColumn(
+          columnName: 'b',
+          sqlType: 'jsonb',
+          dartType: 'B',
+          paramName: 'b',
+          isNullable: false,
+          isList: false,
+        ),
       );
     });
 
@@ -67,15 +68,16 @@ void main() {
       var table = schema.tables.values.first;
       var column = table.columns.last;
 
-      testColumn(
+      expect(
         column,
-        {'type': 'field_column', 'column_name': 'b'},
-        columnName: 'b',
-        sqlType: 'jsonb',
-        dartType: 'B',
-        paramName: 'b',
-        isNullable: true,
-        isList: false,
+        isFieldColumn(
+          columnName: 'b',
+          sqlType: 'jsonb',
+          dartType: 'B',
+          paramName: 'b',
+          isNullable: true,
+          isList: false,
+        ),
       );
     });
 

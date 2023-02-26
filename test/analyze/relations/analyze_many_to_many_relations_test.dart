@@ -38,42 +38,35 @@ void main() {
       expect(tableA.tableName, equals('as'));
       expect(tableB.tableName, equals('bs'));
 
-      testIdColumn(tableA.columns[0]);
+      expect(tableA.columns[0], isIdColumn());
 
-      testColumn(
+      expect(
         tableA.columns[1],
-        {
-          'type': 'join_column',
-          'param_name': 'b',
-          'join_table_name': 'as_bs',
-          'link_table_name': 'bs',
-          'parent_foreign_key_name': 'a_id',
-          'link_primary_key_name': 'id',
-          'link_foreign_key_name': 'b_id',
-        },
-        isList: true,
-        linkedTo: tableB,
-        references: tableB.columns[1],
-        joinedTo: join,
+        isJoinColumn(
+          linkedTo: tableB,
+          references: tableB.columns[1],
+          joinedTo: join,
+        ),
       );
 
-      testIdColumn(tableB.columns[0]);
+      expect(
+        tableA.columns[1],
+        isJoinColumn(
+          linkedTo: tableB,
+          references: tableB.columns[1],
+          joinedTo: join,
+        ),
+      );
 
-      testColumn(
+      expect(tableB.columns[0], isIdColumn());
+
+      expect(
         tableB.columns[1],
-        {
-          'type': 'join_column',
-          'param_name': 'a',
-          'join_table_name': 'as_bs',
-          'link_table_name': 'as',
-          'parent_foreign_key_name': 'b_id',
-          'link_primary_key_name': 'id',
-          'link_foreign_key_name': 'a_id',
-        },
-        isList: true,
-        linkedTo: tableA,
-        references: tableA.columns[1],
-        joinedTo: join,
+        isJoinColumn(
+          linkedTo: tableA,
+          references: tableA.columns[1],
+          joinedTo: join,
+        ),
       );
     });
 

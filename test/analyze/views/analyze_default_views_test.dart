@@ -39,28 +39,26 @@ void main() {
 
       expect(viewA.columns, hasLength(2));
 
-      testViewColumn(
+      expect(
         viewA.columns[0],
-        {
-          'type': 'field_column',
-          'column_name': 'id',
-        },
-        paramName: 'id',
-        dartType: 'String',
-        isNullable: false,
+        isViewColumn(
+          paramName: 'id',
+          dartType: 'String',
+          isNullable: false,
+          transformer: null,
+          viewAs: null,
+        ),
       );
 
-      testViewColumn(
+      expect(
         viewA.columns[1],
-        {
-          'type': 'foreign_column',
-          'param_name': 'b',
-          'column_name': 'b_id',
-          'link_primary_key_name': 'id',
-        },
-        paramName: 'b',
-        dartType: 'B',
-        isNullable: false,
+        isViewColumn(
+          paramName: 'b',
+          dartType: 'B',
+          isNullable: false,
+          transformer: null,
+          viewAs: null,
+        ),
       );
     });
   });

@@ -32,34 +32,31 @@ void main() {
       expect(tableA.tableName, equals('as'));
       expect(tableB.tableName, equals('bs'));
 
-      testIdColumn(tableA.columns[0]);
+      expect(tableA.columns[0], isIdColumn());
 
-      testColumn(
+      expect(
         tableA.columns[1],
-        {
-          'type': 'multi_reference_column',
-          'param_name': 'b',
-          'ref_column_name': 'a_id',
-          'link_table_name': 'bs',
-        },
-        paramName: 'b',
-        isList: true,
-        linkedTo: tableB,
-        references: tableB.columns[1],
+        isReferenceColumn(
+          paramName: 'b',
+          isList: true,
+          linkedTo: tableB,
+          references: tableB.columns[1],
+        ),
       );
 
-      testIdColumn(tableB.columns[0]);
+      expect(tableB.columns[0], isIdColumn());
 
-      testColumn(
+      expect(
         tableB.columns[1],
-        null,
-        columnName: 'a_id',
-        sqlType: 'text',
-        paramName: 'aId',
-        isList: false,
-        isNullable: true,
-        linkedTo: tableA,
-        references: tableA.columns[1],
+        isForeignColumn(
+          columnName: 'a_id',
+          sqlType: 'text',
+          paramName: 'aId',
+          isList: false,
+          isNullable: true,
+          linkedTo: tableA,
+          references: tableA.columns[1],
+        ),
       );
     });
 
@@ -90,34 +87,31 @@ void main() {
       expect(tableA.tableName, equals('as'));
       expect(tableB.tableName, equals('bs'));
 
-      testIdColumn(tableA.columns[0]);
+      expect(tableA.columns[0], isIdColumn());
 
-      testColumn(
+      expect(
         tableA.columns[1],
-        {
-          'type': 'multi_reference_column',
-          'param_name': 'b',
-          'ref_column_name': 'a_id',
-          'link_table_name': 'bs',
-        },
-        paramName: 'b',
-        isList: true,
-        linkedTo: tableB,
-        references: tableB.columns[1],
+        isReferenceColumn(
+          paramName: 'b',
+          isList: true,
+          linkedTo: tableB,
+          references: tableB.columns[1],
+        ),
       );
 
-      testIdColumn(tableB.columns[0], name: 'name');
+      expect(tableB.columns[0], isIdColumn(name: 'name'));
 
-      testColumn(
+      expect(
         tableB.columns[1],
-        null,
-        columnName: 'a_id',
-        sqlType: 'text',
-        paramName: 'aId',
-        isList: false,
-        isNullable: false,
-        linkedTo: tableA,
-        references: tableA.columns[1],
+        isForeignColumn(
+          columnName: 'a_id',
+          sqlType: 'text',
+          paramName: 'aId',
+          isList: false,
+          isNullable: false,
+          linkedTo: tableA,
+          references: tableA.columns[1],
+        ),
       );
     });
 
@@ -151,39 +145,31 @@ void main() {
       expect(tableA.tableName, equals('as'));
       expect(tableB.tableName, equals('bs'));
 
-      testIdColumn(tableA.columns[0]);
+      expect(tableA.columns[0], isIdColumn());
 
-      testColumn(
+      expect(
         tableA.columns[1],
-        {
-          'type': 'multi_reference_column',
-          'param_name': 'b',
-          'ref_column_name': 'a_id',
-          'link_table_name': 'bs',
-        },
-        paramName: 'b',
-        isList: true,
-        linkedTo: tableB,
-        references: tableB.columns[1],
+        isReferenceColumn(
+          paramName: 'b',
+          isList: true,
+          linkedTo: tableB,
+          references: tableB.columns[1],
+        ),
       );
 
-      testIdColumn(tableB.columns[0]);
+      expect(tableB.columns[0], isIdColumn());
 
-      testColumn(
+      expect(
         tableB.columns[1],
-        {
-          'type': 'foreign_column',
-          'param_name': 'a',
-          'column_name': 'a_id',
-          'link_primary_key_name': 'id',
-        },
-        columnName: 'a_id',
-        sqlType: 'text',
-        paramName: 'aId',
-        isList: false,
-        isNullable: false,
-        linkedTo: tableA,
-        references: tableA.columns[1],
+        isForeignColumn(
+          columnName: 'a_id',
+          sqlType: 'text',
+          paramName: 'aId',
+          isList: false,
+          isNullable: false,
+          linkedTo: tableA,
+          references: tableA.columns[1],
+        ),
       );
     });
 
@@ -216,39 +202,31 @@ void main() {
       expect(tableA.tableName, equals('as'));
       expect(tableB.tableName, equals('bs'));
 
-      testIdColumn(tableA.columns[0]);
+      expect(tableA.columns[0], isIdColumn());
 
-      testColumn(
+      expect(
         tableA.columns[1],
-        {
-          'type': 'multi_reference_column',
-          'param_name': 'b',
-          'ref_column_name': 'a_id',
-          'link_table_name': 'bs',
-        },
-        paramName: 'b',
-        isList: true,
-        linkedTo: tableB,
-        references: tableB.columns[1],
+        isReferenceColumn(
+          paramName: 'b',
+          isList: true,
+          linkedTo: tableB,
+          references: tableB.columns[1],
+        ),
       );
 
-      testIdColumn(tableB.columns[0], name: 'name');
+      expect(tableB.columns[0], isIdColumn(name: 'name'));
 
-      testColumn(
+      expect(
         tableB.columns[1],
-        {
-          'type': 'foreign_column',
-          'param_name': 'a',
-          'column_name': 'a_id',
-          'link_primary_key_name': 'id',
-        },
-        columnName: 'a_id',
-        sqlType: 'text',
-        paramName: 'aId',
-        isList: false,
-        isNullable: false,
-        linkedTo: tableA,
-        references: tableA.columns[1],
+        isForeignColumn(
+          columnName: 'a_id',
+          sqlType: 'text',
+          paramName: 'aId',
+          isList: false,
+          isNullable: false,
+          linkedTo: tableA,
+          references: tableA.columns[1],
+        ),
       );
     });
   });
