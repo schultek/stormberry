@@ -7,6 +7,7 @@ import '../../../core/case_style.dart';
 import '../../schema.dart';
 import '../../utils.dart';
 import '../table_element.dart';
+import '../view_element.dart';
 import 'column_element.dart';
 
 class FieldColumnElement extends ColumnElement with NamedColumnElement {
@@ -51,8 +52,9 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
 
   @override
   void checkModifiers() {
-    if (modifiers.isNotEmpty) {
-      throw 'Column field was annotated with "${modifiers.first.toSource()}", which is not supported.\n'
+    var viewModifiers = modifiers.where((m) => m.instanceOf(viewedInChecker));
+    if (viewModifiers.isNotEmpty) {
+      throw 'Column field was annotated with "${viewModifiers.first.toSource()}", which is not supported.\n'
           '  - ${parameter.getDisplayString(withNullability: true)}';
     }
   }
