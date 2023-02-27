@@ -1,3 +1,7 @@
+# 0.12.1
+
+- Support generic type converters.
+
 # 0.12.0
 
 - Support self-joins. Models can now have relations to itself.
