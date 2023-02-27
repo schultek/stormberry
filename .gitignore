@@ -11,6 +11,6 @@ pubspec.lock
 
 coverage/
 doc/api/
-
+playground/
 test/**/*.schema.dart
 

@@ -3,6 +3,7 @@ import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
+import 'package:analyzer/dart/element/type.dart';
 import 'package:source_gen/source_gen.dart';
 
 import '../../stormberry.dart';
@@ -104,9 +105,17 @@ extension ReaderSource on ConstantReader {
     if (rev.source.fragment.isNotEmpty) {
       str = rev.source.fragment;
 
+      if (objectValue.type is InterfaceType) {
+        var args = (objectValue.type as InterfaceType).typeArguments;
+        if (args.isNotEmpty) {
+          str += '<${args.map((a) => a.getDisplayString(withNullability: true)).join(', ')}>';
+        }
+      }
+
       if (rev.accessor.isNotEmpty) {
         str += '.${rev.accessor}';
       }
+
       str += '(';
       var isFirst = true;
 
