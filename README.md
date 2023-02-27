@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://pub.dev/packages/stormberry">
-    <img src="https://img.shields.io/pub/v/stormberry?label=pub.dev&labelColor=333940&logo=dart">
+    <img src="https://img.shields.io/pub/v/stormberry?label=pub.dev&labelColor=333940&logo=dart&color=00589B">
   </a>
   <a href="https://github.com/schultek/stormberry/actions/workflows/test.yaml">
     <img src="https://img.shields.io/github/actions/workflow/status/schultek/stormberry/test.yaml?branch=main&label=tests&labelColor=333940&logo=github">

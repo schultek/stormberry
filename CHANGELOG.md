@@ -1,3 +1,9 @@
+# 0.12.0
+
+- Support self-joins. Models can now have relations to itself.
+- Added `value` property to `QueryParams` to supply custom query parameters.
+- Added `@BindTo()` annotation to resolve ambiguous field relations.
+
 # 0.11.0
 
 - Fixed wrong column types in update query.

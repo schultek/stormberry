@@ -1,8 +1,10 @@
 name: stormberry
-description: Access your postgres database effortlessly from dart code.
-version: 0.11.0
+description: A strongly-typed postgres ORM to provide easy bindings between your dart classes and postgres database.
+version: 0.12.0
 repository: https://github.com/schultek/stormberry
 issue_tracker: https://github.com/schultek/stormberry/issues
+funding:
+  - https://github.com/sponsors/schultek
 
 environment:
   sdk: '>=2.17.0 <3.0.0'
