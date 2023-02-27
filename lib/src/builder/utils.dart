@@ -4,6 +4,7 @@ import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:source_gen/source_gen.dart';
+
 import '../../stormberry.dart';
 import '../core/case_style.dart';
 
@@ -13,6 +14,7 @@ const primaryKeyChecker = TypeChecker.fromRuntime(PrimaryKey);
 const autoIncrementChecker = TypeChecker.fromRuntime(AutoIncrement);
 const changedInChecker = TypeChecker.fromRuntime(ChangedIn);
 const useConverterChecker = TypeChecker.fromRuntime(UseConverter);
+const bindToChecker = TypeChecker.fromRuntime(BindTo);
 
 /// The global builder options from the build.yaml file
 class GlobalOptions {

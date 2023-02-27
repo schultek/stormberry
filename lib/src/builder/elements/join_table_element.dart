@@ -18,4 +18,9 @@ class JoinTableElement {
 
     tableName = state.options.tableCaseStyle.transform('${first.tableName}-${second.tableName}');
   }
+
+  bool get isSelf => first == second;
+
+  String get firstName => first.getForeignKeyName()! + (isSelf ? '_a' : '');
+  String get secondName => second.getForeignKeyName()! + (isSelf ? '_b' : '');
 }

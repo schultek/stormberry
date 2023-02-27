@@ -23,21 +23,11 @@ class JoinColumnElement extends ColumnElement with RelationalColumnElement, Link
     }
   }
 
-  @override
-  bool get isList => true;
+  String get columnName =>
+      parentTable.getForeignKeyName()! + (referencedColumn.parentTable == parentTable ? '_a' : '');
 
   @override
-  Map<String, dynamic> toMap() {
-    return {
-      'type': 'join_column',
-      'param_name': parameter.name,
-      'join_table_name': joinTable.tableName,
-      'link_table_name': linkedTable.tableName,
-      'parent_foreign_key_name': parentTable.getForeignKeyName()!,
-      'link_primary_key_name': linkedTable.primaryKeyColumn!.columnName,
-      'link_foreign_key_name': linkedTable.getForeignKeyName()!,
-    };
-  }
+  bool get isList => true;
 
   @override
   String toString() {

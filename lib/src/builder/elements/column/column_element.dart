@@ -5,8 +5,8 @@ import 'package:collection/collection.dart';
 import 'package:source_gen/source_gen.dart';
 
 import '../../schema.dart';
-import '../table_element.dart';
 import '../../utils.dart';
+import '../table_element.dart';
 
 abstract class NamedColumnElement implements ParameterColumnElement {
   String get columnName;
@@ -56,6 +56,7 @@ abstract class ColumnElement {
 
   ColumnElement(this.parentTable, this.state) {
     checkConverter();
+    checkModifiers();
   }
 
   FieldElement? get parameter;
@@ -87,8 +88,6 @@ abstract class ColumnElement {
   }();
 
   void checkModifiers();
-
-  Map<String, dynamic> toMap();
 }
 
 String? getSqlType(DartType type) {

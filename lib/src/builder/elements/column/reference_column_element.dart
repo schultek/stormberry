@@ -35,22 +35,4 @@ class ReferenceColumnElement extends ColumnElement
 
   @override
   bool get isList => parameter?.type.isDartCoreList ?? true;
-
-  @override
-  Map<String, dynamic> toMap() {
-    if (!isList) {
-      return {
-        'type': 'reference_column',
-        'param_name': parameter!.name,
-        'ref_column_name': referencedColumn.columnName,
-      };
-    } else {
-      return {
-        'type': 'multi_reference_column',
-        'param_name': parameter!.name,
-        'ref_column_name': referencedColumn.columnName,
-        'link_table_name': linkedTable.tableName,
-      };
-    }
-  }
 }

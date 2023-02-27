@@ -5,8 +5,8 @@ import 'package:source_gen/source_gen.dart';
 
 import '../../../core/case_style.dart';
 import '../../schema.dart';
-import '../table_element.dart';
 import '../../utils.dart';
+import '../table_element.dart';
 import 'column_element.dart';
 
 class FieldColumnElement extends ColumnElement with NamedColumnElement {
@@ -25,6 +25,12 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
       throw 'The following field is annotated with @AutoIncrement() but has an unallowed type:\n'
           '  - "${parameter.getDisplayString(withNullability: true)}" in class "${parentTable.element.getDisplayString(withNullability: true)}"\n'
           'A field annotated with @AutoIncrement() must be of type int.';
+    }
+
+    if (bindToChecker.hasAnnotationOf(parameter.getter ?? parameter)) {
+      var r = ConstantReader(bindToChecker.annotationsOf(parameter.getter ?? parameter).first);
+      throw 'Column field was annotated with "${r.toSource()}", which is not supported.\n'
+          '  - ${parameter.getDisplayString(withNullability: true)}';
     }
   }
 
@@ -46,9 +52,8 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
   @override
   void checkModifiers() {
     if (modifiers.isNotEmpty) {
-      print(
-          'Column field was annotated with "${modifiers.first.toSource()}", which is not supported.\n'
-          '  - ${parameter.getDisplayString(withNullability: true)}');
+      throw 'Column field was annotated with "${modifiers.first.toSource()}", which is not supported.\n'
+          '  - ${parameter.getDisplayString(withNullability: true)}';
     }
   }
 
@@ -100,12 +105,4 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
 
   @override
   bool get isNullable => parameter.type.nullabilitySuffix != NullabilitySuffix.none;
-
-  @override
-  Map<String, dynamic> toMap() {
-    return {
-      'type': 'field_column',
-      'column_name': columnName,
-    };
-  }
 }

@@ -153,15 +153,16 @@ class TableElement {
 
           var selfColumn = JoinColumnElement(param, otherBuilder, joinBuilder, this, state);
 
-          if (otherParam != null) {
-            var otherColumn = JoinColumnElement(otherParam, this, joinBuilder, otherBuilder, state);
-
+          JoinColumnElement otherColumn;
+          if (param != otherParam) {
+            otherColumn = JoinColumnElement(otherParam!, this, joinBuilder, otherBuilder, state);
             otherColumn.referencedColumn = selfColumn;
-            selfColumn.referencedColumn = otherColumn;
-
             otherBuilder.columns.add(otherColumn);
+          } else {
+            otherColumn = selfColumn;
           }
 
+          selfColumn.referencedColumn = otherColumn;
           columns.add(selfColumn);
         } else {
           ReferencingColumnElement selfColumn;
@@ -176,16 +177,19 @@ class TableElement {
 
           ReferencingColumnElement otherColumn;
 
-          if (selfHasKey && !otherIsList) {
-            otherColumn = ForeignColumnElement(otherParam, this, otherBuilder, state);
-            otherBuilder.columns.add(otherColumn);
+          if (param == otherParam) {
+            otherColumn = selfColumn;
           } else {
-            otherColumn = ReferenceColumnElement(otherParam, this, otherBuilder, state);
+            if (selfHasKey && !otherIsList && this != otherBuilder) {
+              otherColumn = ForeignColumnElement(otherParam, this, otherBuilder, state);
+            } else {
+              otherColumn = ReferenceColumnElement(otherParam, this, otherBuilder, state);
+            }
             otherBuilder.columns.add(otherColumn);
+            otherColumn.referencedColumn = selfColumn;
           }
 
           selfColumn.referencedColumn = otherColumn;
-          otherColumn.referencedColumn = selfColumn;
         }
       }
     }
@@ -224,16 +228,76 @@ class TableElement {
   }
 
   FieldElement? findMatchingParam(FieldElement param) {
-    // TODO add binding
+    var binding = param.binding;
+
+    if (binding != null) {
+      var bindingParam = allFields.where((f) => f.name == binding).firstOrNull;
+
+      if (bindingParam == null) {
+        throw 'A @BindTo() annotation was used with an incorrect target field. The following field '
+            'was annotated:\n'
+            '  - "${param.getDisplayString(withNullability: true)}" in class "${param.enclosingElement.getDisplayString(withNullability: true)}"\n'
+            'The binding specified a target field of:\n'
+            '  - "$binding"\n'
+            'which does not exist in class "${element.getDisplayString(withNullability: false)}.';
+      }
+
+      var bindingParamBinding = bindingParam.binding;
+
+      if (bindingParamBinding == null) {
+        throw 'A @BindTo() annotation was only used on one field of a relation. The following field '
+            'had no binding:\n'
+            '  - "${bindingParam.getDisplayString(withNullability: true)}" in class "${bindingParam.enclosingElement.getDisplayString(withNullability: true)}"\n'
+            'while the following field had a binding referring to the first field:\n'
+            '  - "${param.getDisplayString(withNullability: true)}" in class ${param.enclosingElement.getDisplayString(withNullability: true)}"\n\n'
+            'Make sure that both parameters specify the @BindTo() annotation referring to each other, or neither.';
+      } else if (bindingParamBinding != param.name) {
+        throw 'A @BindTo() annotation contained an incorrect target field. The following field '
+            'had a binding:\n'
+            '  - "${param.getDisplayString(withNullability: true)}" in class "${param.enclosingElement.getDisplayString(withNullability: true)}"\n'
+            'which referred to the second field:\n'
+            '  - "${bindingParam.getDisplayString(withNullability: true)}" in class ${bindingParam.enclosingElement.getDisplayString(withNullability: true)}"\n'
+            'which referred to some other field "$bindingParamBinding".\n\n'
+            'Make sure that both fields specify the @BindTo() annotation referring to each other, or neither.';
+      }
+
+      var type = bindingParam.type.isDartCoreList
+          ? (bindingParam.type as InterfaceType).typeArguments[0]
+          : bindingParam.type;
+
+      if (type.element != param.enclosingElement) {
+        throw 'A @BindTo() annotation was used incorrectly on a type. The following field '
+            'had a binding:\n'
+            '  - "${param.getDisplayString(withNullability: true)}" in class "${param.enclosingElement.getDisplayString(withNullability: true)}"\n'
+            'which referred to the second field:\n'
+            '  - "${bindingParam.getDisplayString(withNullability: true)}" in class ${bindingParam.enclosingElement.getDisplayString(withNullability: true)}"\n'
+            'which has an incorrect type "${type.element?.getDisplayString(withNullability: false)}".\n\n'
+            'Make sure that the type of the second field is set to the class of the first field.';
+      }
+
+      return bindingParam;
+    }
 
     if (allFields.contains(param)) {
-      // self relation
+      // Select no default matching param for self relations.
       return null;
     }
 
-    return element.fields.where((p) {
-      var pType = p.type.isDartCoreList ? (p.type as InterfaceType).typeArguments[0] : p.type;
-      return pType.element == param.enclosingElement;
+    return allFields.where((p) {
+      var type = p.type.isDartCoreList ? (p.type as InterfaceType).typeArguments[0] : p.type;
+      if (type.element != param.enclosingElement) return false;
+
+      var binding = p.binding;
+      if (binding == param.name) {
+        throw 'A @BindTo() annotation was only used on one field of a relation. The following field'
+            'had no binding:\n'
+            '  - "${param.getDisplayString(withNullability: true)}" in class "${param.enclosingElement.getDisplayString(withNullability: true)}"\n'
+            'while the following field had a binding referring to the first field:\n'
+            '  - "${p.getDisplayString(withNullability: true)}" in class ${p.enclosingElement.getDisplayString(withNullability: true)}"\n\n'
+            'Make sure that both fields specify the @BindTo() annotation referring to each other, or neither.';
+      }
+      if (binding != null) return false;
+      return true;
     }).firstOrNull;
   }
 
@@ -248,5 +312,11 @@ class TableElement {
       name += name.endsWith('s') ? 'es' : 's';
     }
     return name;
+  }
+}
+
+extension FieldBinding on FieldElement {
+  String? get binding {
+    return bindToChecker.firstAnnotationOf(getter ?? this)?.getField('name')?.toSymbolValue();
   }
 }

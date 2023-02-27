@@ -47,14 +47,4 @@ class ForeignColumnElement extends ColumnElement
       return true;
     }
   }
-
-  @override
-  Map<String, dynamic> toMap() {
-    return {
-      'type': 'foreign_column',
-      'param_name': parameter!.name,
-      'column_name': columnName,
-      'link_primary_key_name': linkedTable.primaryKeyColumn!.columnName,
-    };
-  }
 }
