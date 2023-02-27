@@ -74,13 +74,13 @@ abstract class User {
 In order to generate the database code, run the following command:
 
 ```shell script
-dart pub run build_runner build
+dart run build_runner build
 ```
 
 You'll need to re-run code generation each time you are making changes to your code. So for development time, use `watch` like this
 
 ```shell script
-dart pub run build_runner watch
+dart run build_runner watch
 ```
 
 This will generate a `.schema.dart` file that you should add as a `part` to the original model file.
@@ -348,7 +348,7 @@ abstract class MyModel {
 
 # Usage
 
-When running the build using `dart pub run build_runner build`, `stormberry` will
+When running the build using `dart run build_runner build`, `stormberry` will
 generate a `Repository` for each model which you can use to query, insert, update or delete data
 related to this model.
 
@@ -426,7 +426,7 @@ Stormberry comes with a database migration tool, to create or update the schema 
 To use this run the following command from the root folder of your project.
 
 ```
-dart pub run stormberry migrate
+dart run stormberry migrate
 ```
 
 In order to connect to your database, provide the following environment variables:
