@@ -1,3 +1,5 @@
+library stormberry;
+
 export 'package:postgres/postgres.dart';
 export 'package:postgres/src/text_codec.dart';
 

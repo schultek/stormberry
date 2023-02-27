@@ -10,15 +10,21 @@
   <a href="https://app.codecov.io/gh/schultek/stormberry">
     <img src="https://img.shields.io/codecov/c/github/schultek/stormberry?logo=codecov&logoColor=fff&labelColor=333940">
   </a>
-  <!--<a href="https://twitter.com/schultek_dev">
-    <img src="https://img.shields.io/twitter/follow/schultek_dev?style=flat&label=Follow&color=1DA1F2&labelColor=333940&logo=twitter&logoColor=fff">
-  </a>-->
+  <br/>
+  <a href="https://twitter.com/schultek_dev">
+    <img src="https://img.shields.io/badge/follow-%40schultek__dev-1DA1F2?style=flat&label=follow&color=1DA1F2&labelColor=333940&logo=twitter&logoColor=fff">
+  </a>
+  <a href="https://github.com/schultek/stormberry">
+    <img src="https://img.shields.io/github/stars/schultek/stormberry?style=flat&label=stars&labelColor=333940&color=8957e5&logo=github">
+  </a>
 </p>
 
 <p align="center">
-A strongly-typed postgres ORM to provide easy bindings between your dart classes and postgres database. 
-It supports all kinds of relations without any complex configuration.
+A <b>strongly-typed postgres ORM</b> to provide easy bindings between your dart classes and postgres database. 
+It supports all kinds of <b>relations without any complex configuration</b>.
 </p>
+
+---
 
 # Outline
 
@@ -37,17 +43,6 @@ It supports all kinds of relations without any complex configuration.
 
 > This package is still in active development. If you have any feedback or feature requests,
 > write me and issue on github.
-
-## Roadmap
-
-- Documentation
-  - Improve Readme
-  - Improve example
-- Testing & Maintenance
-  - Improve code structure
-  - Write tests
-- Long Term
-  - Be database agnostic (sub-packages)
 
 # Get Started
 
@@ -173,7 +168,36 @@ Generally, the correct relation type is determined by whether you use `List<...>
 Depending on the relation type, it is also mandatory to specify a primary key field.
 
 Notice how when you specify both sides of a relation, querying one of the models would lead to a
-cyclic dependency. You can solve this by using `Views`.
+cyclic dependency. You can solve this by using [Views](#views).
+
+#### Bindings
+
+When you have multiple relations between the same types, it may be ambiguous fields refer to each other.
+In those cases, you can use the `@BindTo(#otherField)` annotation like this:
+
+```dart
+@Model()
+abstract class User {
+  @PrimaryKey()
+  String get id;
+
+  @BindTo(#author)
+  List<Post> get posts;
+  @BindTo(#likes)
+  List<Post> get liked;
+}
+
+@Model()
+abstract class Post {
+  @PrimaryKey()
+  String get id;
+
+  @BindTo(#posts)
+  User get author;
+  @BindTo(#liked)
+  List<User> get likes;
+}
+```
 
 ## Views
 
