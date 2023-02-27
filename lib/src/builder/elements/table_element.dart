@@ -180,7 +180,9 @@ class TableElement {
           if (param == otherParam) {
             otherColumn = selfColumn;
           } else {
-            if (selfHasKey && !otherIsList && this != otherBuilder) {
+            if (selfHasKey &&
+                !otherIsList &&
+                (selfColumn is! ForeignColumnElement || this != otherBuilder)) {
               otherColumn = ForeignColumnElement(otherParam, this, otherBuilder, state);
             } else {
               otherColumn = ReferenceColumnElement(otherParam, this, otherBuilder, state);
