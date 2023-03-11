@@ -98,7 +98,7 @@ String? getSqlType(DartType type) {
   } else if (type.isDartCoreNum || type.isDartCoreDouble) {
     return 'float8';
   } else if (type.isDartCoreBool) {
-    return 'bool';
+    return 'boolean';
   } else if (type.element?.name == 'DateTime') {
     return 'timestamp';
   } else if (type.element?.name == 'PgPoint') {
