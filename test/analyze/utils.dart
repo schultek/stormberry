@@ -12,7 +12,7 @@ import 'package:stormberry/src/builder/elements/view_element.dart';
 import 'package:stormberry/src/builder/schema.dart';
 import 'package:test/test.dart';
 
-import 'polyfill.dart';
+import '../polyfill.dart';
 
 Future<SchemaState> analyzeSchema(String source) async {
   var manager = ResourceManager();

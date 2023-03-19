@@ -152,7 +152,7 @@ class InsertGenerator {
       ${defineClassWithMeta(requestClassName, table.meta?.read('insert'))}
         $requestClassName(${constructorParameters.isNotEmpty ? '{$constructorParameters}' : ''});
         
-        ${requestFields.map((f) => '${f.key} ${f.value};').join('\n')}
+        ${requestFields.map((f) => 'final ${f.key} ${f.value};').join('\n')}
       }
     ''';
   }

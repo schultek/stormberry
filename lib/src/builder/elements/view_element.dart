@@ -81,6 +81,22 @@ class ViewElement {
   String get viewTableName =>
       CaseStyle.snakeCase.transform('${!isDefaultView ? '${name}_' : ''}${table.tableName}_view');
 
+  late bool includeModelAsMixin = () {
+    if (!isDefaultView) {
+      return false;
+    }
+
+    if (columns.length != table.columns.length) {
+      return false;
+    }
+
+    if (columns.any((c) => c.viewAs != null && c.viewAs != defaultName)) {
+      return false;
+    }
+
+    return true;
+  }();
+
   late List<ViewColumn> columns = () {
     var columns = <ViewColumn>[];
 

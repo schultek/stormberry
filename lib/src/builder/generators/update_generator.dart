@@ -151,7 +151,7 @@ class UpdateGenerator {
       ${defineClassWithMeta(requestClassName, table.meta?.read('update'))}
         $requestClassName(${constructorParameters.isNotEmpty ? '{$constructorParameters}' : ''});
         
-        ${requestFields.map((f) => '${f.key} ${f.value};').join('\n')}
+        ${requestFields.map((f) => 'final ${f.key} ${f.value};').join('\n')}
       }
     ''';
   }

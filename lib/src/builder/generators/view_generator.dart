@@ -3,8 +3,8 @@ import 'package:analyzer/dart/element/nullability_suffix.dart';
 
 import '../elements/column/field_column_element.dart';
 import '../elements/table_element.dart';
-import '../utils.dart';
 import '../elements/view_element.dart';
+import '../utils.dart';
 import 'view_query_generator.dart';
 
 class ViewGenerator {
@@ -68,10 +68,10 @@ class ViewGenerator {
         ${view.entityName} decode(TypedMap map) => ${view.className}(${view.columns.map((c) => '${c.paramName}: ${_getInitializer(c)}').join(',')});
       }
       
-      ${defineClassWithMeta(view.className, view.table.meta?.read('view'), mixin: view.isDefaultView ? view.table.element.name : null)}
+      ${defineClassWithMeta(view.className, view.table.meta?.read('view'), mixin: view.includeModelAsMixin ? view.table.element.name : null)}
         ${view.className}(${view.columns.isEmpty ? '' : '{${view.columns.map((c) => '${c.isNullable ? '' : 'required '}this.${c.paramName}').join(', ')},}'});
         
-        ${view.columns.map((c) => '${view.isDefaultView ? '@override ' : ''}final ${c.dartType} ${c.paramName};').join('\n')}
+        ${view.columns.map((c) => '${view.includeModelAsMixin ? '@override ' : ''}final ${c.dartType} ${c.paramName};').join('\n')}
       }
     ''';
   }

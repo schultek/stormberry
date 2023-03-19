@@ -1,7 +1,7 @@
 import 'package:stormberry/src/builder/elements/column/column_element.dart';
 import 'package:test/test.dart';
 
-import '../../utils.dart';
+import '../utils.dart';
 
 void main() {
   group('analyzing builder', () {

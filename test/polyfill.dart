@@ -1,8 +1,8 @@
 import 'package:build/build.dart';
-import 'package:build_test/build_test.dart';
 import 'package:build_resolvers/build_resolvers.dart';
+import 'package:build_test/build_test.dart';
 
-Future testBuilder2(
+Future<Map<AssetId, List<int>>> testBuilder2(
   Builder builder,
   Map<String, /*String|List<int>*/ Object> sourceAssets, {
   Set<String>? generateFor,
@@ -61,4 +61,5 @@ Future testBuilder2(
 
   var actualOutputs = writerSpy.assetsWritten;
   checkOutputs(outputs, actualOutputs, writer);
+  return {...writer.assets};
 }
