@@ -93,7 +93,7 @@ void main() {
         table.columns[3],
         isFieldColumn(
           columnName: 'is_enabled',
-          sqlType: 'bool',
+          sqlType: 'boolean',
           dartType: 'bool',
           paramName: 'isEnabled',
           isList: false,

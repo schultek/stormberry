@@ -20,7 +20,7 @@ void testInserts() {
       var authors = await tester.db.authors.queryAuthors();
 
       expect(authors, hasLength(1));
-      expect(authors.first, predicate<Author>((a) => a.id == 'abc' && a.name == 'Alice'));
+      expect(authors.first, predicate<AuthorView>((a) => a.id == 'abc' && a.name == 'Alice'));
     });
 
     test('insert multiple objects', () async {
@@ -32,8 +32,8 @@ void testInserts() {
       var authors = await tester.db.authors.queryAuthors(QueryParams(orderBy: 'id'));
 
       expect(authors, hasLength(2));
-      expect(authors.first, predicate<Author>((a) => a.id == 'abc' && a.name == 'Alice'));
-      expect(authors.last, predicate<Author>((a) => a.id == 'def' && a.name == 'Bob'));
+      expect(authors.first, predicate<AuthorView>((a) => a.id == 'abc' && a.name == 'Alice'));
+      expect(authors.last, predicate<AuthorView>((a) => a.id == 'def' && a.name == 'Bob'));
     });
 
     test('updates single object', () async {
@@ -48,8 +48,8 @@ void testInserts() {
       var authors = await tester.db.authors.queryAuthors(QueryParams(orderBy: 'id'));
 
       expect(authors, hasLength(2));
-      expect(authors.first, predicate<Author>((a) => a.id == 'abc' && a.name == 'Alex'));
-      expect(authors.last, predicate<Author>((a) => a.id == 'def' && a.name == 'Bob'));
+      expect(authors.first, predicate<AuthorView>((a) => a.id == 'abc' && a.name == 'Alex'));
+      expect(authors.last, predicate<AuthorView>((a) => a.id == 'def' && a.name == 'Bob'));
     });
 
     test('delete single object', () async {
@@ -64,7 +64,7 @@ void testInserts() {
       var authors = await tester.db.authors.queryAuthors();
 
       expect(authors, hasLength(1));
-      expect(authors.last, predicate<Author>((a) => a.id == 'def' && a.name == 'Bob'));
+      expect(authors.last, predicate<AuthorView>((a) => a.id == 'def' && a.name == 'Bob'));
     });
   });
 }

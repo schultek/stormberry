@@ -54,7 +54,7 @@ void main() {
         viewA.columns[1],
         isViewColumn(
           paramName: 'b',
-          dartType: 'B',
+          dartType: 'BView',
           isNullable: false,
           transformer: null,
           viewAs: null,
@@ -112,7 +112,7 @@ void main() {
         viewA.columns[1],
         isViewColumn(
           paramName: 'b',
-          dartType: 'B',
+          dartType: 'BView',
           isNullable: false,
           transformer: null,
           viewAs: null,

@@ -37,7 +37,7 @@ void main() {
             '    required this.b,\n'
             '  });\n\n'
             '  final String id;\n'
-            '  final B b;\n'
+            '  final BView b;\n'
             '}',
           ),
         );
