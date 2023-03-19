@@ -45,12 +45,12 @@ class TableElement {
     views = {};
 
     for (var o in annotation.read('views').listValue) {
-      var name = o.toSymbolValue()!;
+      var name = ViewElement.nameOf(o);
       views[name] = ViewElement(this, name);
     }
 
     if (views.isEmpty) {
-      views[''] = ViewElement(this, '');
+      views[ViewElement.defaultName] = ViewElement(this);
     }
 
     indexes = annotation.read('indexes').listValue.map((o) {
@@ -198,7 +198,7 @@ class TableElement {
 
     for (var c in columns) {
       for (var m in c.modifiers) {
-        var viewName = m.read('name').objectValue.toSymbolValue()!;
+        var viewName = ViewElement.nameOf(m.read('name').objectValue);
 
         if (!views.containsKey(viewName)) {
           throw 'Model ${element.name} uses a view modifier on an unknown view \'#$viewName\'.\n'

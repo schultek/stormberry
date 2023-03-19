@@ -22,6 +22,9 @@ class Model {
     this.tableName,
     this.meta,
   });
+
+  /// The default view of a model.
+  static const Symbol defaultView = #$default$;
 }
 
 /// Metadata for the generated classes in order to use serialization for these classes.

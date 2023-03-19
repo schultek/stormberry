@@ -1,12 +1,13 @@
+import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:collection/collection.dart';
 import 'package:source_gen/source_gen.dart';
 
 import '../../core/annotations.dart';
 import '../../core/case_style.dart';
+import '../utils.dart';
 import 'column/column_element.dart';
 import 'table_element.dart';
-import '../utils.dart';
 
 final hiddenInChecker = TypeChecker.fromRuntime(HiddenIn);
 final viewedInChecker = TypeChecker.fromRuntime(ViewedIn);
@@ -55,9 +56,19 @@ class ViewElement {
   final TableElement table;
   final String name;
 
-  ViewElement(this.table, this.name);
+  ViewElement(this.table, [this.name = defaultName]);
 
-  bool get isDefaultView => name.isEmpty;
+  static String nameOf(DartObject object) {
+    var name = object.toSymbolValue()!;
+    if (Symbol(name) == Model.defaultView) {
+      name = defaultName;
+    }
+    return name;
+  }
+
+  static const String defaultName = '';
+
+  bool get isDefaultView => name == defaultName;
 
   String get className => CaseStyle.pascalCase
       .transform('${!isDefaultView ? '${name}_' : ''}${table.element.name}_view');
@@ -78,24 +89,20 @@ class ViewElement {
         continue;
       }
 
-      var modifiers = column.modifiers.where(
-          (m) => m.read('name').objectValue.toSymbolValue()!.toLowerCase() == name.toLowerCase());
+      var modifiers = column.modifiers
+          .where((m) => nameOf(m.read('name').objectValue).toLowerCase() == name.toLowerCase());
       if (modifiers.isNotEmpty) {
         var isHidden = modifiers.any((m) => m.instanceOf(hiddenInChecker));
         if (isHidden) {
           continue;
         }
 
-        var viewAs = modifiers
-            .where((m) => m.instanceOf(viewedInChecker))
-            .firstOrNull
-            ?.read('as')
-            .objectValue
-            .toSymbolValue();
+        var viewModifier = modifiers.where((m) => m.instanceOf(viewedInChecker)).firstOrNull;
+        var viewAs = viewModifier != null ? nameOf(viewModifier.read('as').objectValue) : null;
 
         if (viewAs == null && column is LinkedColumnElement) {
           if (!column.linkedTable.views.values.any((v) => v.isDefaultView)) {
-            column.linkedTable.views[''] = ViewElement(column.linkedTable, '');
+            column.linkedTable.views[defaultName] = ViewElement(column.linkedTable);
           }
         }
 
@@ -111,7 +118,7 @@ class ViewElement {
       } else {
         if (column is LinkedColumnElement) {
           if (!column.linkedTable.views.values.any((v) => v.isDefaultView)) {
-            column.linkedTable.views[''] = ViewElement(column.linkedTable, '');
+            column.linkedTable.views[defaultName] = ViewElement(column.linkedTable);
           }
         }
 
