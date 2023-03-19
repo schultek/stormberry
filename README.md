@@ -26,25 +26,10 @@ It supports all kinds of <b>relations without any complex configuration</b>.
 
 ---
 
-# Outline
-
-- [Get Started](#get-started)
-- [Setup](#setup)
-  - [Models](#models)
-    - [Relations](#relations)
-  - [Views](#views)
-  - [Indexes](#indexes)
-  - [TypeConverters](#typeconverters)
-- [Usage](#usage)
-  - [Repositories](#repositories)
-  - [Queries](#queries)
-  - [Actions](#actions)
-- [Database Migration](#database-migration)
-
 > This package is still in active development. If you have any feedback or feature requests,
 > write me and issue on github.
 
-# Get Started
+# Quick Start
 
 To get started, add `stormberry` as a dependency and `build_runner` as a dev dependency:
 
@@ -77,384 +62,54 @@ In order to generate the database code, run the following command:
 dart run build_runner build
 ```
 
-You'll need to re-run code generation each time you are making changes to your code. So for development time, use `watch` like this
-
-```shell script
-dart run build_runner watch
-```
+***Tip**: You'll need to re-run code generation each time you are making changes to your models.
+During development, you can use `watch` to automatically watch your changes: `dart pub run build_runner watch`.*
 
 This will generate a `.schema.dart` file that you should add as a `part` to the original model file.
 
-# Setup
+---
 
-## Models
+Before running your application, you have to migrate your database. To do this run:
 
-Models are the key entities for your database mapping. All tables in your database will be deducted from your model classes,
-and the columns of a table will be deducted from the fields of a model.
-
-You define a model by using the `@Model()` annotation on an abstract class. This class should only contain getters and have no constructor.
-
-```dart
-@Model()
-abstract class Book {
-  @PrimaryKey()
-  String get id;
-
-  String get title;
-}
-```
-
-This model uses an additional `@PrimaryKey()` annotation on its `id` field. It will be translated into the following sql table:
-
-```sql
-TABLE "books" (
-  "id" text NOT NULL,
-  "title" text NOT NULL,
-  PRIMARY KEY ("id")
-);
-```
-
-You can also make any field **auto-increment** by using the `@AutoIncrement()` annotation. Auto-increment fields
-must be of type **int**.
-
-```dart
-@Model()
-abstract class Book {
-  @PrimaryKey()
-  @AutoIncrement()
-  int get id;
-
-  @AutoIncrement()
-  int get someOtherValue;
-}
-```
-
-### Relations
-
-When using relational database systems, you model your data using relations, namely one-to-one,
-one-to-many, or many-to-many relations.
-
-When you want to specify a relation to another model, you simply use that model as the type of any field.
-`stormberry` analyzes your models and automatically determines the correct relation types.
-
-```dart
-
-@Model()
-abstract class Author {
-  @PrimaryKey()
-  String get id;
-
-  String get name;
-}
-
-@Model()
-abstract class Book {
-  @PrimaryKey()
-  String get id;
-
-  String get title;
-  Author get author;
-}
-```
-
-The above code specifies a many-to-one relation between `Book` and `Author`. It is ok to specify
-a relation only in one of the two models, but you could also specify the `List<Book> get books;`
-in the `Author` model.
-
-When only one side is specified, `stormberry` will default to a many-to-one or one-to-many relation.
-To instead specify a one-to-one relation, simply specify `Book get book;` on the author side.
-
-Generally, the correct relation type is determined by whether you use `List<...>` on one or both sides of the relation.
-Depending on the relation type, it is also mandatory to specify a primary key field.
-
-Notice how when you specify both sides of a relation, querying one of the models would lead to a
-cyclic dependency. You can solve this by using [Views](#views).
-
-#### Bindings
-
-When you have multiple relations between the same types, it may be ambiguous fields refer to each other.
-In those cases, you can use the `@BindTo(#otherField)` annotation like this:
-
-```dart
-@Model()
-abstract class User {
-  @PrimaryKey()
-  String get id;
-
-  @BindTo(#author)
-  List<Post> get posts;
-  @BindTo(#likes)
-  List<Post> get liked;
-}
-
-@Model()
-abstract class Post {
-  @PrimaryKey()
-  String get id;
-
-  @BindTo(#posts)
-  User get author;
-  @BindTo(#liked)
-  List<User> get likes;
-}
-```
-
-## Views
-
-For each table you can define a series of `View`s, which you can query for. A view is a modified
-subset of fields of the table and resolved relations.
-
-A `View` is helpful, when you have different points in your application where you want to query the
-same model, but with different access demands, like privacy.
-
-As an easy example take a typical `User` model. In the database, you might want to store some public
-information for a user, like the username, together with some private information, like the address.
-When a user requests its own data, you want to return all available data, public and private. But when
-a user requests the information for another user, you want to only return the public information.
-With `stormberry` you can handle this automatically by defining separate `View`s on the `User` model.
-
-You define `View`s like this:
-
-```dart
-@Model(views: [#Complete, #Reduced])
-abstract class User {
-  @PrimaryKey()
-  String get id;
-
-  String get name;
-  
-  @HiddenIn(#Reduced)
-  String get address;
-
-  @ViewedIn(#Company, as: #Info)
-  @HiddenIn(#Reduced)
-  List<Post> get posts;
-}
-
-@Model(views: [#Base, #Info])
-abstract class Post {
-  @PrimaryKey()
-  String get id;
-
-  String get content;
-
-  @ViewedIn(#Base, as: #Reduced)
-  @HiddenIn(#Info)
-  User get author;
-}
-```
-
-First define all views that you want of a model as a list of symbols. Then
-you can modify specific fields for a view using these annotations
-
-- `@HiddenIn(#SomeView)` removes the field from the view
-- `@ViewedIn(#SomeView, as: #SomeOtherView)` modifies the field to use the specified view of the 
-  target type
-
-The above model would result in the following view classes:
-
-```dart
-class CompleteUserView {
-  String id;
-  String name;
-  String address;
-  List<InfoPostView> posts;
-}
-
-class ReducedUserView {
-  String id;
-  String name;
-}
-
-class BasePostView {
-  String id;
-  String content;
-  ReducedUserView author;
-}
-
-class InfoPostView {
-  String id;
-  String content;
-}
-```
-
-As mentioned before, when you have two-way relations in your models you must use `View`s to resolve
-any cyclic dependencies. `stormberry` can't resolve them for you, however it will warn you if it
-detects any when trying to [migrate your database schema](#database-migration).
-
-## Indexes
-
-As an advanced configuration you can specify indexes on your table using the `TableIndex` class.
-You can add indexes to your `@Model()` annotation like this:
-
-```dart
-@Model(
-  views: [...],
-  indexes: [
-    TableIndex(name: 'my_index', columns: ['my_column'], unique: true)
-  ],
-)
-abstract class MyModel {
-  ...
-}
-```
-
-Checkout the api documentation [here](https://pub.dev/documentation/stormberry/latest/stormberry/TableIndex-class.html)
-for a description of the available parameters you can specify on an index.
-
-## TypeConverters
-
-When using a custom type for a model field, you need to create a custom `TypeConverter` for this
-type. Implement a custom type converter like this:
-
-```dart
-class LatLngConverter extends TypeConverter<LatLng> {
-  const LatLngConverter() : super('point');
-  
-  @override
-  dynamic encode(LatLng value) => PgPoint(value.latitude, value.longitude);
-
-  @override
-  LatLng decode(dynamic value) {
-    if (value is PgPoint) {
-      return LatLng(value.latitude, value.longitude);
-    } else {
-      var m = RegExp(r'\((.+),(.+)\)').firstMatch(value.toString());
-      var lat = double.parse(m!.group(1)!.trim());
-      var lng = double.parse(m.group(2)!.trim());
-      return LatLng(lat, lng);
-    }
-  }
-}
-```
-
-This transforms a value of type `LatLng` to the postgres data type `point`.
-Note the usage of `PgPoint` as the encoded object, which comes from the `postgres` package.
-For decoding, we also cover the case that the value is returned as a point literal instead of an
-point object.
-
-To use this converter specify it for a field of your model with:
-
-```dart
-@Model(...)
-abstract class MyModel {
-  ...
-
-  // Custom Type
-  @UseConverter(LatLngConverter())
-  LatLng get location;
-}
-```
-
-# Usage
-
-When running the build using `dart run build_runner build`, `stormberry` will
-generate a `Repository` for each model which you can use to query, insert, update or delete data
-related to this model.
-
-`Repositories` are extensions to the `Database` object, which you can create like this:
-
-```dart
-final db = Database(
-  host: '127.0.0.1',
-  port: 5432,
-  database: 'postgres',
-  user: 'postgres',
-  password: 'root',
-);
-```
-
-All parameters are optional. When a parameter is not provided, it is taken from the related
-environment variable, or the shown default value.
-
-## Repositories
-
-A `Repository` exists for each `Model` on which you can
-
-- **query** the model table and each of its views
-- **insert** an entry to the model table
-- **update** an entry of the model table
-- **delete** an entry of the model table
-
-You can get a models repository through its property accessor on the `Database` instance:
-`var userRepo = db.users;`.
-
-For the above example with two views `Complete` and `Reduced`, this would have the following
-methods:
-
-- `Future<CompleteUserView?> queryCompleteView(String id)`
-- `Future<List<CompleteUserView>> queryCompleteViews()`
-- `Future<ReducedUserView?> queryReducedView(String id)`
-- `Future<List<ReducedUserView>> queryReducedViews()`
-- `Future<void> insertOne(UserInsertRequest request)`
-- `Future<void> insertMany(List<UserInsertRequest> requests)`
-- `Future<void> updateOne(UserUpdateRequest request)`
-- `Future<void> updateMany(List<UserUpdateRequest> requests)`
-- `Future<void> deleteOne(String id)`
-- `Future<void> updateMany(List<String> ids)`
-
-Each method has a single and multi variant. `UserInsertRequest` and `UserUpdateRequest` are
-special generated classes that enable type-safe inserts and updates while respecting data relations
-and key constraints.
-
-With this, `stormberry` also supports partial updates of a model. You could for example just update
-the name of a user while keeping the other fields untouched like this:
-
-```dart
-await db.users.updateOne(UserUpdateRequest(id: 'abc', name: 'Tom'));
-```
-
-## Queries
-
-You can specify a custom query with custom sql by extending the `Query<T, U>` class.
-You will then need to implement the `Future<T> apply(Database db, U params)` method.
-
-Additionally to the model tables, you can query the model views to automatically get all resolved
-relations without needing to do manual joins. Table names are always plural, e.g. `users` and view
-names are in the format as `complete_user_view`.
-
-## Actions
-
-You can also specify custom `Action`s to perform on your table.
-Similar to the queries, you extend the `Action<T>` class and implement the
-`Future<void> apply(Database db, T request)` method.
-
-# Database Migration
-
-Stormberry comes with a database migration tool, to create or update the schema of your database.
-
-To use this run the following command from the root folder of your project.
-
-```
+```shell
 dart run stormberry migrate
 ```
 
-In order to connect to your database, provide the following environment variables:
+This will ask you for the connection details of your postgres database and then migrate
+the database schema by adding the `users` table.
 
-- `DB_HOST_ADDRESS` (default: `127.0.0.1`)
-- `DB_PORT` (default: `5432`)
-- `DB_NAME` (default: `postgres`)
-- `DB_USERNAME` (default: `postgres`)
-- `DB_PASSWORD` (default: `root`)
-- `DB_SSL` (default: `true`)
-- `DB_SOCKET` (default: `false`)
+---
 
-The tool will analyze the database schema and log any needed changes. It then asks for
-confirmation before applying the changes or aborting.
+To access your database from your application, create a `Database` instance and use the `users`
+repository like this:
 
-The tool supported the following options:
+```dart
+void main() async {
+  
+  var db = Database(
+    // connection parameters go here
+  );
+  
+  // adds a user to the 'users' table
+  await db.users.insertOne(UserInsertRequest(id: 'abc', name: 'Alex'));
+  
+  // finds a user by its 'id'
+  var user = await db.users.queryUser('abc');
+  
+  assert(user.name == 'Alex');
+}
+```
 
-- `-h`: Shows the available options.
-- `--db=<db_name>`: Specify the database name. Tool will ask if not specified.
-- `--host=<host_address>`: Specify the database host address. Tool will ask if not specified.
-- `--port=<port>`: Specify the database port. Tool will ask if not specified.
-- `--username=<username>`: Specify the database username. Tool will ask if not specified.
-- `--password=<password>`: Specify the database password. Tool will ask if not specified.
-- `--[no-]ssl`: Specify whether or not this connection should connect securely.
-- `--[no-]unix-socket`: Specify Whether or not the connection is made via unix socket.
-- `--defaults`: Specify Whether to use default values except for the values provided via arguments or environment variables.
-- `--dry-run`: Logs any changes to the schema without writing to the database, and exists
-  with code 1 if there are any.
-- `--apply-changes`: Apply any changes without asking for confirmation.
-- `-o=<folder>`: Specify an output folder. When used, this will output all migration statements to
-  `.sql` files in this folder instead of applying them to the database.
+## Full Documentation
+
+See the full documentation [here](https://pub.dev/documentation/stormberry/latest/topics/Introduction-topic.html)
+or jump directly to the topic you are looking for:
+
+- [**Models**](https://pub.dev/documentation/stormberry/latest/topics/Models-topic.html)
+- [**Views**](https://pub.dev/documentation/stormberry/latest/topics/Views-topic.html)
+- [**Database**](https://pub.dev/documentation/stormberry/latest/topics/Database-topic.html)
+- [**Repositories**](https://pub.dev/documentation/stormberry/latest/topics/Repositories-topic.html)
+- [**Queries & Actions**](https://pub.dev/documentation/stormberry/latest/topics/Queries-Actions-topic.html)
+- [**Migration**](https://pub.dev/documentation/stormberry/latest/topics/Migration-topic.html)
+
+

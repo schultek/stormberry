@@ -5,6 +5,10 @@ import 'package:postgres/postgres.dart';
 
 import 'default_values.dart';
 
+/// {@category Introduction}
+/// {@category Database}
+/// {@category Repositories}
+/// {@category Migration}
 class Database {
   bool debugPrint;
 

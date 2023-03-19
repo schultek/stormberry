@@ -1,4 +1,6 @@
 /// Used to define indexes on a table
+///
+/// {@category Models}
 class TableIndex {
   final List<String> columns;
   final String name;
@@ -37,5 +39,7 @@ class TableIndex {
 }
 
 /// The algorithm for an index.
+///
+/// {@category Models}
 // ignore: constant_identifier_names
 enum IndexAlgorithm { BTREE, GIST, HASH, GIN, BRIN, SPGIST }

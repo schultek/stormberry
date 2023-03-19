@@ -1,3 +1,4 @@
+/// {@category Models}
 abstract class Transformer {
   const Transformer();
 
@@ -21,6 +22,7 @@ abstract class ListTransformer extends Transformer {
   }
 }
 
+/// {@category Models}
 class FilterByField extends FilterByValue {
   final String _value;
 

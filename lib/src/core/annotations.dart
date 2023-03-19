@@ -3,6 +3,8 @@ import 'table_index.dart';
 import 'transformer.dart';
 
 /// Used to annotate a class as a database model
+///
+/// {@category Models}
 class Model {
   /// The list of views this model defined.
   final List<Symbol> views;
@@ -28,6 +30,8 @@ class Model {
 }
 
 /// Metadata for the generated classes in order to use serialization for these classes.
+///
+/// {@category Models}
 class ModelMeta {
   /// Metadata for the insert request class.
   final ClassMeta? insert;
@@ -51,6 +55,8 @@ class ModelMeta {
 }
 
 /// Metadata for a generated class.
+///
+/// {@category Models}
 class ClassMeta {
   /// An annotation to be applied to the generated class.
   final Object? annotation;
@@ -74,6 +80,8 @@ class ClassMeta {
 }
 
 /// Base class for the view modifiers.
+///
+/// {@category Models}
 class ChangedIn {
   final Symbol name;
 
@@ -81,11 +89,17 @@ class ChangedIn {
 }
 
 /// Hides the annotated field in the given view.
+///
+/// {@category Models}
+/// {@category Views}
 class HiddenIn extends ChangedIn {
   const HiddenIn(Symbol name) : super(name);
 }
 
 /// Modified the annotated field in the given view.
+///
+/// {@category Models}
+/// {@category Views}
 class ViewedIn extends ChangedIn {
   final Symbol as;
 
@@ -93,19 +107,26 @@ class ViewedIn extends ChangedIn {
 }
 
 /// Applies the transformer on the annotated field in the given view.
+///
+/// {@category Models}
+/// {@category Views}
 class TransformedIn extends ChangedIn {
   final Transformer by;
 
   const TransformedIn(Symbol name, {required this.by}) : super(name);
 }
 
-/// Used to annotate a field as the primary key of the table
+/// Used to annotate a field as the primary key of the table.
+///
+/// {@category Models}
 class PrimaryKey {
   const PrimaryKey();
 }
 
-/// Used to annotate a field as an auto increment value
-/// Can only be applied to an integer field
+/// Used to annotate a field as an auto increment value.
+/// Can only be applied to an integer field.
+///
+/// {@category Models}
 class AutoIncrement {
   const AutoIncrement();
 }
@@ -115,19 +136,25 @@ class AutoIncrement {
 /// The binding target must be a field of the referenced model that
 /// refers back to this model. That field must also use the `@BindTo`
 /// annotation set to this field, in order to form a closed loop.
+///
+/// {@category Models}
 class BindTo {
   const BindTo(this.name);
 
   final Symbol name;
 }
 
-/// Extend this to define a custom action
+/// Extend this to define a custom action.
+///
+/// {@category Queries & Actions}
 abstract class Action<T> {
   const Action();
   Future<void> apply(Database db, T request);
 }
 
-/// Extend this to define a custom query
+/// Extend this to define a custom query.
+///
+/// {@category Queries & Actions}
 abstract class Query<T, U> {
   const Query();
   Future<T> apply(Database db, U params);

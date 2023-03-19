@@ -1,0 +1,24 @@
+dartdoc:
+  categories:
+    "Introduction":
+      markdown: "doc/intro.md"
+    "Models":
+      markdown: "doc/models.md"
+    "Views":
+      markdown: "doc/views.md"
+    "Database":
+      markdown: "doc/database.md"
+    "Repositories":
+      markdown: "doc/repositories.md"
+    "Queries & Actions":
+      markdown: "doc/queries_and_actions.md.md"
+    "Migration":
+      markdown: "doc/migration.md"
+  categoryOrder:
+    - "Introduction"
+    - "Models"
+    - "Views"
+    - "Database"
+    - "Repositories"
+    - "Queries & Actions"
+    - "Migration"
