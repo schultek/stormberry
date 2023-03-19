@@ -1,3 +1,5 @@
+// ignore_for_file: annotate_overrides
+
 part of 'company.dart';
 
 extension CompanyRepositories on Database {
@@ -93,9 +95,9 @@ class CompanyInsertRequest {
     required this.addresses,
   });
 
-  String id;
-  String name;
-  List<BillingAddress> addresses;
+  final String id;
+  final String name;
+  final List<BillingAddress> addresses;
 }
 
 class CompanyUpdateRequest {
@@ -105,9 +107,9 @@ class CompanyUpdateRequest {
     this.addresses,
   });
 
-  String id;
-  String? name;
-  List<BillingAddress>? addresses;
+  final String id;
+  final String? name;
+  final List<BillingAddress>? addresses;
 }
 
 class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, String> {
@@ -124,7 +126,7 @@ class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, Strin
       'LEFT JOIN ('
       '  SELECT "billing_addresses"."company_id",'
       '    to_jsonb(array_agg("billing_addresses".*)) as data'
-      '  FROM (${BillingAddressQueryable().query}) "billing_addresses"'
+      '  FROM (${BillingAddressViewQueryable().query}) "billing_addresses"'
       '  GROUP BY "billing_addresses"."company_id"'
       ') "addresses"'
       'ON "companies"."id" = "addresses"."company_id"'
@@ -157,7 +159,7 @@ class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, Strin
   FullCompanyView decode(TypedMap map) => FullCompanyView(
       id: map.get('id'),
       name: map.get('name'),
-      addresses: map.getListOpt('addresses', BillingAddressQueryable().decoder) ?? const [],
+      addresses: map.getListOpt('addresses', BillingAddressViewQueryable().decoder) ?? const [],
       members: map.getListOpt('members', CompanyAccountViewQueryable().decoder) ?? const [],
       invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
       parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const []);
@@ -175,7 +177,7 @@ class FullCompanyView {
 
   final String id;
   final String name;
-  final List<BillingAddress> addresses;
+  final List<BillingAddressView> addresses;
   final List<CompanyAccountView> members;
   final List<OwnerInvoiceView> invoices;
   final List<CompanyPartyView> parties;
@@ -194,7 +196,7 @@ class MemberCompanyViewQueryable extends KeyedViewQueryable<MemberCompanyView, S
       'LEFT JOIN ('
       '  SELECT "billing_addresses"."company_id",'
       '    to_jsonb(array_agg("billing_addresses".*)) as data'
-      '  FROM (${BillingAddressQueryable().query}) "billing_addresses"'
+      '  FROM (${BillingAddressViewQueryable().query}) "billing_addresses"'
       '  GROUP BY "billing_addresses"."company_id"'
       ') "addresses"'
       'ON "companies"."id" = "addresses"."company_id"';
@@ -206,7 +208,7 @@ class MemberCompanyViewQueryable extends KeyedViewQueryable<MemberCompanyView, S
   MemberCompanyView decode(TypedMap map) => MemberCompanyView(
       id: map.get('id'),
       name: map.get('name'),
-      addresses: map.getListOpt('addresses', BillingAddressQueryable().decoder) ?? const []);
+      addresses: map.getListOpt('addresses', BillingAddressViewQueryable().decoder) ?? const []);
 }
 
 class MemberCompanyView {
@@ -218,5 +220,5 @@ class MemberCompanyView {
 
   final String id;
   final String name;
-  final List<BillingAddress> addresses;
+  final List<BillingAddressView> addresses;
 }

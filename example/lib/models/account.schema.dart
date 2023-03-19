@@ -1,3 +1,5 @@
+// ignore_for_file: annotate_overrides
+
 part of 'account.dart';
 
 extension AccountRepositories on Database {
@@ -115,11 +117,11 @@ class AccountInsertRequest {
     this.companyId,
   });
 
-  String firstName;
-  String lastName;
-  LatLng location;
-  BillingAddress? billingAddress;
-  String? companyId;
+  final String firstName;
+  final String lastName;
+  final LatLng location;
+  final BillingAddress? billingAddress;
+  final String? companyId;
 }
 
 class AccountUpdateRequest {
@@ -132,12 +134,12 @@ class AccountUpdateRequest {
     this.companyId,
   });
 
-  int id;
-  String? firstName;
-  String? lastName;
-  LatLng? location;
-  BillingAddress? billingAddress;
-  String? companyId;
+  final int id;
+  final String? firstName;
+  final String? lastName;
+  final LatLng? location;
+  final BillingAddress? billingAddress;
+  final String? companyId;
 }
 
 class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> {
@@ -151,7 +153,7 @@ class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> 
   String get query =>
       'SELECT "accounts".*, row_to_json("billingAddress".*) as "billingAddress", "invoices"."data" as "invoices", row_to_json("company".*) as "company", "parties"."data" as "parties"'
       'FROM "accounts"'
-      'LEFT JOIN (${BillingAddressQueryable().query}) "billingAddress"'
+      'LEFT JOIN (${BillingAddressViewQueryable().query}) "billingAddress"'
       'ON "accounts"."id" = "billingAddress"."account_id"'
       'LEFT JOIN ('
       '  SELECT "invoices"."account_id",'
@@ -181,7 +183,7 @@ class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> 
       firstName: map.get('first_name'),
       lastName: map.get('last_name'),
       location: map.get('location', LatLngConverter().decode),
-      billingAddress: map.getOpt('billingAddress', BillingAddressQueryable().decoder),
+      billingAddress: map.getOpt('billingAddress', BillingAddressViewQueryable().decoder),
       invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
       company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
       parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const []);
@@ -203,7 +205,7 @@ class FullAccountView {
   final String firstName;
   final String lastName;
   final LatLng location;
-  final BillingAddress? billingAddress;
+  final BillingAddressView? billingAddress;
   final List<OwnerInvoiceView> invoices;
   final MemberCompanyView? company;
   final List<GuestPartyView> parties;
@@ -220,7 +222,7 @@ class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> 
   String get query =>
       'SELECT "accounts".*, row_to_json("billingAddress".*) as "billingAddress", "invoices"."data" as "invoices", row_to_json("company".*) as "company", "parties"."data" as "parties"'
       'FROM "accounts"'
-      'LEFT JOIN (${BillingAddressQueryable().query}) "billingAddress"'
+      'LEFT JOIN (${BillingAddressViewQueryable().query}) "billingAddress"'
       'ON "accounts"."id" = "billingAddress"."account_id"'
       'LEFT JOIN ('
       '  SELECT "invoices"."account_id",'
@@ -250,7 +252,7 @@ class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> 
       firstName: map.get('first_name'),
       lastName: map.get('last_name'),
       location: map.get('location', LatLngConverter().decode),
-      billingAddress: map.getOpt('billingAddress', BillingAddressQueryable().decoder),
+      billingAddress: map.getOpt('billingAddress', BillingAddressViewQueryable().decoder),
       invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
       company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
       parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const []);
@@ -272,7 +274,7 @@ class UserAccountView {
   final String firstName;
   final String lastName;
   final LatLng location;
-  final BillingAddress? billingAddress;
+  final BillingAddressView? billingAddress;
   final List<OwnerInvoiceView> invoices;
   final MemberCompanyView? company;
   final List<GuestPartyView> parties;

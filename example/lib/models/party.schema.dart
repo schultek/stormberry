@@ -1,3 +1,5 @@
+// ignore_for_file: annotate_overrides
+
 part of 'party.dart';
 
 extension PartyRepositories on Database {
@@ -80,10 +82,10 @@ class PartyInsertRequest {
     required this.date,
   });
 
-  String id;
-  String name;
-  String? sponsorId;
-  int date;
+  final String id;
+  final String name;
+  final String? sponsorId;
+  final int date;
 }
 
 class PartyUpdateRequest {
@@ -94,10 +96,10 @@ class PartyUpdateRequest {
     this.date,
   });
 
-  String id;
-  String? name;
-  String? sponsorId;
-  int? date;
+  final String id;
+  final String? name;
+  final String? sponsorId;
+  final int? date;
 }
 
 class GuestPartyViewQueryable extends KeyedViewQueryable<GuestPartyView, String> {

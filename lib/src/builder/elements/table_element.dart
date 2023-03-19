@@ -315,6 +315,21 @@ class TableElement {
     }
     return name;
   }
+
+  ConstantReader? metaFor(String name) {
+    if (meta == null) {
+      return null;
+    }
+    var views = meta!.read('views');
+    if (!views.isNull) {
+      var view =
+          views.mapValue.entries.where((e) => name == e.key?.toSymbolValue()).firstOrNull?.value;
+      if (view != null && !view.isNull) {
+        return ConstantReader(view);
+      }
+    }
+    return meta!.read('view');
+  }
 }
 
 extension FieldBinding on FieldElement {

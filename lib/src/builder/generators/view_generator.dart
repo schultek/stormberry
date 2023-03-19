@@ -12,28 +12,28 @@ class ViewGenerator {
     var str = StringBuffer();
 
     for (var view in table.views.values) {
-      var viewName = view.viewName;
+      var queryName = view.queryName;
 
       if (table.primaryKeyColumn != null) {
         var paramType = table.primaryKeyColumn!.dartType;
         var paramName = table.primaryKeyColumn!.paramName;
-        var signature = 'Future<${view.entityName}?> query$viewName($paramType $paramName)';
+        var signature = 'Future<${view.className}?> query$queryName($paramType $paramName)';
         if (abstract) {
           str.writeln('$signature;');
         } else {
           str.writeln(
-            '@override $signature {\nreturn queryOne($paramName, ${view.entityName}Queryable());\n}',
+            '@override $signature {\nreturn queryOne($paramName, ${view.className}Queryable());\n}',
           );
         }
       }
 
       var signature =
-          'Future<List<${view.entityName}>> query$viewName${viewName.endsWith('s') ? 'e' : ''}s([QueryParams? params])';
+          'Future<List<${view.className}>> query$queryName${queryName.endsWith('s') ? 'e' : ''}s([QueryParams? params])';
       if (abstract) {
         str.writeln('$signature;');
       } else {
         str.writeln(
-            '@override $signature {\nreturn queryMany(${view.entityName}Queryable(), params);\n}');
+            '@override $signature {\nreturn queryMany(${view.className}Queryable(), params);\n}');
       }
     }
 
@@ -49,7 +49,7 @@ class ViewGenerator {
     var keyType = hasKey ? view.table.primaryKeyColumn!.dartType : null;
 
     return '''
-      class ${view.entityName}Queryable extends ${hasKey ? 'Keyed' : ''}ViewQueryable<${view.entityName}${hasKey ? ', $keyType' : ''}> {
+      class ${view.className}Queryable extends ${hasKey ? 'Keyed' : ''}ViewQueryable<${view.className}${hasKey ? ', $keyType' : ''}> {
         ${hasKey ? '''
         @override
         String get keyName => '${view.table.primaryKeyColumn!.columnName}';
@@ -65,13 +65,13 @@ class ViewGenerator {
         String get tableAlias => '${view.table.tableName}';
         
         @override
-        ${view.entityName} decode(TypedMap map) => ${view.className}(${view.columns.map((c) => '${c.paramName}: ${_getInitializer(c)}').join(',')});
+        ${view.className} decode(TypedMap map) => ${view.className}(${view.columns.map((c) => '${c.paramName}: ${_getInitializer(c)}').join(',')});
       }
       
-      ${defineClassWithMeta(view.className, view.table.meta?.read('view'), mixin: view.includeModelAsMixin ? view.table.element.name : null)}
+      ${defineClassWithMeta(view.className, view.table.metaFor(view.name))}
         ${view.className}(${view.columns.isEmpty ? '' : '{${view.columns.map((c) => '${c.isNullable ? '' : 'required '}this.${c.paramName}').join(', ')},}'});
         
-        ${view.columns.map((c) => '${view.includeModelAsMixin ? '@override ' : ''}final ${c.dartType} ${c.paramName};').join('\n')}
+        ${view.columns.map((c) => 'final ${c.dartType} ${c.paramName};').join('\n')}
       }
     ''';
   }
@@ -100,7 +100,7 @@ class ViewGenerator {
     str += "('$key'";
 
     if (c.view != null) {
-      str += ', ${c.view!.entityName}Queryable().decoder)';
+      str += ', ${c.view!.className}Queryable().decoder)';
     } else if (c.column.converter != null) {
       str += ', ${c.column.converter!.toSource()}.decode)';
     } else if (c.column is FieldColumnElement && (c.column as FieldColumnElement).dataType.isEnum) {

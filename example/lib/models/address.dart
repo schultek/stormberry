@@ -9,7 +9,7 @@ class Address {
   Address(this.name, this.street);
 }
 
-@Model()
+@Model(meta: ModelMeta(view: ClassMeta(implement: 'BillingAddress')))
 abstract class BillingAddress implements Address {
   String get city;
   String get postcode;

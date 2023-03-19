@@ -23,7 +23,7 @@ String buildViewQuery(ViewElement view) {
     String? tableReference;
 
     if (viewColumn.view != null) {
-      tableReference = '(\${${viewColumn.view!.entityName}Queryable().query})';
+      tableReference = '(\${${viewColumn.view!.className}Queryable().query})';
     } else if (column is LinkedColumnElement) {
       tableReference = '"${column.linkedTable.tableName}"';
     }

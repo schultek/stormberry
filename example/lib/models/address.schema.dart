@@ -1,3 +1,5 @@
+// ignore_for_file: annotate_overrides
+
 part of 'address.dart';
 
 extension AddressRepositories on Database {
@@ -11,7 +13,7 @@ abstract class BillingAddressRepository
         ModelRepositoryUpdate<BillingAddressUpdateRequest> {
   factory BillingAddressRepository._(Database db) = _BillingAddressRepository;
 
-  Future<List<BillingAddress>> queryBillingAddresses([QueryParams? params]);
+  Future<List<BillingAddressView>> queryBillingAddresses([QueryParams? params]);
 }
 
 class _BillingAddressRepository extends BaseRepository
@@ -22,8 +24,8 @@ class _BillingAddressRepository extends BaseRepository
   _BillingAddressRepository(super.db) : super(tableName: 'billing_addresses');
 
   @override
-  Future<List<BillingAddress>> queryBillingAddresses([QueryParams? params]) {
-    return queryMany(BillingAddressQueryable(), params);
+  Future<List<BillingAddressView>> queryBillingAddresses([QueryParams? params]) {
+    return queryMany(BillingAddressViewQueryable(), params);
   }
 
   @override
@@ -62,12 +64,12 @@ class BillingAddressInsertRequest {
     this.companyId,
   });
 
-  String city;
-  String postcode;
-  String name;
-  String street;
-  int? accountId;
-  String? companyId;
+  final String city;
+  final String postcode;
+  final String name;
+  final String street;
+  final int? accountId;
+  final String? companyId;
 }
 
 class BillingAddressUpdateRequest {
@@ -80,15 +82,15 @@ class BillingAddressUpdateRequest {
     this.companyId,
   });
 
-  String? city;
-  String? postcode;
-  String? name;
-  String? street;
-  int? accountId;
-  String? companyId;
+  final String? city;
+  final String? postcode;
+  final String? name;
+  final String? street;
+  final int? accountId;
+  final String? companyId;
 }
 
-class BillingAddressQueryable extends ViewQueryable<BillingAddress> {
+class BillingAddressViewQueryable extends ViewQueryable<BillingAddressView> {
   @override
   String get query => 'SELECT "billing_addresses".*'
       'FROM "billing_addresses"';
@@ -97,14 +99,14 @@ class BillingAddressQueryable extends ViewQueryable<BillingAddress> {
   String get tableAlias => 'billing_addresses';
 
   @override
-  BillingAddress decode(TypedMap map) => BillingAddressView(
+  BillingAddressView decode(TypedMap map) => BillingAddressView(
       city: map.get('city'),
       postcode: map.get('postcode'),
       name: map.get('name'),
       street: map.get('street'));
 }
 
-class BillingAddressView with BillingAddress {
+class BillingAddressView implements BillingAddress {
   BillingAddressView({
     required this.city,
     required this.postcode,
@@ -112,12 +114,8 @@ class BillingAddressView with BillingAddress {
     required this.street,
   });
 
-  @override
   final String city;
-  @override
   final String postcode;
-  @override
   final String name;
-  @override
   final String street;
 }

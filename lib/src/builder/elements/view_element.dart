@@ -43,7 +43,7 @@ class ViewColumn {
       var isList = column.isList;
       var nullSuffix = column.parameter!.type.nullabilitySuffix;
       var typeSuffix = nullSuffix == NullabilitySuffix.question ? '?' : '';
-      return isList ? 'List<${view!.entityName}>$typeSuffix' : '${view!.entityName}$typeSuffix';
+      return isList ? 'List<${view!.className}>$typeSuffix' : '${view!.className}$typeSuffix';
     } else {
       return column.parameter!.type.getDisplayString(withNullability: true);
     }
@@ -73,29 +73,11 @@ class ViewElement {
   String get className => CaseStyle.pascalCase
       .transform('${!isDefaultView ? '${name}_' : ''}${table.element.name}_view');
 
-  String get entityName => isDefaultView ? table.element.name : className;
-
-  String get viewName =>
-      CaseStyle.pascalCase.transform(isDefaultView ? entityName : '${name}_view');
-
   String get viewTableName =>
       CaseStyle.snakeCase.transform('${!isDefaultView ? '${name}_' : ''}${table.tableName}_view');
 
-  late bool includeModelAsMixin = () {
-    if (!isDefaultView) {
-      return false;
-    }
-
-    if (columns.length != table.columns.length) {
-      return false;
-    }
-
-    if (columns.any((c) => c.viewAs != null && c.viewAs != defaultName)) {
-      return false;
-    }
-
-    return true;
-  }();
+  String get queryName =>
+      CaseStyle.pascalCase.transform(isDefaultView ? table.element.name : '${name}_view');
 
   late List<ViewColumn> columns = () {
     var columns = <ViewColumn>[];

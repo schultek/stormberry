@@ -148,8 +148,6 @@ void main() {
 
       expect(view.isDefaultView, isTrue);
       expect(view.className, equals('MyModelView'));
-      expect(view.entityName, equals('MyModel'));
-      expect(view.viewName, equals('MyModel'));
       expect(view.viewTableName, equals('my_models_view'));
     });
   });

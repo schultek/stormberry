@@ -1,3 +1,5 @@
+// ignore_for_file: annotate_overrides
+
 part of 'invoice.dart';
 
 extension InvoiceRepositories on Database {
@@ -69,11 +71,11 @@ class InvoiceInsertRequest {
     this.companyId,
   });
 
-  String id;
-  String title;
-  String invoiceId;
-  int? accountId;
-  String? companyId;
+  final String id;
+  final String title;
+  final String invoiceId;
+  final int? accountId;
+  final String? companyId;
 }
 
 class InvoiceUpdateRequest {
@@ -85,11 +87,11 @@ class InvoiceUpdateRequest {
     this.companyId,
   });
 
-  String id;
-  String? title;
-  String? invoiceId;
-  int? accountId;
-  String? companyId;
+  final String id;
+  final String? title;
+  final String? invoiceId;
+  final int? accountId;
+  final String? companyId;
 }
 
 class OwnerInvoiceViewQueryable extends KeyedViewQueryable<OwnerInvoiceView, String> {

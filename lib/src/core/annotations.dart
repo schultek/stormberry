@@ -35,15 +35,19 @@ class ModelMeta {
   /// Metadata for the update request class.
   final ClassMeta? update;
 
-  /// Metadata for the view classes.
+  /// Metadata for all view classes.
   final ClassMeta? view;
 
-  const ModelMeta({this.insert, this.update, this.view});
+  /// Metadata for specific view classes.
+  final Map<Symbol, ClassMeta>? views;
+
+  const ModelMeta({this.insert, this.update, this.view, this.views});
 
   const ModelMeta.all(ClassMeta meta)
       : insert = meta,
         update = meta,
-        view = meta;
+        view = meta,
+        views = null;
 }
 
 /// Metadata for a generated class.
@@ -52,12 +56,18 @@ class ClassMeta {
   final Object? annotation;
 
   /// Additional mixins for the generated class.
+  ///
+  /// Supports the '{name}' template which will be replaced with the target class name.
   final String? mixin;
 
   /// Extends clause for the generated class.
+  ///
+  /// Supports the '{name}' template which will be replaced with the target class name.
   final String? extend;
 
   /// Additional interfaces for the generated class.
+  ///
+  /// Supports the '{name}' template which will be replaced with the target class name.
   final String? implement;
 
   const ClassMeta({this.annotation, this.mixin, this.extend, this.implement});

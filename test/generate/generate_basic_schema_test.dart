@@ -31,13 +31,13 @@ void main() {
         expect(
           source,
           contains(
-            'class AView with A {\n'
+            'class AView {\n'
             '  AView({\n'
             '    required this.id,\n'
             '    required this.b,\n'
             '  });\n\n'
-            '  @override\n  final String id;\n'
-            '  @override\n  final B b;\n'
+            '  final String id;\n'
+            '  final B b;\n'
             '}',
           ),
         );
@@ -45,11 +45,11 @@ void main() {
         expect(
           source,
           contains(
-            'class BView with B {\n'
+            'class BView {\n'
             '  BView({\n'
             '    required this.id,\n'
             '  });\n\n'
-            '  @override\n  final String id;\n'
+            '  final String id;\n'
             '}',
           ),
         );
