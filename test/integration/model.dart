@@ -8,6 +8,8 @@ abstract class Author {
   String get id;
 
   String get name;
+
+  bool get verified;
 }
 
 @Model()

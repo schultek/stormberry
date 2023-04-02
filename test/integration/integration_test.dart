@@ -15,7 +15,8 @@ void testInserts() {
     var tester = useTester(schema: 'integration/*', cleanup: true);
 
     test('insert single object', () async {
-      await tester.db.authors.insertOne(AuthorInsertRequest(id: 'abc', name: 'Alice'));
+      await tester.db.authors
+          .insertOne(AuthorInsertRequest(id: 'abc', name: 'Alice', verified: false));
 
       var authors = await tester.db.authors.queryAuthors();
 
@@ -25,8 +26,8 @@ void testInserts() {
 
     test('insert multiple objects', () async {
       await tester.db.authors.insertMany([
-        AuthorInsertRequest(id: 'abc', name: 'Alice'),
-        AuthorInsertRequest(id: 'def', name: 'Bob')
+        AuthorInsertRequest(id: 'abc', name: 'Alice', verified: false),
+        AuthorInsertRequest(id: 'def', name: 'Bob', verified: true)
       ]);
 
       var authors = await tester.db.authors.queryAuthors(QueryParams(orderBy: 'id'));
@@ -38,11 +39,12 @@ void testInserts() {
 
     test('updates single object', () async {
       await tester.db.authors.insertMany([
-        AuthorInsertRequest(id: 'abc', name: 'Alice'),
-        AuthorInsertRequest(id: 'def', name: 'Bob')
+        AuthorInsertRequest(id: 'abc', name: 'Alice', verified: false),
+        AuthorInsertRequest(id: 'def', name: 'Bob', verified: true)
       ]);
 
-      await tester.db.authors.updateOne(AuthorUpdateRequest(id: 'abc', name: 'Alex'));
+      await tester.db.authors
+          .updateOne(AuthorUpdateRequest(id: 'abc', name: 'Alex', verified: true));
       await tester.db.authors.updateMany([]);
 
       var authors = await tester.db.authors.queryAuthors(QueryParams(orderBy: 'id'));
@@ -54,8 +56,8 @@ void testInserts() {
 
     test('delete single object', () async {
       await tester.db.authors.insertMany([
-        AuthorInsertRequest(id: 'abc', name: 'Alice'),
-        AuthorInsertRequest(id: 'def', name: 'Bob')
+        AuthorInsertRequest(id: 'abc', name: 'Alice', verified: false),
+        AuthorInsertRequest(id: 'def', name: 'Bob', verified: true)
       ]);
 
       await tester.db.authors.deleteOne('abc');
