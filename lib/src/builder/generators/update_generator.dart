@@ -69,9 +69,9 @@ class UpdateGenerator {
 
     String toUpdateValue(NamedColumnElement c) {
       if (c.converter != null) {
-        return '\${values.add(${c.converter!.toSource()}.tryEncode(r.${c.paramName}))}:${c.rawSqlType}';
+        return '\${values.add(${c.converter!.toSource()}.tryEncode(r.${c.paramName}))}:${c.rawSqlType}::${c.rawSqlType}';
       } else {
-        return '\${values.add(r.${c.paramName})}:${c.rawSqlType}';
+        return '\${values.add(r.${c.paramName})}:${c.rawSqlType}::${c.rawSqlType}';
       }
     }
 
