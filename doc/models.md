@@ -13,6 +13,9 @@ abstract class Book {
 }
 ```
 
+***Note**: The model class acts mostly as a blueprint for your database tables. It is recommended to not use
+this class directly in you application, but rather one of the generated entity classes. More on this later.* 
+
 This model uses an additional `@PrimaryKey()` annotation on its `id` field. It will be translated into the following sql table:
 
 ```sql
@@ -156,7 +159,7 @@ class LatLngConverter extends TypeConverter<LatLng> {
 
 This transforms a value of type `LatLng` to the postgres data type `point`.
 Note the usage of `PgPoint` as the encoded object, which comes from the `postgres` package.
-For decoding, we also cover the case that the value is returned as a point literal instead of an
+For decoding, we also cover the case that the value is returned as a point string literal instead of a
 point object.
 
 To use this converter specify it for a field of your model with:

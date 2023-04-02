@@ -11,7 +11,7 @@ dartdoc:
     "Repositories":
       markdown: "doc/repositories.md"
     "Queries & Actions":
-      markdown: "doc/queries_and_actions.md.md"
+      markdown: "doc/queries_and_actions.md"
     "Migration":
       markdown: "doc/migration.md"
   categoryOrder:

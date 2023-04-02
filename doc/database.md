@@ -1,9 +1,4 @@
-
-When running the build using `dart run build_runner build`, `stormberry` will
-generate a `Repository` for each model which you can use to query, insert, update or delete data
-related to this model.
-
-`Repositories` are extensions to the `Database` object, which you can create like this:
+You can create a database object like this:
 
 ```dart
 final db = Database(

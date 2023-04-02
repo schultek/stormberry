@@ -1,7 +1,8 @@
+/// A strongly-typed postgres ORM to provide easy bindings between your dart classes and postgres database.
+/// It supports all kinds of relations without any complex configuration.
 library stormberry;
 
 export 'package:postgres/postgres.dart';
-export 'package:postgres/src/text_codec.dart';
 
 export 'src/core/annotations.dart';
 export 'src/core/converter.dart';
