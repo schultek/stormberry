@@ -22,7 +22,7 @@ void testUpdate() {
       var as = await tester.db.as.queryAs(QueryParams(orderBy: 'id'));
 
       expect(as, hasLength(2));
-      expect(as.first, predicate<AView>((a) => a.id == 'abc' && a.a == 'hello'));
+      expect(as.first, predicate<AView>((a) => a.id == 'abc' && a.a == 'test'));
       expect(as.last, predicate<AView>((a) => a.id == 'def' && a.a == 'world'));
     });
   });
