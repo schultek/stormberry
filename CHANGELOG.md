@@ -1,3 +1,16 @@
+# 0.13.0
+
+- Added `Table.defaultView` flag for referring to the default view of a table.
+- [BREAKING] Removed model mixin from default view classes.
+  - If needed this can now be specified manually using `ModelMeta` annotations.
+
+- Fixed bug with using `@HiddenIn` on normal fields.
+- Corrected naming of bool sql type to `boolean`.
+- Fixed type cast for parameters in update queries.
+
+- Moved documentation to dartdoc topics.
+- Increased test coverage.
+
 # 0.12.1
 
 - Support generic type converters.
