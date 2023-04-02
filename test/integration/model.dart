@@ -3,21 +3,28 @@ import 'package:stormberry/stormberry.dart';
 part 'model.schema.dart';
 
 @Model()
-abstract class Author {
+abstract class A {
   @PrimaryKey()
   String get id;
 
-  String get name;
-
-  bool get verified;
+  String get a;
+  int get b;
+  double get c;
+  bool get d;
+  List<int> get e;
+  List<double> get f;
 }
 
 @Model()
-abstract class Book {
+abstract class B {
   @PrimaryKey()
-  String get id;
+  @AutoIncrement()
+  int get id;
 
-  String get title;
+  A get a;
 
-  Author get author;
+  String get b;
+  int get c;
+  double get d;
+  bool get e;
 }
