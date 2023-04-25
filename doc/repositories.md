@@ -24,7 +24,7 @@ methods:
 - `Future<void> updateOne(UserUpdateRequest request)`
 - `Future<void> updateMany(List<UserUpdateRequest> requests)`
 - `Future<void> deleteOne(String id)`
-- `Future<void> updateMany(List<String> ids)`
+- `Future<void> deleteMany(List<String> ids)`
 
 Each method has a single and multi variant. `UserInsertRequest` and `UserUpdateRequest` are
 special generated classes that enable type-safe inserts and updates while respecting data relations
