@@ -49,7 +49,7 @@ final matchingUser = (await db.users.queryUsers(const QueryParams(
 )));
 ```
 
-**NOTE**: Alternatively to avoid SQL injection it is recommended to use `values` proprety of QueryParams like below example
+**NOTE**: Alternatively to avoid SQL injection it is recommended to use `values` property of `QueryParams` like below example
 
 ```dart
 // Check if user already exists
