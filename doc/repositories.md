@@ -16,9 +16,9 @@ For the above example with two views `Complete` and `Reduced`, this would have t
 methods:
 
 - `Future<CompleteUserView?> queryCompleteView(String id)`
-- `Future<List<CompleteUserView>> queryCompleteViews()`
+- `Future<List<CompleteUserView>> queryCompleteViews([QueryParams? params])`
 - `Future<ReducedUserView?> queryReducedView(String id)`
-- `Future<List<ReducedUserView>> queryReducedViews()`
+- `Future<List<ReducedUserView>> queryReducedViews([QueryParams? params])`
 - `Future<void> insertOne(UserInsertRequest request)`
 - `Future<void> insertMany(List<UserInsertRequest> requests)`
 - `Future<void> updateOne(UserUpdateRequest request)`
@@ -35,6 +35,19 @@ the name of a user while keeping the other fields untouched like this:
 
 ```dart
 await db.users.updateOne(UserUpdateRequest(id: 'abc', name: 'Tom'));
+```
+
+#### QueryParams
+
+Query methods that return a list of models will accept a `QueryParams` argument 
+where you can set conditions for you query like where conditions for example.
+
+```dart
+// Check if user already exists
+final matchingUser = (await db.users.queryUsers(const QueryParams(
+  where: 'email=@email',
+  values: {'email': 'test@test.de'},
+)));
 ```
 
 ---
