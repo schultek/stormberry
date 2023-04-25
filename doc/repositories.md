@@ -45,6 +45,15 @@ where you can set conditions for you query like where conditions for example.
 ```dart
 // Check if user already exists
 final matchingUser = (await db.users.queryUsers(const QueryParams(
+  where: "email='test@test.de'",
+)));
+```
+
+**NOTE**: Alternatively to avoid SQL injection it is recommended to use `values` proprety of QueryParams like below example
+
+```dart
+// Check if user already exists
+final matchingUser = (await db.users.queryUsers(const QueryParams(
   where: 'email=@email',
   values: {'email': 'test@test.de'},
 )));
