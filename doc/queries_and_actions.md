@@ -55,9 +55,12 @@ class UpdateTitleAction extends Action<InfoPostView> {
   Future<void> apply(Database db, InfoPostView request) async {
     await db.query("""
       UPDATE posts
-      SET title = '$title'
-      WHERE id = ${request.id}
-""");
+      SET title = @title
+      WHERE id = @id
+    """, {
+      'title': title,
+      'id': request.id,
+    });
   }
 }
 ```
