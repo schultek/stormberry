@@ -1,3 +1,7 @@
+# 0.13.1
+
+- Fixed bug with boolean column in migration.
+
 # 0.13.0
 
 - Added `Table.defaultView` flag for referring to the default view of a table.
