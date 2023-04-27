@@ -1,5 +1,4 @@
 import '../../../stormberry.dart';
-
 import 'schema.dart';
 
 Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
@@ -22,13 +21,20 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
       var columnName = columnMap['column_name'] as String;
       var columnType = columnMap['udt_name'] as String;
       var columnIsNullable = columnMap['is_nullable'];
-      var columnIsAutoIncrement =
-          (columnMap['column_default'] as String?)?.startsWith('nextval') ?? false;
+      var columnDefault = columnMap['column_default'] as String?;
+      var columnIsAutoIncrement = columnDefault?.startsWith('nextval') ?? false;
+
+      if (columnIsAutoIncrement && (columnType == 'int4' || columnType == 'int8')) {
+        columnType = 'serial';
+      }
+
+      if (columnType == 'bool') {
+        columnType = 'boolean';
+      }
+
       tableScheme.columns[columnName] = ColumnSchema(
         columnName,
-        type: columnIsAutoIncrement && (columnType == 'int4' || columnType == 'int8')
-            ? 'serial'
-            : columnType,
+        type: columnType,
         isNullable: columnIsNullable == 'YES',
         isAutoIncrement: columnIsAutoIncrement,
       );
