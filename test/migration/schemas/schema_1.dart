@@ -17,6 +17,7 @@ abstract class Book {
   int get id;
 
   String get title;
+  bool get isBestSelling;
 
   Author get author;
 }
