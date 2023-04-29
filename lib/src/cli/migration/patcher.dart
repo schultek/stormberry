@@ -113,10 +113,6 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
     }
   }
 
-  removeUnused(db, diff);
-}
-
-Future<void> removeUnused(Database db, DatabaseSchemaDiff diff) async {
   for (var table in diff.tables.modified) {
     if (table.columns.removed.isNotEmpty) {
       await db.query("""
