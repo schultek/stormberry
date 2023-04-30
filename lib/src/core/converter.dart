@@ -24,7 +24,7 @@ abstract class TypeConverter<T> {
     if (value is T) {
       return encode(value);
     } else if (value is List) {
-      return value.map(tryEncode).toList();
+      return value.map(tryEncode).cast<Object>().toList();
     } else if (value is Map) {
       return value.map((k, v) => MapEntry(k, tryEncode(v)));
     } else {
