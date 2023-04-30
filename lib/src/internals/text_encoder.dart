@@ -92,7 +92,7 @@ class TextEncoder {
     } else if (_baseConverters[value.runtimeType] != null) {
       return _baseConverters[value.runtimeType]!.encode(value);
     } else if (value is List) {
-      return value.map(convert).toList();
+      return value.map(convert).cast<Object>().toList();
     } else if (value is Map) {
       return value.map((k, v) => MapEntry(k, convert(v)));
     } else {
