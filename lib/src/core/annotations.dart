@@ -79,41 +79,39 @@ class ClassMeta {
   const ClassMeta({this.annotation, this.mixin, this.extend, this.implement});
 }
 
-/// Base class for the view modifiers.
-///
-/// {@category Models}
-class ChangedIn {
-  final Symbol name;
-
-  const ChangedIn(this.name);
-}
-
 /// Hides the annotated field in the given view.
 ///
 /// {@category Models}
 /// {@category Views}
-class HiddenIn extends ChangedIn {
-  const HiddenIn(Symbol name) : super(name);
+class HiddenIn {
+  final Symbol name;
+
+  const HiddenIn(this.name);
+  const HiddenIn.defaultView() : name = Model.defaultView;
 }
 
 /// Modified the annotated field in the given view.
 ///
 /// {@category Models}
 /// {@category Views}
-class ViewedIn extends ChangedIn {
+class ViewedIn {
+  final Symbol name;
   final Symbol as;
 
-  const ViewedIn(Symbol name, {required this.as}) : super(name);
+  const ViewedIn(this.name, {required this.as});
+  const ViewedIn.defaultView({required this.as}) : name = Model.defaultView;
 }
 
 /// Applies the transformer on the annotated field in the given view.
 ///
 /// {@category Models}
 /// {@category Views}
-class TransformedIn extends ChangedIn {
+class TransformedIn {
+  final Symbol name;
   final Transformer by;
 
-  const TransformedIn(Symbol name, {required this.by}) : super(name);
+  const TransformedIn(this.name, {required this.by});
+  const TransformedIn.defaultView({required this.by}) : name = Model.defaultView;
 }
 
 /// Used to annotate a field as the primary key of the table.

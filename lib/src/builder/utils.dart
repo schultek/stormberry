@@ -13,7 +13,9 @@ const tableChecker = TypeChecker.fromRuntime(Model);
 const typeConverterChecker = TypeChecker.fromRuntime(TypeConverter);
 const primaryKeyChecker = TypeChecker.fromRuntime(PrimaryKey);
 const autoIncrementChecker = TypeChecker.fromRuntime(AutoIncrement);
-const changedInChecker = TypeChecker.fromRuntime(ChangedIn);
+const hiddenInChecker = TypeChecker.fromRuntime(HiddenIn);
+const viewedInChecker = TypeChecker.fromRuntime(ViewedIn);
+const transformedInChecker = TypeChecker.fromRuntime(TransformedIn);
 const useConverterChecker = TypeChecker.fromRuntime(UseConverter);
 const bindToChecker = TypeChecker.fromRuntime(BindTo);
 

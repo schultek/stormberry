@@ -2,6 +2,7 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/nullability_suffix.dart';
 
 import '../elements/column/field_column_element.dart';
+import '../elements/column/view_column_element.dart';
 import '../elements/table_element.dart';
 import '../elements/view_element.dart';
 import '../utils.dart';
@@ -76,7 +77,7 @@ class ViewGenerator {
     ''';
   }
 
-  String _getInitializer(ViewColumn c) {
+  String _getInitializer(ViewColumnElement c) {
     var column = c.column;
     var param = column.parameter!;
     var str = 'map.get';

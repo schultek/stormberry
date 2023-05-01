@@ -2,12 +2,13 @@ import '../elements/column/column_element.dart';
 import '../elements/column/foreign_column_element.dart';
 import '../elements/column/join_column_element.dart';
 import '../elements/column/reference_column_element.dart';
+import '../elements/column/view_column_element.dart';
 import '../elements/view_element.dart';
 
 String buildViewQuery(ViewElement view) {
   String tableName = view.table.tableName;
   String? primaryKeyName = view.table.primaryKeyColumn?.columnName;
-  List<ViewColumn> columns = view.columns;
+  List<ViewColumnElement> columns = view.columns;
 
   var joins = <MapEntry<String, String>>[];
 

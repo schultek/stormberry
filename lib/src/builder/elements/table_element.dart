@@ -330,6 +330,12 @@ class TableElement {
     }
     return meta!.read('view');
   }
+
+  void analyzeViews() {
+    for (var view in views.values) {
+      view.analyze();
+    }
+  }
 }
 
 extension FieldBinding on FieldElement {

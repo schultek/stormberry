@@ -82,8 +82,12 @@ abstract class ColumnElement {
     if (parameter == null || parameter!.getter == null) return <ConstantReader>[];
 
     return [
-      ...changedInChecker.annotationsOf(parameter!),
-      ...changedInChecker.annotationsOf(parameter!.getter!),
+      ...hiddenInChecker.annotationsOf(parameter!),
+      ...hiddenInChecker.annotationsOf(parameter!.getter!),
+      ...viewedInChecker.annotationsOf(parameter!),
+      ...viewedInChecker.annotationsOf(parameter!.getter!),
+      ...transformedInChecker.annotationsOf(parameter!),
+      ...transformedInChecker.annotationsOf(parameter!.getter!),
     ].map((m) => ConstantReader(m)).toList();
   }();
 

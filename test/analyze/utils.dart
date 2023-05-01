@@ -6,9 +6,9 @@ import 'package:stormberry/src/builder/elements/column/field_column_element.dart
 import 'package:stormberry/src/builder/elements/column/foreign_column_element.dart';
 import 'package:stormberry/src/builder/elements/column/join_column_element.dart';
 import 'package:stormberry/src/builder/elements/column/reference_column_element.dart';
+import 'package:stormberry/src/builder/elements/column/view_column_element.dart';
 import 'package:stormberry/src/builder/elements/join_table_element.dart';
 import 'package:stormberry/src/builder/elements/table_element.dart';
-import 'package:stormberry/src/builder/elements/view_element.dart';
 import 'package:stormberry/src/builder/schema.dart';
 import 'package:test/test.dart';
 
@@ -171,11 +171,11 @@ Matcher isViewColumn({
   required bool isNullable,
 }) {
   return allOf(
-    isA<ViewColumn>(),
-    _has<ViewColumn>('viewAs', (c) => c.viewAs, viewAs),
-    _has<ViewColumn>('transformer', (c) => c.transformer, transformer),
-    _has<ViewColumn>('paramName', (c) => c.paramName, paramName),
-    _has<ViewColumn>('dartType', (c) => c.dartType, dartType),
-    _has<ViewColumn>('isNullable', (c) => c.isNullable, isNullable),
+    isA<ViewColumnElement>(),
+    _has<ViewColumnElement>('viewAs', (c) => c.viewAs, viewAs),
+    _has<ViewColumnElement>('transformer', (c) => c.transformer, transformer),
+    _has<ViewColumnElement>('paramName', (c) => c.paramName, paramName),
+    _has<ViewColumnElement>('dartType', (c) => c.dartType, dartType),
+    _has<ViewColumnElement>('isNullable', (c) => c.isNullable, isNullable),
   );
 }

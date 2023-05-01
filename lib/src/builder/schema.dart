@@ -1,10 +1,10 @@
 import 'package:analyzer/dart/element/element.dart';
-import 'package:path/path.dart' as p;
 import 'package:build/build.dart';
-import 'utils.dart';
+import 'package:path/path.dart' as p;
 
 import 'elements/join_table_element.dart';
 import 'elements/table_element.dart';
+import 'utils.dart';
 
 final schemaResource = Resource<SchemaState>(() => SchemaState());
 
@@ -39,6 +39,9 @@ class SchemaState {
       }
       for (var element in tables.values) {
         element.sortColumns();
+      }
+      for (var element in tables.values) {
+        element.analyzeViews();
       }
       _didFinalize = true;
     }

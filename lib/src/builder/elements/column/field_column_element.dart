@@ -7,7 +7,6 @@ import '../../../core/case_style.dart';
 import '../../schema.dart';
 import '../../utils.dart';
 import '../table_element.dart';
-import '../view_element.dart';
 import 'column_element.dart';
 
 class FieldColumnElement extends ColumnElement with NamedColumnElement {
