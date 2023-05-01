@@ -23,7 +23,7 @@ abstract class User {
   @HiddenIn(#Reduced)
   String get address;
 
-  @ViewedIn(#Company, as: #Info)
+  @ViewedIn(#Complete, as: #Info)
   @HiddenIn(#Reduced)
   List<Post> get posts;
 }

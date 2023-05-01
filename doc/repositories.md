@@ -16,15 +16,15 @@ For the above example with two views `Complete` and `Reduced`, this would have t
 methods:
 
 - `Future<CompleteUserView?> queryCompleteView(String id)`
-- `Future<List<CompleteUserView>> queryCompleteViews()`
+- `Future<List<CompleteUserView>> queryCompleteViews([QueryParams? params])`
 - `Future<ReducedUserView?> queryReducedView(String id)`
-- `Future<List<ReducedUserView>> queryReducedViews()`
+- `Future<List<ReducedUserView>> queryReducedViews([QueryParams? params])`
 - `Future<void> insertOne(UserInsertRequest request)`
 - `Future<void> insertMany(List<UserInsertRequest> requests)`
 - `Future<void> updateOne(UserUpdateRequest request)`
 - `Future<void> updateMany(List<UserUpdateRequest> requests)`
 - `Future<void> deleteOne(String id)`
-- `Future<void> updateMany(List<String> ids)`
+- `Future<void> deleteMany(List<String> ids)`
 
 Each method has a single and multi variant. `UserInsertRequest` and `UserUpdateRequest` are
 special generated classes that enable type-safe inserts and updates while respecting data relations
@@ -35,6 +35,28 @@ the name of a user while keeping the other fields untouched like this:
 
 ```dart
 await db.users.updateOne(UserUpdateRequest(id: 'abc', name: 'Tom'));
+```
+
+#### QueryParams
+
+Query methods that return a list of models will accept a `QueryParams` argument 
+where you can set conditions for you query like where conditions for example.
+
+```dart
+// Check if user already exists
+final matchingUser = (await db.users.queryUsers(const QueryParams(
+  where: "email='test@test.de'",
+)));
+```
+
+**NOTE**: Alternatively to avoid SQL injection it is recommended to use `values` property of `QueryParams` like below example
+
+```dart
+// Check if user already exists
+final matchingUser = (await db.users.queryUsers(const QueryParams(
+  where: 'email=@email',
+  values: {'email': 'test@test.de'},
+)));
 ```
 
 ---
