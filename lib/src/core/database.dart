@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:io';
 
-import 'package:postgres/postgres.dart';
+import 'package:postgres/postgres.dart' show ReplicationMode;
+import 'package:postgres/postgres_v3_experimental.dart';
 
 import 'default_values.dart';
 
@@ -25,7 +27,8 @@ class Database {
   final bool allowClearTextPassword;
   final ReplicationMode replicationMode;
 
-  static PostgreSQLConnection? _cachedConnection;
+  static PgConnection? _cachedConnection;
+  static bool _isInTransaction = false;
 
   Database({
     this.debugPrint = false,
@@ -41,64 +44,79 @@ class Database {
     bool? isUnixSocket,
     this.allowClearTextPassword = false,
     this.replicationMode = ReplicationMode.none,
-  })  : host = host ?? Platform.environment['DB_HOST_ADDRESS'] ?? DB_HOST_ADDRESS,
-        port = port ?? int.tryParse(Platform.environment['DB_PORT'] ?? '') ?? DB_PORT,
+  })  : host =
+            host ?? Platform.environment['DB_HOST_ADDRESS'] ?? DB_HOST_ADDRESS,
+        port = port ??
+            int.tryParse(Platform.environment['DB_PORT'] ?? '') ??
+            DB_PORT,
         database = database ?? Platform.environment['DB_NAME'] ?? DB_NAME,
         user = user ?? Platform.environment['DB_USERNAME'] ?? DB_USERNAME,
-        password = password ?? Platform.environment['DB_PASSWORD'] ?? DB_PASSWORD,
+        password =
+            password ?? Platform.environment['DB_PASSWORD'] ?? DB_PASSWORD,
         useSSL = useSSL ?? (Platform.environment['DB_SSL'] != DB_SSL),
-        isUnixSocket = isUnixSocket ?? (Platform.environment['DB_SOCKET'] == DB_SOCKET);
+        isUnixSocket =
+            isUnixSocket ?? (Platform.environment['DB_SOCKET'] == DB_SOCKET);
 
-  PostgreSQLConnection connection() {
-    return PostgreSQLConnection(
-      host,
-      port,
-      database,
-      username: user,
-      password: password,
-      useSSL: useSSL,
-      timeoutInSeconds: timeoutInSeconds,
-      queryTimeoutInSeconds: queryTimeoutInSeconds,
-      timeZone: timeZone,
-      isUnixSocket: isUnixSocket,
-      allowClearTextPassword: allowClearTextPassword,
-      replicationMode: replicationMode,
+  Future<PgConnection> connection() async {
+    return PgConnection.open(
+      PgEndpoint(
+        host: host,
+        port: port,
+        database: database,
+        username: user,
+        password: password,
+        requireSsl: useSSL,
+        isUnixSocket: isUnixSocket,
+        allowCleartextPassword: allowClearTextPassword,
+      ),
+      sessionSettings: PgSessionSettings(
+        timeZone: timeZone,
+        connectTimeout: Duration(seconds: timeoutInSeconds),
+      ),
     );
   }
 
   Future<void> open() => _tryOpen();
   Future<void> close() async {
-    if (_cachedConnection != null && !_cachedConnection!.isClosed) {
-      await _cachedConnection!.close();
+    final connection = _cachedConnection;
+
+    if (connection != null) {
       _cachedConnection = null;
+      await connection.close();
     }
   }
 
   Future<void> _tryOpen() async {
-    if (_cachedConnection != null && !_cachedConnection!.isClosed) {
+    if (_cachedConnection != null) {
       return;
     }
 
-    var c = connection();
-    print('Database: connecting to ${c.databaseName} at ${c.host}...');
-    await c.open();
-    _cachedConnection = c;
+    print('Database: connecting to $database at $host...');
+
+    _cachedConnection = await connection();
     print('Database: connected');
   }
 
-  Future<PostgreSQLResult> query(String query, [Map<String, dynamic>? values]) async {
+  Future<PgResult> query(String query, [List<PgTypedParameter>? values]) async {
     await _tryOpen();
     if (debugPrint) {
-      _printQuery(query);
+      _printQuery(query, values);
     }
-    if (transactionContext != null) {
-      return transactionContext!.query(query, substitutionValues: values);
-    } else {
-      return _cachedConnection!.query(query, substitutionValues: values);
-    }
+
+    final session = _cachedConnection!;
+    return await session.execute(
+      PgSql(
+        query,
+        types: [
+          if (values != null)
+            for (final value in values) value.type,
+        ],
+      ),
+      parameters: values,
+    );
   }
 
-  void _printQuery(String query) {
+  void _printQuery(String query, [List<PgTypedParameter>? values]) {
     var offset = 0;
     var q = query
         .split('\n')
@@ -110,42 +128,29 @@ class Database {
       if (s.startsWith(')')) offset -= 2;
       return "$v\n${" " * offset}$s";
     });
-    print('---\n$q');
+    print(
+        '---\n$q with params ${values?.map((p) => '${p.value}::${p.type.nameForSubstitution}')}');
   }
-
-  Future? transactionFuture;
-  Completer<bool>? transactionCompleter;
-  PostgreSQLExecutionContext? transactionContext;
 
   Future<void> startTransaction() async {
     await _tryOpen();
-    if (transactionContext != null) {
-      return;
+
+    if (!_isInTransaction) {
+      await _cachedConnection!.execute('BEGIN', ignoreRows: true);
     }
-    transactionCompleter = Completer();
-    var transactionStarted = Completer();
-    transactionFuture = _cachedConnection!.transaction((context) async {
-      transactionContext = context;
-      transactionStarted.complete();
-      return transactionCompleter!.future;
-    });
-    await transactionStarted.future;
   }
 
-  void cancelTransaction() {
-    try {
-      transactionContext?.cancelTransaction();
-    } catch (_) {}
-    transactionCompleter?.complete(false);
-    transactionCompleter = null;
+  Future<void> cancelTransaction() async {
+    if (_isInTransaction) {
+      await _cachedConnection!.execute('ROLLBACK', ignoreRows: true);
+      _isInTransaction = false;
+    }
   }
 
   Future<bool> finishTransaction() async {
-    transactionCompleter?.complete(true);
-    transactionContext = null;
     try {
-      var result = await transactionFuture;
-      return result as bool;
+      await _cachedConnection!.execute('COMMIT', ignoreRows: true);
+      return true;
     } catch (e) {
       print('Transaction finished with error: $e');
       return false;
@@ -153,7 +158,7 @@ class Database {
   }
 
   Future<T> runTransaction<T>(FutureOr<T> Function() run) async {
-    if (transactionContext != null) {
+    if (_isInTransaction) {
       try {
         var result = await run();
         return result;
@@ -171,5 +176,21 @@ class Database {
       cancelTransaction();
       rethrow;
     }
+  }
+}
+
+extension RowToMap on PgResultRow {
+  Map<String, Object?> toColumnMap() {
+    final columns = schema.columns;
+    final map = <String, Object?>{};
+
+    for (var i = 0; i < columns.length; i++) {
+      final name = columns[i].columnName;
+      if (name != null) {
+        map[name] = this[i];
+      }
+    }
+
+    return map;
   }
 }

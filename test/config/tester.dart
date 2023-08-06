@@ -13,11 +13,14 @@ StormberryTester useTester({String? schema, bool cleanup = false}) {
 
   setUp(() async {
     tester.db = Database(
-        host: 'localhost',
-        port: 5432,
-        database: 'postgres',
-        user: 'postgres',
-        password: 'postgres');
+      host: 'localhost',
+      port: 5432,
+      database: 'postgres',
+      user: 'postgres',
+      password: 'postgres',
+      useSSL: false,
+      debugPrint: true,
+    );
     if (schema != null) {
       await tester.db.migrateTo(schema);
     }

@@ -2,7 +2,7 @@
 /// It supports all kinds of relations without any complex configuration.
 library stormberry;
 
-export 'package:postgres/postgres.dart';
+export 'package:postgres/postgres_v3_experimental.dart';
 
 export 'src/core/annotations.dart';
 export 'src/core/converter.dart';

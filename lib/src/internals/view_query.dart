@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:postgres/postgres_v3_experimental.dart';
+
 import '../core/annotations.dart';
 import '../core/database.dart';
 import '../core/query_params.dart';
@@ -26,7 +28,7 @@ abstract class ViewQueryable<T> {
 abstract class KeyedViewQueryable<T, K> extends ViewQueryable<T> {
   String get keyName;
 
-  String encodeKey(K key);
+  PgTypedParameter encodeKey(K key);
 }
 
 class ViewQuery<Result> implements Query<List<Result>, QueryParams> {
@@ -45,8 +47,11 @@ class ViewQuery<Result> implements Query<List<Result>, QueryParams> {
       ${params.offset != null ? "OFFSET ${params.offset}" : ""}
     """, params.values);
 
-    var results = res.map((row) => queryable.decode(TypedMap(row.toColumnMap()))).toList();
-    print('Queried ${results.length} rows in ${DateTime.now().difference(time)}');
+    var results = res
+        .map((row) => queryable.decode(TypedMap(row.toColumnMap())))
+        .toList();
+    print(
+        'Queried ${results.length} rows in ${DateTime.now().difference(time)}');
     return results;
   }
 }
