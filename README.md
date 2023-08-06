@@ -109,7 +109,7 @@ or jump directly to the topic you are looking for:
 - [**Views**](https://pub.dev/documentation/stormberry/latest/topics/Views-topic.html)
 - [**Database**](https://pub.dev/documentation/stormberry/latest/topics/Database-topic.html)
 - [**Repositories**](https://pub.dev/documentation/stormberry/latest/topics/Repositories-topic.html)
-- [**Queries & Actions**](https://pub.dev/documentation/stormberry/latest/topics/Queries-Actions-topic.html)
+- [**Queries & Actions**](https://pub.dev/documentation/stormberry/latest/topics/Queries%20&%20Actions-topic.html)
 - [**Migration**](https://pub.dev/documentation/stormberry/latest/topics/Migration-topic.html)
 
 
