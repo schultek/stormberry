@@ -49,7 +49,9 @@ class Database {
         useSSL = useSSL ?? (Platform.environment['DB_SSL'] != DB_SSL),
         isUnixSocket = isUnixSocket ?? (Platform.environment['DB_SOCKET'] == DB_SOCKET);
 
-  PostgreSQLConnection connection() {
+  PostgreSQLConnection? get connection => _cachedConnection;
+
+  PostgreSQLConnection _connection() {
     return PostgreSQLConnection(
       host,
       port,
@@ -66,7 +68,11 @@ class Database {
     );
   }
 
-  Future<void> open() => _tryOpen();
+  Future<PostgreSQLConnection> open() async {
+    await _tryOpen();
+    return _cachedConnection!;
+  }
+
   Future<void> close() async {
     if (_cachedConnection != null && !_cachedConnection!.isClosed) {
       await _cachedConnection!.close();
@@ -79,7 +85,7 @@ class Database {
       return;
     }
 
-    var c = connection();
+    var c = _connection();
     print('Database: connecting to ${c.databaseName} at ${c.host}...');
     await c.open();
     _cachedConnection = c;
