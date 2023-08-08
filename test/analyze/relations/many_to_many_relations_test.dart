@@ -21,6 +21,7 @@ void main() {
           @PrimaryKey()
           String get id;
           
+          @HiddenIn.defaultView()
           List<A> get a;
         }
       ''');

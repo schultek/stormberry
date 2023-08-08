@@ -57,7 +57,9 @@ class Database {
         isUnixSocket =
             isUnixSocket ?? (Platform.environment['DB_SOCKET'] == DB_SOCKET);
 
-  Future<PgConnection> connection() async {
+  PostgreSQLConnection? get connection => _cachedConnection;
+
+  Future<PgConnection> _connection() async {
     return PgConnection.open(
       PgEndpoint(
         host: host,
@@ -76,7 +78,11 @@ class Database {
     );
   }
 
-  Future<void> open() => _tryOpen();
+  Future<PostgreSQLConnection> open() async {
+    await _tryOpen();
+    return _cachedConnection!;
+  }
+
   Future<void> close() async {
     final connection = _cachedConnection;
 
@@ -93,7 +99,7 @@ class Database {
 
     print('Database: connecting to $database at $host...');
 
-    _cachedConnection = await connection();
+    _cachedConnection = await _connection();
     print('Database: connected');
   }
 
