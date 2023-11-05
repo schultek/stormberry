@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:glob/glob.dart';
 import 'package:file/local.dart';
+import 'package:glob/glob.dart';
 
 import '../../../stormberry.dart';
 
@@ -138,7 +138,7 @@ abstract class TableConstraint {
 
 class PrimaryKeyConstraint extends TableConstraint {
   final String column;
-  const PrimaryKeyConstraint(String? name, this.column) : super(name);
+  const PrimaryKeyConstraint(super.name, this.column);
 
   @override
   String toString() {
@@ -164,8 +164,7 @@ class ForeignKeyConstraint extends TableConstraint {
   final ForeignKeyAction onUpdate;
 
   const ForeignKeyConstraint(
-      String? name, this.srcColumn, this.table, this.column, this.onDelete, this.onUpdate)
-      : super(name);
+      super.name, this.srcColumn, this.table, this.column, this.onDelete, this.onUpdate);
 
   @override
   String toString() {
@@ -200,7 +199,7 @@ class ForeignKeyConstraint extends TableConstraint {
 
 class UniqueConstraint extends TableConstraint {
   final String column;
-  const UniqueConstraint(String? name, this.column) : super(name);
+  const UniqueConstraint(super.name, this.column);
 
   @override
   String toString() {

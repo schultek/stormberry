@@ -13,6 +13,7 @@ void main() {
           @PrimaryKey()
           String get id;
         
+          @HiddenIn.defaultView()
           A? get a;
         }
       ''');
@@ -60,6 +61,7 @@ void main() {
           @PrimaryKey()
           String get id;
         
+          @HiddenIn.defaultView()
           List<A> get a;
         }
       ''');
@@ -107,7 +109,9 @@ void main() {
           @PrimaryKey()
           String get id;
         
+          @HiddenIn.defaultView()
           A? get a;
+          @HiddenIn.defaultView()
           A? get b;
         }
       ''');
@@ -178,7 +182,9 @@ void main() {
           @PrimaryKey()
           String get id;
         
+          @HiddenIn.defaultView()
           A? get a;
+          @HiddenIn.defaultView()
           A? get b;
         }
       ''');

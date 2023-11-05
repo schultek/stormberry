@@ -43,7 +43,7 @@ Future<Map<AssetId, List<int>>> testBuilder2(
   inputIds.retainWhere((id) => inputFilter('$id'));
 
   var writerSpy = AssetWriterSpy(writer);
-  var resolvers = AnalyzerResolvers();
+  var resolvers = AnalyzerResolvers.sharedInstance;
 
   for (var input in inputIds) {
     // create another writer spy and reader for each input. This prevents writes

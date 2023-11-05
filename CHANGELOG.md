@@ -1,3 +1,6 @@
+- Updated analyzer dependency to `^6.0.0`
+- Updated dart sdk constraints to `>=2.17.0 <4.0.0`
+
 # 0.13.1
 
 - Fixed bug with boolean column in migration.
