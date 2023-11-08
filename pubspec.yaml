@@ -19,7 +19,7 @@ dependencies:
   file: ^7.0.0
   glob: ^2.1.1
   path: ^1.8.2
-  postgres: ^2.5.1
+  postgres: ^3.0.3
   source_gen: ^1.2.3
   yaml: ^3.1.1
 

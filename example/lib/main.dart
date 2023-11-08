@@ -9,7 +9,7 @@ Future<void> main() async {
   var db = Database(
     port: 2222,
     database: 'dart_test',
-    user: 'postgres',
+    username: 'postgres',
     password: 'postgres',
     useSSL: false,
   );

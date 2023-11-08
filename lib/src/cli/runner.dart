@@ -95,7 +95,7 @@ class MigrateCommand extends Command<void> {
         arg: 'host', env: 'DB_HOST_ADDRESS', prompt: 'Enter the database host address: ');
     var dbPort =
         resolveProperty<int>(arg: 'port', env: 'DB_PORT', prompt: 'Enter the database port: ');
-    var dbUser = resolveProperty<String>(
+    var dbUsername = resolveProperty<String>(
         arg: 'username', env: 'DB_USERNAME', prompt: 'Enter the database username: ');
     var dbPassword = resolveProperty<String>(
         arg: 'password',
@@ -110,7 +110,7 @@ class MigrateCommand extends Command<void> {
       port: dbPort,
       database: dbName,
       password: dbPassword,
-      user: dbUser,
+      username: dbUsername,
       useSSL: useSSL,
       isUnixSocket: isUnixSocket,
     );
@@ -132,28 +132,24 @@ class MigrateCommand extends Command<void> {
         exit(1);
       } else {
         if (output == null) {
-          await db.startTransaction();
-
           String? answerApplyChanges;
           if (!applyChanges) {
             stdout.write('Do you want to apply these changes? (yes/no): ');
             answerApplyChanges = stdin.readLineSync(encoding: Encoding.getByName('utf-8')!);
           }
 
+          var updateWasSuccessFull = false;
+
           if (applyChanges || answerApplyChanges == 'yes') {
             print('Database schema changed, applying updates now:');
 
-            try {
-              db.debugPrint = true;
+            db.debugPrint = true;
+            updateWasSuccessFull = await db.runTx((session) async {
               await patchSchema(db, diff);
-            } catch (_) {
-              db.cancelTransaction();
-            }
-          } else {
-            db.cancelTransaction();
+              return true;
+            });
+            db.debugPrint = false;
           }
-
-          var updateWasSuccessFull = await db.finishTransaction();
 
           print('========================');
           if (updateWasSuccessFull) {

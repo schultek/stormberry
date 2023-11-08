@@ -1,11 +1,10 @@
 import '../../../stormberry.dart';
-
 import 'differentiator.dart';
 import 'schema.dart';
 
-Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
+Future<void> patchSchema(Session db, DatabaseSchemaDiff diff) async {
   for (var table in diff.tables.added) {
-    await db.query("""
+    await db.execute("""
         CREATE TABLE IF NOT EXISTS "${table.name}" ( 
           ${table.columns.values.map((c) => '"${c.name}" ${c.type} ${c.isNullable ? 'NULL' : 'NOT NULL'}').join(",")}
         )
@@ -14,11 +13,11 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
 
   for (var table in diff.tables.modified) {
     for (var index in table.indexes.removed) {
-      await db.query('DROP INDEX "__${index.name}"');
+      await db.execute('DROP INDEX "__${index.name}"');
     }
 
     if (table.constraints.removed.isNotEmpty) {
-      await db.query("""
+      await db.execute("""
           ALTER TABLE "${table.name}"
           ${table.constraints.removed.map((c) => 'DROP CONSTRAINT IF EXISTS "${c.name}" CASCADE').join(",\n")}
         """);
@@ -46,12 +45,12 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
 
       for (var c in table.columns.modified
           .where((c) => c.prev.type != 'serial' && c.newly.type == 'serial')) {
-        await db.query('''
+        await db.execute('''
           CREATE SEQUENCE IF NOT EXISTS ${table.name}_${c.newly.name}_seq OWNED BY "public"."${table.name}"."${c.newly.name}";
         ''');
       }
 
-      await db.query("""
+      await db.execute("""
         ALTER TABLE "${table.name}"
         ${updatedColumns.join(",\n")}
       """);
@@ -63,7 +62,7 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
         .where((c) => c is PrimaryKeyConstraint || c is UniqueConstraint)
         .toList();
     if (uniqueConstraints.isNotEmpty) {
-      await db.query("""
+      await db.execute("""
           ALTER TABLE "${table.name}"
           ${uniqueConstraints.map((c) => 'ADD ${c.toString()}').join(",\n")}
         """);
@@ -74,7 +73,7 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
     var uniqueConstraints =
         table.constraints.where((c) => c is PrimaryKeyConstraint || c is UniqueConstraint).toList();
     if (uniqueConstraints.isNotEmpty) {
-      await db.query("""
+      await db.execute("""
           ALTER TABLE "${table.name}"
           ${uniqueConstraints.map((c) => 'ADD ${c.toString()}').join(",\n")}
         """);
@@ -84,7 +83,7 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
   for (var table in diff.tables.modified) {
     var foreignKeyConstraints = table.constraints.added.whereType<ForeignKeyConstraint>().toList();
     if (foreignKeyConstraints.isNotEmpty) {
-      await db.query("""
+      await db.execute("""
           ALTER TABLE "${table.name}"
           ${foreignKeyConstraints.map((c) => 'ADD ${c.toString()}').join(",\n")}
         """);
@@ -94,7 +93,7 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
   for (var table in diff.tables.added) {
     var foreignKeyConstraints = table.constraints.whereType<ForeignKeyConstraint>().toList();
     if (foreignKeyConstraints.isNotEmpty) {
-      await db.query("""
+      await db.execute("""
           ALTER TABLE "${table.name}"
           ${foreignKeyConstraints.map((c) => 'ADD ${c.toString()}').join(",\n")}
         """);
@@ -103,19 +102,19 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
 
   for (var table in diff.tables.modified) {
     for (var index in table.indexes.added) {
-      await db.query('CREATE ${index.statement(table.name)}');
+      await db.execute('CREATE ${index.statement(table.name)}');
     }
   }
 
   for (var table in diff.tables.added) {
     for (var index in table.indexes) {
-      await db.query('CREATE ${index.statement(table.name)}');
+      await db.execute('CREATE ${index.statement(table.name)}');
     }
   }
 
   for (var table in diff.tables.modified) {
     if (table.columns.removed.isNotEmpty) {
-      await db.query("""
+      await db.execute("""
           ALTER TABLE "${table.name}"
           ${table.columns.removed.map((c) => 'DROP COLUMN "${c.name}"').join(",\n")}
         """);
@@ -124,11 +123,11 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
 
   for (var table in diff.tables.removed) {
     for (var index in table.indexes) {
-      await db.query('DROP INDEX "__${index.name}"');
+      await db.execute('DROP INDEX "__${index.name}"');
     }
 
     if (table.constraints.isNotEmpty) {
-      await db.query("""
+      await db.execute("""
           ALTER TABLE "${table.name}"
           ${table.constraints.map((c) => 'DROP CONSTRAINT IF EXISTS "${c.name}" CASCADE').join(",\n")}
         """);
@@ -136,6 +135,6 @@ Future<void> patchSchema(Database db, DatabaseSchemaDiff diff) async {
   }
 
   for (var table in diff.tables.removed) {
-    await db.query('DROP TABLE "${table.name}" CASCADE');
+    await db.execute('DROP TABLE "${table.name}" CASCADE');
   }
 }

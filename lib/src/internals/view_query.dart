@@ -1,7 +1,8 @@
 import 'dart:convert';
 
+import 'package:postgres/postgres.dart';
+
 import '../core/annotations.dart';
-import '../core/database.dart';
 import '../core/query_params.dart';
 import 'text_encoder.dart';
 
@@ -35,15 +36,15 @@ class ViewQuery<Result> implements Query<List<Result>, QueryParams> {
   final ViewQueryable<Result> queryable;
 
   @override
-  Future<List<Result>> apply(Database db, QueryParams params) async {
+  Future<List<Result>> apply(Session db, QueryParams params) async {
     var time = DateTime.now();
-    var res = await db.query("""
+    var res = await db.execute(Sql.named("""
       SELECT * FROM (${queryable.query}) "${queryable.tableAlias}"
       ${params.where != null ? "WHERE ${params.where}" : ""}
       ${params.orderBy != null ? "ORDER BY ${params.orderBy}" : ""}
       ${params.limit != null ? "LIMIT ${params.limit}" : ""}
       ${params.offset != null ? "OFFSET ${params.offset}" : ""}
-    """, params.values);
+    """), parameters: params.values);
 
     var results = res.map((row) => queryable.decode(TypedMap(row.toColumnMap()))).toList();
     print('Queried ${results.length} rows in ${DateTime.now().difference(time)}');

@@ -85,11 +85,12 @@ class InsertGenerator {
         .whereType<NamedColumnElement>()
         .where((c) => c is! FieldColumnElement || !c.isAutoIncrement);
 
-    String toInsertValue(NamedColumnElement c) {
-      if (c.converter != null) {
-        return '\${values.add(${c.converter!.toSource()}.tryEncode(r.${c.paramName}))}:${c.rawSqlType}';
+    String toInsertValue(NamedColumnElement e) {
+      final converter = e.converter;
+      if (converter != null) {
+        return '\${values.add(${converter.toSource()}.tryEncode(r.${e.paramName}))}:${e.rawSqlType}';
       } else {
-        return '\${values.add(r.${c.paramName}${c.converter != null ? ', ${c.converter!.toSource()}' : ''})}:${c.rawSqlType}';
+        return '\${values.add(r.${e.paramName})}:${e.rawSqlType}';
       }
     }
 
@@ -98,11 +99,11 @@ class InsertGenerator {
       Future<${keyReturnStatement != null ? 'List<int>' : 'void'}> insert(List<${table.element.name}InsertRequest> requests) async {
         if (requests.isEmpty) return${keyReturnStatement != null ? ' []' : ''};
         var values = QueryValues();
-        ${autoIncrementStatement != null ? 'var rows = ' : ''}await db.query(
-          'INSERT INTO "${table.tableName}" ( ${insertColumns.map((c) => '"${c.columnName}"').join(', ')} )\\n'
+        ${autoIncrementStatement != null ? 'var rows = ' : ''}await db.execute(
+          Sql.named('INSERT INTO "${table.tableName}" ( ${insertColumns.map((c) => '"${c.columnName}"').join(', ')} )\\n'
           'VALUES \${requests.map((r) => '( ${insertColumns.map(toInsertValue).join(', ')} )').join(', ')}\\n'
-          ${autoIncrementStatement != null ? "'RETURNING \"${table.primaryKeyColumn!.columnName}\"'" : ''},
-          values.values,
+          ${autoIncrementStatement != null ? "'RETURNING \"${table.primaryKeyColumn!.columnName}\"'" : ''}),
+          parameters: values.values,
         );
         ${autoIncrementStatement ?? ''}
         ${deepInserts.isNotEmpty ? deepInserts.join() : ''}

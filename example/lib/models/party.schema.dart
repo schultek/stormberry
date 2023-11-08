@@ -2,7 +2,7 @@
 
 part of 'party.dart';
 
-extension PartyRepositories on Database {
+extension PartyRepositories on Session {
   PartyRepository get parties => PartyRepository._(this);
 }
 
@@ -12,7 +12,7 @@ abstract class PartyRepository
         ModelRepositoryInsert<PartyInsertRequest>,
         ModelRepositoryUpdate<PartyUpdateRequest>,
         ModelRepositoryDelete<String> {
-  factory PartyRepository._(Database db) = _PartyRepository;
+  factory PartyRepository._(Session db) = _PartyRepository;
 
   Future<GuestPartyView?> queryGuestView(String id);
   Future<List<GuestPartyView>> queryGuestViews([QueryParams? params]);
@@ -52,10 +52,10 @@ class _PartyRepository extends BaseRepository
   Future<void> insert(List<PartyInsertRequest> requests) async {
     if (requests.isEmpty) return;
     var values = QueryValues();
-    await db.query(
-      'INSERT INTO "parties" ( "id", "name", "sponsor_id", "date" )\n'
-      'VALUES ${requests.map((r) => '( ${values.add(r.id)}:text, ${values.add(r.name)}:text, ${values.add(r.sponsorId)}:text, ${values.add(r.date)}:int8 )').join(', ')}\n',
-      values.values,
+    await db.execute(
+      Sql.named('INSERT INTO "parties" ( "id", "name", "sponsor_id", "date" )\n'
+          'VALUES ${requests.map((r) => '( ${values.add(r.id)}:text, ${values.add(r.name)}:text, ${values.add(r.sponsorId)}:text, ${values.add(r.date)}:int8 )').join(', ')}\n'),
+      parameters: values.values,
     );
   }
 
@@ -63,13 +63,13 @@ class _PartyRepository extends BaseRepository
   Future<void> update(List<PartyUpdateRequest> requests) async {
     if (requests.isEmpty) return;
     var values = QueryValues();
-    await db.query(
-      'UPDATE "parties"\n'
-      'SET "name" = COALESCE(UPDATED."name", "parties"."name"), "sponsor_id" = COALESCE(UPDATED."sponsor_id", "parties"."sponsor_id"), "date" = COALESCE(UPDATED."date", "parties"."date")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:text, ${values.add(r.name)}:text, ${values.add(r.sponsorId)}:text, ${values.add(r.date)}:int8 )').join(', ')} )\n'
-      'AS UPDATED("id", "name", "sponsor_id", "date")\n'
-      'WHERE "parties"."id" = UPDATED."id"',
-      values.values,
+    await db.execute(
+      Sql.named('UPDATE "parties"\n'
+          'SET "name" = COALESCE(UPDATED."name", "parties"."name"), "sponsor_id" = COALESCE(UPDATED."sponsor_id", "parties"."sponsor_id"), "date" = COALESCE(UPDATED."date", "parties"."date")\n'
+          'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:text::text, ${values.add(r.name)}:text::text, ${values.add(r.sponsorId)}:text::text, ${values.add(r.date)}:int8::int8 )').join(', ')} )\n'
+          'AS UPDATED("id", "name", "sponsor_id", "date")\n'
+          'WHERE "parties"."id" = UPDATED."id"'),
+      parameters: values.values,
     );
   }
 }
