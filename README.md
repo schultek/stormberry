@@ -26,9 +26,6 @@ It supports all kinds of <b>relations without any complex configuration</b>.
 
 ---
 
-> This package is still in active development. If you have any feedback or feature requests,
-> write me and issue on github.
-
 # Quick Start
 
 To get started, add `stormberry` as a dependency and `build_runner` as a dev dependency:
