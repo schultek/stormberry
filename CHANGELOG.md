@@ -1,16 +1,23 @@
-- You no longer need to use the `Database` class, you can use `Connection.open` or `Pool` directly.
-- `Database` class implements postegres `Session` and `SessionExecutor` classes
-- Extension methods for accessing repositories now extend `Session`
-- Added the ability to create a Pool for your database
-- Updated analyzer dependency to `^6.0.0`
-- Updated dart sdk constraints to `>=2.17.0 <4.0.0`
+# 0.14.0
 
-**BREAKING CHANGES**
-- Updated the `postgres` package to version `3.0.0`. To visit all the breaking changes see their changelog
-- Removed `Database.query` method in favour of `Session.execute` method
-- `Action` and `Query` now accept a Session
-- Repository methods are no longer wrapped in a transaction
-- Removed all fields and methods to execute a transaction in favor of `SessionExecutor.runTx`
+- **BREAKING** Updated the `postgres` package to version `3.0.0` (by [@BreX900](https://github.com/BreX900)).
+
+  To visit all the breaking changes see [their changelog](https://pub.dev/packages/postgres).
+   
+  - You no longer need to use the `Database` class, you can use `Connection.open` or `Pool` directly.
+  - `Database` class now implements `Session` and `SessionExecutor` classes from `postgres` package.
+  - Removed `Database.query` method in favour of `Session.execute` method.
+  - Extension methods for accessing repositories now extend `Session`.
+  - `Action` and `Query` now accept a `Session`
+  
+- **BREAKING** Generated repository methods are no longer wrapped in a transaction.
+
+  Instead, wrap your database calls in a transaction yourself, e.g. by using `db.runTx()`.
+
+- Added the ability to create a Pool for your database-
+
+- Updated analyzer dependency to `^6.0.0`.
+- Updated dart sdk constraints to `>=3.0.0 <4.0.0`.
 
 # 0.13.1
 
