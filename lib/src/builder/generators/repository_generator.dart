@@ -1,8 +1,8 @@
 import 'package:path/path.dart' as p;
 
 import '../../core/case_style.dart';
-import '../schema.dart';
 import '../elements/table_element.dart';
+import '../schema.dart';
 import 'insert_generator.dart';
 import 'update_generator.dart';
 import 'view_generator.dart';
@@ -10,7 +10,7 @@ import 'view_generator.dart';
 class RepositoryGenerator {
   String generateRepositories(AssetState state) {
     return '''
-    extension ${CaseStyle.pascalCase.transform(p.withoutExtension(state.filename))}Repositories on Database {
+    extension ${CaseStyle.pascalCase.transform(p.withoutExtension(state.filename))}Repositories on Session {
       ${state.tables.values.map((b) => '  ${b.element.name}Repository get ${b.repoName} => ${b.element.name}Repository._(this);\n').join()}
     }
     
@@ -35,7 +35,7 @@ class RepositoryGenerator {
         ${hasKeyAutoInc ? 'Keyed' : ''}ModelRepositoryInsert<${table.element.name}InsertRequest>, 
         ModelRepositoryUpdate<${table.element.name}UpdateRequest>
         ${keyType != null ? ', ModelRepositoryDelete<$keyType>' : ''} {
-        factory $repoName._(Database db) = _$repoName;
+        factory $repoName._(Session db) = _$repoName;
          
         ${ViewGenerator().generateRepositoryMethods(table, abstract: true)} 
       }

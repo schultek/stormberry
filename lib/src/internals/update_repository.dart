@@ -8,9 +8,9 @@ abstract class ModelRepositoryUpdate<UpdateRequest> {
 mixin RepositoryUpdateMixin<UpdateRequest> on BaseRepository
     implements ModelRepositoryUpdate<UpdateRequest> {
   @override
-  Future<void> updateOne(UpdateRequest request) => transaction(() => update([request]));
+  Future<void> updateOne(UpdateRequest request) => update([request]);
   @override
-  Future<void> updateMany(List<UpdateRequest> requests) => transaction(() => update(requests));
+  Future<void> updateMany(List<UpdateRequest> requests) => update(requests);
 
   Future<void> update(List<UpdateRequest> requests);
 }

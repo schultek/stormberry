@@ -1,4 +1,5 @@
-import 'database.dart';
+import 'package:postgres/postgres.dart';
+
 import 'table_index.dart';
 import 'transformer.dart';
 
@@ -147,7 +148,8 @@ class BindTo {
 /// {@category Queries & Actions}
 abstract class Action<T> {
   const Action();
-  Future<void> apply(Database db, T request);
+
+  Future<void> apply(Session db, T request);
 }
 
 /// Extend this to define a custom query.
@@ -155,5 +157,6 @@ abstract class Action<T> {
 /// {@category Queries & Actions}
 abstract class Query<T, U> {
   const Query();
-  Future<T> apply(Database db, U params);
+
+  Future<T> apply(Session db, U params);
 }

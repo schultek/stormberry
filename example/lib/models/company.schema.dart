@@ -2,7 +2,7 @@
 
 part of 'company.dart';
 
-extension CompanyRepositories on Database {
+extension CompanyRepositories on Session {
   CompanyRepository get companies => CompanyRepository._(this);
 }
 
@@ -12,7 +12,7 @@ abstract class CompanyRepository
         ModelRepositoryInsert<CompanyInsertRequest>,
         ModelRepositoryUpdate<CompanyUpdateRequest>,
         ModelRepositoryDelete<String> {
-  factory CompanyRepository._(Database db) = _CompanyRepository;
+  factory CompanyRepository._(Session db) = _CompanyRepository;
 
   Future<FullCompanyView?> queryFullView(String id);
   Future<List<FullCompanyView>> queryFullViews([QueryParams? params]);
@@ -52,10 +52,10 @@ class _CompanyRepository extends BaseRepository
   Future<void> insert(List<CompanyInsertRequest> requests) async {
     if (requests.isEmpty) return;
     var values = QueryValues();
-    await db.query(
-      'INSERT INTO "companies" ( "id", "name" )\n'
-      'VALUES ${requests.map((r) => '( ${values.add(r.id)}:text, ${values.add(r.name)}:text )').join(', ')}\n',
-      values.values,
+    await db.execute(
+      Sql.named('INSERT INTO "companies" ( "id", "name" )\n'
+          'VALUES ${requests.map((r) => '( ${values.add(r.id)}:text, ${values.add(r.name)}:text )').join(', ')}\n'),
+      parameters: values.values,
     );
 
     await db.billingAddresses.insertMany(requests.expand((r) {
@@ -73,13 +73,13 @@ class _CompanyRepository extends BaseRepository
   Future<void> update(List<CompanyUpdateRequest> requests) async {
     if (requests.isEmpty) return;
     var values = QueryValues();
-    await db.query(
-      'UPDATE "companies"\n'
-      'SET "name" = COALESCE(UPDATED."name", "companies"."name")\n'
-      'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:text, ${values.add(r.name)}:text )').join(', ')} )\n'
-      'AS UPDATED("id", "name")\n'
-      'WHERE "companies"."id" = UPDATED."id"',
-      values.values,
+    await db.execute(
+      Sql.named('UPDATE "companies"\n'
+          'SET "name" = COALESCE(UPDATED."name", "companies"."name")\n'
+          'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:text::text, ${values.add(r.name)}:text::text )').join(', ')} )\n'
+          'AS UPDATED("id", "name")\n'
+          'WHERE "companies"."id" = UPDATED."id"'),
+      parameters: values.values,
     );
     await db.billingAddresses.updateMany(requests.where((r) => r.addresses != null).expand((r) {
       return r.addresses!.map((rr) => BillingAddressUpdateRequest(

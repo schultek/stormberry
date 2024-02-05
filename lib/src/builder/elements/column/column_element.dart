@@ -2,6 +2,7 @@ import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:collection/collection.dart';
+import 'package:postgres/postgres.dart';
 import 'package:source_gen/source_gen.dart';
 
 import '../../schema.dart';
@@ -80,20 +81,25 @@ abstract class ColumnElement {
   void checkConverter();
 
   late List<ConstantReader> modifiers = () {
-    if (parameter == null || parameter!.getter == null) return <ConstantReader>[];
+    final parameter = this.parameter;
+    final parameterGetter = parameter?.getter;
+    if (parameter == null || parameterGetter == null) return <ConstantReader>[];
 
     return [
-      ...hiddenInChecker.annotationsOf(parameter!),
-      ...hiddenInChecker.annotationsOf(parameter!.getter!),
-      ...viewedInChecker.annotationsOf(parameter!),
-      ...viewedInChecker.annotationsOf(parameter!.getter!),
-      ...transformedInChecker.annotationsOf(parameter!),
-      ...transformedInChecker.annotationsOf(parameter!.getter!),
+      ...hiddenInChecker.annotationsOf(parameter),
+      ...hiddenInChecker.annotationsOf(parameterGetter),
+      ...viewedInChecker.annotationsOf(parameter),
+      ...viewedInChecker.annotationsOf(parameterGetter),
+      ...transformedInChecker.annotationsOf(parameter),
+      ...transformedInChecker.annotationsOf(parameterGetter),
     ].map((m) => ConstantReader(m)).toList();
   }();
 
   void checkModifiers();
 }
+
+final _dateTimeChecker = TypeChecker.fromRuntime(DateTime);
+final _pointChecker = TypeChecker.fromRuntime(Point);
 
 String? getSqlType(DartType type) {
   if (type.isDartCoreString) {
@@ -104,9 +110,9 @@ String? getSqlType(DartType type) {
     return 'float8';
   } else if (type.isDartCoreBool) {
     return 'boolean';
-  } else if (type.element?.name == 'DateTime') {
+  } else if (_dateTimeChecker.isExactlyType(type)) {
     return 'timestamp';
-  } else if (type.element?.name == 'PgPoint') {
+  } else if (_pointChecker.isExactlyType(type)) {
     return 'point';
   } else {
     return null;

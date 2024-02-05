@@ -9,11 +9,11 @@ class LatLngConverter extends TypeConverter<LatLng> {
   const LatLngConverter() : super('point');
 
   @override
-  dynamic encode(LatLng value) => PgPoint(value.latitude, value.longitude);
+  dynamic encode(LatLng value) => Point(value.latitude, value.longitude);
 
   @override
   LatLng decode(dynamic value) {
-    if (value is PgPoint) {
+    if (value is Point) {
       return LatLng(value.latitude, value.longitude);
     } else {
       var m = RegExp(r'\((.+),(.+)\)').firstMatch(value.toString());

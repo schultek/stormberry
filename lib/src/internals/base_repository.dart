@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
+import 'package:postgres/postgres.dart';
 
 import '../core/annotations.dart';
-import '../core/database.dart';
 import '../core/query_params.dart';
 import 'view_query.dart';
 
@@ -15,7 +15,7 @@ abstract class ModelRepository {
 }
 
 abstract class BaseRepository implements ModelRepository {
-  final Database db;
+  final Session db;
 
   final String tableName;
   final String? keyName;
@@ -37,12 +37,8 @@ abstract class BaseRepository implements ModelRepository {
     return query.apply(db, params);
   }
 
-  Future<T> transaction<T>(Runnable<T> runnable) {
-    return db.runTransaction(runnable);
-  }
-
   @override
   Future<void> run<T>(Action<T> action, T request) {
-    return transaction(() => action.apply(db, request));
+    return action.apply(db, request);
   }
 }

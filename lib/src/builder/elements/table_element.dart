@@ -95,7 +95,9 @@ class TableElement {
 
   late List<FieldElement> allFields = element.fields
       .cast<FieldElement>()
-      .followedBy(element.allSupertypes.expand((t) => t.isDartCoreObject ? [] : t.element.fields))
+      .followedBy(element.allSupertypes
+          .expand((t) => t.isDartCoreObject ? <FieldElement>[] : t.element.fields))
+      .where((e) => !e.hasInitializer)
       .toList();
 
   void prepareColumns() {

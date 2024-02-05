@@ -5,7 +5,7 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
   //ignore: prefer_const_constructors
   var schema = DatabaseSchema({});
 
-  var tables = await db.query(
+  var tables = await db.execute(
       "SELECT * FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'");
   for (var row in tables) {
     var tableMap = row.toColumnMap();
@@ -14,8 +14,8 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
     var tableScheme = TableSchema(tableName, columns: {}, constraints: [], indexes: []);
     schema.tables[tableName] = tableScheme;
 
-    var columns =
-        await db.query("SELECT * FROM information_schema.columns WHERE table_name = '$tableName'");
+    var columns = await db
+        .execute("SELECT * FROM information_schema.columns WHERE table_name = '$tableName'");
     for (var row in columns) {
       var columnMap = row.toColumnMap();
       var columnName = columnMap['column_name'] as String;
@@ -41,7 +41,7 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
     }
   }
 
-  var constraints = await db.query("""
+  var constraints = await db.execute("""
       SELECT tc.constraint_name, tc.constraint_type, 
         (array_agg(kcu.table_name))[1] as src_table,
         array_to_json(array_agg(DISTINCT kcu.column_name)) as src_columns,
@@ -92,7 +92,7 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
     }
   }
 
-  var indexes = await db.query(r"""
+  var indexes = await db.execute(r"""
       SELECT * FROM pg_catalog.pg_indexes WHERE schemaname = 'public' AND indexname LIKE '\_\_%'
     """);
   for (var row in indexes) {

@@ -13,11 +13,12 @@ StormberryTester useTester({String? schema, bool cleanup = false}) {
 
   setUp(() async {
     tester.db = Database(
-        host: 'localhost',
-        port: 5432,
-        database: 'postgres',
-        user: 'postgres',
-        password: 'postgres');
+      host: 'localhost',
+      port: 5432,
+      database: 'postgres',
+      username: 'postgres',
+      password: 'postgres',
+    );
     if (schema != null) {
       await tester.db.migrateTo(schema);
     }
@@ -25,8 +26,8 @@ StormberryTester useTester({String? schema, bool cleanup = false}) {
 
   tearDown(() async {
     if (cleanup) {
-      await tester.db.query('DROP SCHEMA public CASCADE;');
-      await tester.db.query('CREATE SCHEMA public;');
+      await tester.db.execute('DROP SCHEMA public CASCADE;');
+      await tester.db.execute('CREATE SCHEMA public;');
     }
     await tester.db.close();
   });
@@ -45,8 +46,8 @@ extension SchemaChanger on Database {
       printDiff(diff);
     }
 
-    await runTransaction(() async {
-      await patchSchema(this, diff);
+    await runTx((session) async {
+      await patchSchema(session, diff);
     });
 
     return diff;

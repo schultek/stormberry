@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:postgres/postgres.dart';
+import 'package:postgres/postgres.dart' hide Type;
 
 import '../core/converter.dart';
 
@@ -179,7 +179,7 @@ class _TextEncoder {
       return _encodeString(value, quotes);
     } else if (value is DateTime) {
       return _encodeDateTime(value, quotes, isDateOnly: false);
-    } else if (value is PgPoint) {
+    } else if (value is Point) {
       return _encodePoint(value, quotes);
     } else if (value is Map) {
       return _encodeJSON(value, quotes);
@@ -187,7 +187,7 @@ class _TextEncoder {
       return _encodeList(value, quotes);
     }
 
-    throw PostgreSQLException("Could not infer type of value '$value'.");
+    throw PgException("Could not infer type of value '$value'.");
   }
 
   String _encodeString(String text, QuoteStyle quotes) {
@@ -262,7 +262,7 @@ class _TextEncoder {
     return _encodeString(json.encode(value), quotes);
   }
 
-  String _encodePoint(PgPoint value, QuoteStyle quotes) {
+  String _encodePoint(Point value, QuoteStyle quotes) {
     return _encodeString(
         '(${_encodeNumber(value.latitude)},${_encodeNumber(value.longitude)})', quotes);
   }

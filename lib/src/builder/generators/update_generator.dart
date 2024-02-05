@@ -92,13 +92,13 @@ class UpdateGenerator {
         Future<void> update(List<${table.element.name}UpdateRequest> requests) async {
           if (requests.isEmpty) return;
           var values = QueryValues();
-          await db.query(
-            'UPDATE "${table.tableName}"\\n'
+          await db.execute(
+            Sql.named('UPDATE "${table.tableName}"\\n'
             'SET ${setColumns.map((c) => '"${c.columnName}" = COALESCE(UPDATED."${c.columnName}", "${table.tableName}"."${c.columnName}")').join(', ')}\\n'
             'FROM ( VALUES \${requests.map((r) => '( ${updateColumns.map(toUpdateValue).join(', ')} )').join(', ')} )\\n'
             'AS UPDATED(${updateColumns.map((c) => '"${c.columnName}"').join(', ')})\\n'
-            'WHERE $whereClause',
-            values.values,
+            'WHERE $whereClause'),
+            parameters: values.values,
           );
           ${deepUpdates.isNotEmpty ? deepUpdates.join() : ''}
         }

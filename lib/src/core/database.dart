@@ -9,102 +9,53 @@ import 'default_values.dart';
 /// {@category Database}
 /// {@category Repositories}
 /// {@category Migration}
-class Database {
+abstract class Database implements Session, SessionExecutor {
   bool debugPrint;
 
-  final String host;
-  final String database;
-  final String user;
-  final String password;
-  final int port;
-  final bool useSSL;
-  final int timeoutInSeconds;
-  final String timeZone;
-  final int queryTimeoutInSeconds;
-  final bool isUnixSocket;
-  final bool allowClearTextPassword;
-  final ReplicationMode replicationMode;
+  Database._({
+    required this.debugPrint,
+  });
 
-  static PostgreSQLConnection? _cachedConnection;
-
-  Database({
-    this.debugPrint = false,
+  factory Database({
     String? host,
     int? port,
     String? database,
-    String? user,
+    String? username,
     String? password,
     bool? useSSL,
-    this.timeoutInSeconds = 30,
-    this.queryTimeoutInSeconds = 30,
-    this.timeZone = 'UTC',
     bool? isUnixSocket,
-    this.allowClearTextPassword = false,
-    this.replicationMode = ReplicationMode.none,
-  })  : host = host ?? Platform.environment['DB_HOST_ADDRESS'] ?? DB_HOST_ADDRESS,
-        port = port ?? int.tryParse(Platform.environment['DB_PORT'] ?? '') ?? DB_PORT,
-        database = database ?? Platform.environment['DB_NAME'] ?? DB_NAME,
-        user = user ?? Platform.environment['DB_USERNAME'] ?? DB_USERNAME,
-        password = password ?? Platform.environment['DB_PASSWORD'] ?? DB_PASSWORD,
-        useSSL = useSSL ?? (Platform.environment['DB_SSL'] != DB_SSL),
-        isUnixSocket = isUnixSocket ?? (Platform.environment['DB_SOCKET'] == DB_SOCKET);
-
-  PostgreSQLConnection? get connection => _cachedConnection;
-
-  PostgreSQLConnection _connection() {
-    return PostgreSQLConnection(
-      host,
-      port,
-      database,
-      username: user,
-      password: password,
-      useSSL: useSSL,
-      timeoutInSeconds: timeoutInSeconds,
-      queryTimeoutInSeconds: queryTimeoutInSeconds,
-      timeZone: timeZone,
-      isUnixSocket: isUnixSocket,
-      allowClearTextPassword: allowClearTextPassword,
-      replicationMode: replicationMode,
+  }) {
+    useSSL ??= (Platform.environment['DB_SSL'] != DB_SSL);
+    return Database.withOneConnection(
+      endpoint: Endpoint(
+        host: host ?? Platform.environment['DB_HOST_ADDRESS'] ?? DB_HOST_ADDRESS,
+        port: port ?? int.tryParse(Platform.environment['DB_PORT'] ?? '') ?? DB_PORT,
+        database: database ?? Platform.environment['DB_NAME'] ?? DB_NAME,
+        username: username ?? Platform.environment['DB_USERNAME'] ?? DB_USERNAME,
+        password: password ?? Platform.environment['DB_PASSWORD'] ?? DB_PASSWORD,
+        isUnixSocket: isUnixSocket ?? (Platform.environment['DB_SOCKET'] == DB_SOCKET),
+      ),
+      connectionSettings: ConnectionSettings(
+        sslMode: useSSL ? SslMode.require : SslMode.disable,
+      ),
     );
   }
 
-  Future<PostgreSQLConnection> open() async {
-    await _tryOpen();
-    return _cachedConnection!;
-  }
+  factory Database.withOneConnection({
+    bool debugPrint,
+    required Endpoint endpoint,
+    ConnectionSettings? connectionSettings,
+  }) = _DatabaseWithOneConnection;
 
-  Future<void> close() async {
-    if (_cachedConnection != null && !_cachedConnection!.isClosed) {
-      await _cachedConnection!.close();
-      _cachedConnection = null;
-    }
-  }
+  factory Database.withPool({
+    bool debugPrint,
+    required Pool pool,
+  }) = _DatabaseWithPool;
 
-  Future<void> _tryOpen() async {
-    if (_cachedConnection != null && !_cachedConnection!.isClosed) {
-      return;
-    }
+  Future<void> open();
 
-    var c = _connection();
-    print('Database: connecting to ${c.databaseName} at ${c.host}...');
-    await c.open();
-    _cachedConnection = c;
-    print('Database: connected');
-  }
-
-  Future<PostgreSQLResult> query(String query, [Map<String, dynamic>? values]) async {
-    await _tryOpen();
-    if (debugPrint) {
-      _printQuery(query);
-    }
-    if (transactionContext != null) {
-      return transactionContext!.query(query, substitutionValues: values);
-    } else {
-      return _cachedConnection!.query(query, substitutionValues: values);
-    }
-  }
-
-  void _printQuery(String query) {
+  void _printQuery(Object query) {
+    if (query is! String) return;
     var offset = 0;
     var q = query
         .split('\n')
@@ -118,64 +69,139 @@ class Database {
     });
     print('---\n$q');
   }
+}
 
-  Future? transactionFuture;
-  Completer<bool>? transactionCompleter;
-  PostgreSQLExecutionContext? transactionContext;
+class _DatabaseWithOneConnection extends Database {
+  final Endpoint endpoint;
+  final ConnectionSettings? connectionSettings;
+  Future<Connection>? _connection;
 
-  Future<void> startTransaction() async {
-    await _tryOpen();
-    if (transactionContext != null) {
-      return;
-    }
-    transactionCompleter = Completer();
-    var transactionStarted = Completer();
-    transactionFuture = _cachedConnection!.transaction((context) async {
-      transactionContext = context;
-      transactionStarted.complete();
-      return transactionCompleter!.future;
-    });
-    await transactionStarted.future;
+  _DatabaseWithOneConnection({
+    super.debugPrint = false,
+    required this.endpoint,
+    this.connectionSettings,
+  }) : super._();
+
+  @override
+  bool get isOpen => _connection != null;
+
+  @override
+  Future<void> get closed async => (await _connection)?.closed;
+
+  @override
+  Future<Connection> open() async {
+    return _connection ??= _tryOpen();
   }
 
-  void cancelTransaction() {
-    try {
-      transactionContext?.cancelTransaction();
-    } catch (_) {}
-    transactionCompleter?.complete(false);
-    transactionCompleter = null;
+  @override
+  Future<void> close() async {
+    final connection = await _connection;
+    connection?.close();
+    _connection = null;
   }
 
-  Future<bool> finishTransaction() async {
-    transactionCompleter?.complete(true);
-    transactionContext = null;
-    try {
-      var result = await transactionFuture;
-      return result as bool;
-    } catch (e) {
-      print('Transaction finished with error: $e');
-      return false;
-    }
+  @override
+  Future<Statement> prepare(Object query) async {
+    final connection = await open();
+    if (debugPrint) _printQuery(query);
+    return await connection.prepare(query);
   }
 
-  Future<T> runTransaction<T>(FutureOr<T> Function() run) async {
-    if (transactionContext != null) {
-      try {
-        var result = await run();
-        return result;
-      } catch (e) {
-        cancelTransaction();
-        rethrow;
-      }
-    }
-    await startTransaction();
-    try {
-      var result = await run();
-      await finishTransaction();
-      return result;
-    } catch (e) {
-      cancelTransaction();
-      rethrow;
-    }
+  @override
+  Future<Result> execute(
+    Object query, {
+    Object? parameters,
+    bool ignoreRows = false,
+    QueryMode? queryMode,
+    Duration? timeout,
+  }) async {
+    final connection = await open();
+    if (debugPrint) _printQuery(query);
+    return await connection.execute(
+      query,
+      parameters: parameters,
+      ignoreRows: ignoreRows,
+      queryMode: queryMode,
+      timeout: timeout,
+    );
   }
+
+  @override
+  Future<R> run<R>(Future<R> Function(Session session) fn, {SessionSettings? settings}) async {
+    final connection = await open();
+    return await connection.run(fn, settings: settings);
+  }
+
+  @override
+  Future<R> runTx<R>(
+    Future<R> Function(TxSession session) fn, {
+    TransactionSettings? settings,
+  }) async {
+    final connection = await open();
+    return await connection.runTx(fn, settings: settings);
+  }
+
+  Future<Connection> _tryOpen() async {
+    final connection = await Connection.open(endpoint, settings: connectionSettings);
+    _connection = null;
+    return connection;
+  }
+}
+
+class _DatabaseWithPool extends Database {
+  final Pool pool;
+
+  _DatabaseWithPool({
+    super.debugPrint = false,
+    required this.pool,
+  }) : super._();
+
+  @override
+  bool get isOpen => pool.isOpen;
+
+  @override
+  Future<void> get closed => pool.closed;
+
+  @override
+  Future<Statement> prepare(Object query) {
+    if (debugPrint) _printQuery(query);
+    return pool.prepare(query);
+  }
+
+  @override
+  Future<Result> execute(
+    Object query, {
+    Object? parameters,
+    bool ignoreRows = false,
+    QueryMode? queryMode,
+    Duration? timeout,
+  }) {
+    if (debugPrint) _printQuery(query);
+    return pool.execute(
+      query,
+      parameters: parameters,
+      ignoreRows: ignoreRows,
+      queryMode: queryMode,
+      timeout: timeout,
+    );
+  }
+
+  @override
+  Future<R> run<R>(Future<R> Function(Session session) fn, {SessionSettings? settings}) {
+    return pool.run(fn, settings: settings);
+  }
+
+  @override
+  Future<R> runTx<R>(
+    Future<R> Function(TxSession session) fn, {
+    TransactionSettings? settings,
+  }) {
+    return pool.runTx(fn, settings: settings);
+  }
+
+  @override
+  Future<void> close() async => await pool.close();
+
+  @override
+  Future<void> open() async {}
 }

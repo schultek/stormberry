@@ -43,7 +43,7 @@ void main() {
           double? get randomFloat;
           bool get isEnabled;
           DateTime get howLate;
-          PgPoint get whereTo;
+          Point get whereTo;
         }
       ''');
 
@@ -118,7 +118,7 @@ void main() {
         isFieldColumn(
           columnName: 'where_to',
           sqlType: 'point',
-          dartType: 'PgPoint',
+          dartType: 'Point',
           paramName: 'whereTo',
           isList: false,
           isNullable: false,
