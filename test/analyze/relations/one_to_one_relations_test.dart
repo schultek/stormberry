@@ -100,6 +100,7 @@ void main() {
           @PrimaryKey()
           String get id;
         
+          @HiddenIn.defaultView()
           B get b;
         }
         
@@ -107,6 +108,7 @@ void main() {
         abstract class B {
           String get name;
           
+          @HiddenIn.defaultView()
           A get a;
         }
       ''');

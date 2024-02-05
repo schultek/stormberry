@@ -8,14 +8,14 @@ import '../../schema.dart';
 import '../../utils.dart';
 import '../table_element.dart';
 
-abstract class NamedColumnElement implements ParameterColumnElement {
+abstract mixin class NamedColumnElement implements ParameterColumnElement {
   String get columnName;
   bool get isNullable;
   String get sqlType;
   String get rawSqlType;
 }
 
-abstract class RelationalColumnElement implements ColumnElement {
+mixin RelationalColumnElement implements ColumnElement {
   @override
   void checkConverter() {
     if (converter != null) {
@@ -37,16 +37,17 @@ abstract class RelationalColumnElement implements ColumnElement {
   }
 }
 
-abstract class LinkedColumnElement implements ColumnElement {
+abstract mixin class LinkedColumnElement implements ColumnElement {
   TableElement get linkedTable;
 }
 
-abstract class ReferencingColumnElement implements LinkedColumnElement, ParameterColumnElement {
+abstract mixin class ReferencingColumnElement
+    implements LinkedColumnElement, ParameterColumnElement {
   ReferencingColumnElement get referencedColumn;
   set referencedColumn(ReferencingColumnElement c);
 }
 
-abstract class ParameterColumnElement implements ColumnElement {
+abstract mixin class ParameterColumnElement implements ColumnElement {
   String get paramName;
 }
 

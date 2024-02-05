@@ -26,7 +26,7 @@ abstract class ListTransformer extends Transformer {
 class FilterByField extends FilterByValue {
   final String _value;
 
-  const FilterByField(String key, String operand, this._value) : super(key, operand);
+  const FilterByField(super.key, super.operand, this._value);
 
   @override
   String value(String column, String table) {

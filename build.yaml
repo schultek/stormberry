@@ -32,3 +32,5 @@ targets:
       stormberry|runner:
         generate_for:
           - test/**/*.dart
+      build_test:test_bootstrap:
+        enabled: false
