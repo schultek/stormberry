@@ -28,12 +28,18 @@ abstract class Database implements Session, SessionExecutor {
     useSSL ??= (Platform.environment['DB_SSL'] != DB_SSL);
     return Database.withOneConnection(
       endpoint: Endpoint(
-        host: host ?? Platform.environment['DB_HOST_ADDRESS'] ?? DB_HOST_ADDRESS,
-        port: port ?? int.tryParse(Platform.environment['DB_PORT'] ?? '') ?? DB_PORT,
+        host:
+            host ?? Platform.environment['DB_HOST_ADDRESS'] ?? DB_HOST_ADDRESS,
+        port: port ??
+            int.tryParse(Platform.environment['DB_PORT'] ?? '') ??
+            DB_PORT,
         database: database ?? Platform.environment['DB_NAME'] ?? DB_NAME,
-        username: username ?? Platform.environment['DB_USERNAME'] ?? DB_USERNAME,
-        password: password ?? Platform.environment['DB_PASSWORD'] ?? DB_PASSWORD,
-        isUnixSocket: isUnixSocket ?? (Platform.environment['DB_SOCKET'] == DB_SOCKET),
+        username:
+            username ?? Platform.environment['DB_USERNAME'] ?? DB_USERNAME,
+        password:
+            password ?? Platform.environment['DB_PASSWORD'] ?? DB_PASSWORD,
+        isUnixSocket:
+            isUnixSocket ?? (Platform.environment['DB_SOCKET'] == DB_SOCKET),
       ),
       connectionSettings: ConnectionSettings(
         sslMode: useSSL ? SslMode.require : SslMode.disable,
@@ -94,9 +100,11 @@ class _DatabaseWithOneConnection extends Database {
   }
 
   @override
-  Future<void> close() async {
+  Future<void> close({
+    bool force = false,
+  }) async {
     final connection = await _connection;
-    connection?.close();
+    connection?.close(force: force);
     _connection = null;
   }
 
@@ -127,7 +135,8 @@ class _DatabaseWithOneConnection extends Database {
   }
 
   @override
-  Future<R> run<R>(Future<R> Function(Session session) fn, {SessionSettings? settings}) async {
+  Future<R> run<R>(Future<R> Function(Session session) fn,
+      {SessionSettings? settings}) async {
     final connection = await open();
     return await connection.run(fn, settings: settings);
   }
@@ -142,7 +151,8 @@ class _DatabaseWithOneConnection extends Database {
   }
 
   Future<Connection> _tryOpen() async {
-    final connection = await Connection.open(endpoint, settings: connectionSettings);
+    final connection =
+        await Connection.open(endpoint, settings: connectionSettings);
     _connection = null;
     return connection;
   }
@@ -187,7 +197,8 @@ class _DatabaseWithPool extends Database {
   }
 
   @override
-  Future<R> run<R>(Future<R> Function(Session session) fn, {SessionSettings? settings}) {
+  Future<R> run<R>(Future<R> Function(Session session) fn,
+      {SessionSettings? settings}) {
     return pool.run(fn, settings: settings);
   }
 
@@ -200,7 +211,10 @@ class _DatabaseWithPool extends Database {
   }
 
   @override
-  Future<void> close() async => await pool.close();
+  Future<void> close({
+    bool force = false,
+  }) async =>
+      await pool.close(force: force);
 
   @override
   Future<void> open() async {}
