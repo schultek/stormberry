@@ -15,7 +15,6 @@ class QueryParams {
   });
 }
 
-/// {@nodoc}
 class QueryValues {
   final Map<String, dynamic> values = {};
   int key = 0;
