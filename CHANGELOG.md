@@ -1,3 +1,7 @@
+# 0.15.0
+
+- Update `postgres` dependency to version `^3.4.5` (by [@alexandrim0](https://github.com/alexandrim0)).
+
 # 0.14.0
 
 - **BREAKING** Updated the `postgres` package to version `3.0.0` (by [@BreX900](https://github.com/BreX900)).
