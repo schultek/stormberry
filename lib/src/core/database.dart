@@ -94,9 +94,11 @@ class _DatabaseWithOneConnection extends Database {
   }
 
   @override
-  Future<void> close() async {
+  Future<void> close({
+    bool force = false,
+  }) async {
     final connection = await _connection;
-    connection?.close();
+    connection?.close(force: force);
     _connection = null;
   }
 
@@ -127,7 +129,10 @@ class _DatabaseWithOneConnection extends Database {
   }
 
   @override
-  Future<R> run<R>(Future<R> Function(Session session) fn, {SessionSettings? settings}) async {
+  Future<R> run<R>(
+    Future<R> Function(Session session) fn, {
+    SessionSettings? settings,
+  }) async {
     final connection = await open();
     return await connection.run(fn, settings: settings);
   }
@@ -142,7 +147,10 @@ class _DatabaseWithOneConnection extends Database {
   }
 
   Future<Connection> _tryOpen() async {
-    final connection = await Connection.open(endpoint, settings: connectionSettings);
+    final connection = await Connection.open(
+      endpoint,
+      settings: connectionSettings,
+    );
     _connection = null;
     return connection;
   }
@@ -187,7 +195,10 @@ class _DatabaseWithPool extends Database {
   }
 
   @override
-  Future<R> run<R>(Future<R> Function(Session session) fn, {SessionSettings? settings}) {
+  Future<R> run<R>(
+    Future<R> Function(Session session) fn, {
+    SessionSettings? settings,
+  }) {
     return pool.run(fn, settings: settings);
   }
 
@@ -200,7 +211,10 @@ class _DatabaseWithPool extends Database {
   }
 
   @override
-  Future<void> close() async => await pool.close();
+  Future<void> close({
+    bool force = false,
+  }) async =>
+      await pool.close(force: force);
 
   @override
   Future<void> open() async {}
