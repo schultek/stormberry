@@ -167,13 +167,13 @@ class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, Strin
 
   @override
   FullCompanyView decode(TypedMap map) => FullCompanyView(
-    id: map.get('id'),
-    name: map.get('name'),
-    addresses: map.getListOpt('addresses', BillingAddressViewQueryable().decoder) ?? const [],
-    members: map.getListOpt('members', CompanyAccountViewQueryable().decoder) ?? const [],
-    invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
-    parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
-  );
+        id: map.get('id'),
+        name: map.get('name'),
+        addresses: map.getListOpt('addresses', BillingAddressViewQueryable().decoder) ?? const [],
+        members: map.getListOpt('members', CompanyAccountViewQueryable().decoder) ?? const [],
+        invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
+        parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
+      );
 }
 
 class FullCompanyView {
@@ -202,8 +202,7 @@ class MemberCompanyViewQueryable extends KeyedViewQueryable<MemberCompanyView, S
   String encodeKey(String key) => TextEncoder.i.encode(key);
 
   @override
-  String get query =>
-      'SELECT "companies".*, "addresses"."data" as "addresses"'
+  String get query => 'SELECT "companies".*, "addresses"."data" as "addresses"'
       'FROM "companies"'
       'LEFT JOIN ('
       '  SELECT "billing_addresses"."company_id",'
@@ -218,10 +217,10 @@ class MemberCompanyViewQueryable extends KeyedViewQueryable<MemberCompanyView, S
 
   @override
   MemberCompanyView decode(TypedMap map) => MemberCompanyView(
-    id: map.get('id'),
-    name: map.get('name'),
-    addresses: map.getListOpt('addresses', BillingAddressViewQueryable().decoder) ?? const [],
-  );
+        id: map.get('id'),
+        name: map.get('name'),
+        addresses: map.getListOpt('addresses', BillingAddressViewQueryable().decoder) ?? const [],
+      );
 }
 
 class MemberCompanyView {
