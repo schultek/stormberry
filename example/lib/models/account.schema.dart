@@ -189,15 +189,15 @@ class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> 
 
   @override
   FullAccountView decode(TypedMap map) => FullAccountView(
-    id: map.get('id'),
-    firstName: map.get('first_name'),
-    lastName: map.get('last_name'),
-    location: map.get('location', LatLngConverter().decode),
-    billingAddress: map.getOpt('billingAddress', BillingAddressViewQueryable().decoder),
-    invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
-    company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
-    parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
-  );
+        id: map.get('id'),
+        firstName: map.get('first_name'),
+        lastName: map.get('last_name'),
+        location: map.get('location', LatLngConverter().decode),
+        billingAddress: map.getOpt('billingAddress', BillingAddressViewQueryable().decoder),
+        invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
+        company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
+        parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
+      );
 }
 
 class FullAccountView {
@@ -259,15 +259,15 @@ class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> 
 
   @override
   UserAccountView decode(TypedMap map) => UserAccountView(
-    id: map.get('id'),
-    firstName: map.get('first_name'),
-    lastName: map.get('last_name'),
-    location: map.get('location', LatLngConverter().decode),
-    billingAddress: map.getOpt('billingAddress', BillingAddressViewQueryable().decoder),
-    invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
-    company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
-    parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
-  );
+        id: map.get('id'),
+        firstName: map.get('first_name'),
+        lastName: map.get('last_name'),
+        location: map.get('location', LatLngConverter().decode),
+        billingAddress: map.getOpt('billingAddress', BillingAddressViewQueryable().decoder),
+        invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
+        company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
+        parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
+      );
 }
 
 class UserAccountView {
@@ -318,12 +318,12 @@ class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView,
 
   @override
   CompanyAccountView decode(TypedMap map) => CompanyAccountView(
-    id: map.get('id'),
-    firstName: map.get('first_name'),
-    lastName: map.get('last_name'),
-    location: map.get('location', LatLngConverter().decode),
-    parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
-  );
+        id: map.get('id'),
+        firstName: map.get('first_name'),
+        lastName: map.get('last_name'),
+        location: map.get('location', LatLngConverter().decode),
+        parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
+      );
 }
 
 class CompanyAccountView {
