@@ -53,20 +53,27 @@ class _CompanyRepository extends BaseRepository
     if (requests.isEmpty) return;
     var values = QueryValues();
     await db.execute(
-      Sql.named('INSERT INTO "companies" ( "id", "name" )\n'
-          'VALUES ${requests.map((r) => '( ${values.add(r.id)}:text, ${values.add(r.name)}:text )').join(', ')}\n'),
+      Sql.named(
+        'INSERT INTO "companies" ( "id", "name" )\n'
+        'VALUES ${requests.map((r) => '( ${values.add(r.id)}:text, ${values.add(r.name)}:text )').join(', ')}\n',
+      ),
       parameters: values.values,
     );
 
-    await db.billingAddresses.insertMany(requests.expand((r) {
-      return r.addresses.map((rr) => BillingAddressInsertRequest(
-          city: rr.city,
-          postcode: rr.postcode,
-          name: rr.name,
-          street: rr.street,
-          accountId: null,
-          companyId: r.id));
-    }).toList());
+    await db.billingAddresses.insertMany(
+      requests.expand((r) {
+        return r.addresses.map(
+          (rr) => BillingAddressInsertRequest(
+            city: rr.city,
+            postcode: rr.postcode,
+            name: rr.name,
+            street: rr.street,
+            accountId: null,
+            companyId: r.id,
+          ),
+        );
+      }).toList(),
+    );
   }
 
   @override
@@ -74,26 +81,33 @@ class _CompanyRepository extends BaseRepository
     if (requests.isEmpty) return;
     var values = QueryValues();
     await db.execute(
-      Sql.named('UPDATE "companies"\n'
-          'SET "name" = COALESCE(UPDATED."name", "companies"."name")\n'
-          'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:text::text, ${values.add(r.name)}:text::text )').join(', ')} )\n'
-          'AS UPDATED("id", "name")\n'
-          'WHERE "companies"."id" = UPDATED."id"'),
+      Sql.named(
+        'UPDATE "companies"\n'
+        'SET "name" = COALESCE(UPDATED."name", "companies"."name")\n'
+        'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:text::text, ${values.add(r.name)}:text::text )').join(', ')} )\n'
+        'AS UPDATED("id", "name")\n'
+        'WHERE "companies"."id" = UPDATED."id"',
+      ),
       parameters: values.values,
     );
-    await db.billingAddresses.updateMany(requests.where((r) => r.addresses != null).expand((r) {
-      return r.addresses!.map((rr) => BillingAddressUpdateRequest(
-          city: rr.city, postcode: rr.postcode, name: rr.name, street: rr.street, companyId: r.id));
-    }).toList());
+    await db.billingAddresses.updateMany(
+      requests.where((r) => r.addresses != null).expand((r) {
+        return r.addresses!.map(
+          (rr) => BillingAddressUpdateRequest(
+            city: rr.city,
+            postcode: rr.postcode,
+            name: rr.name,
+            street: rr.street,
+            companyId: r.id,
+          ),
+        );
+      }).toList(),
+    );
   }
 }
 
 class CompanyInsertRequest {
-  CompanyInsertRequest({
-    required this.id,
-    required this.name,
-    required this.addresses,
-  });
+  CompanyInsertRequest({required this.id, required this.name, required this.addresses});
 
   final String id;
   final String name;
@@ -101,11 +115,7 @@ class CompanyInsertRequest {
 }
 
 class CompanyUpdateRequest {
-  CompanyUpdateRequest({
-    required this.id,
-    this.name,
-    this.addresses,
-  });
+  CompanyUpdateRequest({required this.id, this.name, this.addresses});
 
   final String id;
   final String? name;
@@ -157,12 +167,13 @@ class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, Strin
 
   @override
   FullCompanyView decode(TypedMap map) => FullCompanyView(
-      id: map.get('id'),
-      name: map.get('name'),
-      addresses: map.getListOpt('addresses', BillingAddressViewQueryable().decoder) ?? const [],
-      members: map.getListOpt('members', CompanyAccountViewQueryable().decoder) ?? const [],
-      invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
-      parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const []);
+    id: map.get('id'),
+    name: map.get('name'),
+    addresses: map.getListOpt('addresses', BillingAddressViewQueryable().decoder) ?? const [],
+    members: map.getListOpt('members', CompanyAccountViewQueryable().decoder) ?? const [],
+    invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
+    parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
+  );
 }
 
 class FullCompanyView {
@@ -191,7 +202,8 @@ class MemberCompanyViewQueryable extends KeyedViewQueryable<MemberCompanyView, S
   String encodeKey(String key) => TextEncoder.i.encode(key);
 
   @override
-  String get query => 'SELECT "companies".*, "addresses"."data" as "addresses"'
+  String get query =>
+      'SELECT "companies".*, "addresses"."data" as "addresses"'
       'FROM "companies"'
       'LEFT JOIN ('
       '  SELECT "billing_addresses"."company_id",'
@@ -206,17 +218,14 @@ class MemberCompanyViewQueryable extends KeyedViewQueryable<MemberCompanyView, S
 
   @override
   MemberCompanyView decode(TypedMap map) => MemberCompanyView(
-      id: map.get('id'),
-      name: map.get('name'),
-      addresses: map.getListOpt('addresses', BillingAddressViewQueryable().decoder) ?? const []);
+    id: map.get('id'),
+    name: map.get('name'),
+    addresses: map.getListOpt('addresses', BillingAddressViewQueryable().decoder) ?? const [],
+  );
 }
 
 class MemberCompanyView {
-  MemberCompanyView({
-    required this.id,
-    required this.name,
-    required this.addresses,
-  });
+  MemberCompanyView({required this.id, required this.name, required this.addresses});
 
   final String id;
   final String name;

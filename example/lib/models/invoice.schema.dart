@@ -42,8 +42,9 @@ class _InvoiceRepository extends BaseRepository
     var values = QueryValues();
     await db.execute(
       Sql.named(
-          'INSERT INTO "invoices" ( "id", "title", "invoice_id", "account_id", "company_id" )\n'
-          'VALUES ${requests.map((r) => '( ${values.add(r.id)}:text, ${values.add(r.title)}:text, ${values.add(r.invoiceId)}:text, ${values.add(r.accountId)}:int8, ${values.add(r.companyId)}:text )').join(', ')}\n'),
+        'INSERT INTO "invoices" ( "id", "title", "invoice_id", "account_id", "company_id" )\n'
+        'VALUES ${requests.map((r) => '( ${values.add(r.id)}:text, ${values.add(r.title)}:text, ${values.add(r.invoiceId)}:text, ${values.add(r.accountId)}:int8, ${values.add(r.companyId)}:text )').join(', ')}\n',
+      ),
       parameters: values.values,
     );
   }
@@ -53,11 +54,13 @@ class _InvoiceRepository extends BaseRepository
     if (requests.isEmpty) return;
     var values = QueryValues();
     await db.execute(
-      Sql.named('UPDATE "invoices"\n'
-          'SET "title" = COALESCE(UPDATED."title", "invoices"."title"), "invoice_id" = COALESCE(UPDATED."invoice_id", "invoices"."invoice_id"), "account_id" = COALESCE(UPDATED."account_id", "invoices"."account_id"), "company_id" = COALESCE(UPDATED."company_id", "invoices"."company_id")\n'
-          'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:text::text, ${values.add(r.title)}:text::text, ${values.add(r.invoiceId)}:text::text, ${values.add(r.accountId)}:int8::int8, ${values.add(r.companyId)}:text::text )').join(', ')} )\n'
-          'AS UPDATED("id", "title", "invoice_id", "account_id", "company_id")\n'
-          'WHERE "invoices"."id" = UPDATED."id"'),
+      Sql.named(
+        'UPDATE "invoices"\n'
+        'SET "title" = COALESCE(UPDATED."title", "invoices"."title"), "invoice_id" = COALESCE(UPDATED."invoice_id", "invoices"."invoice_id"), "account_id" = COALESCE(UPDATED."account_id", "invoices"."account_id"), "company_id" = COALESCE(UPDATED."company_id", "invoices"."company_id")\n'
+        'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:text::text, ${values.add(r.title)}:text::text, ${values.add(r.invoiceId)}:text::text, ${values.add(r.accountId)}:int8::int8, ${values.add(r.companyId)}:text::text )').join(', ')} )\n'
+        'AS UPDATED("id", "title", "invoice_id", "account_id", "company_id")\n'
+        'WHERE "invoices"."id" = UPDATED."id"',
+      ),
       parameters: values.values,
     );
   }
@@ -103,7 +106,8 @@ class OwnerInvoiceViewQueryable extends KeyedViewQueryable<OwnerInvoiceView, Str
   String encodeKey(String key) => TextEncoder.i.encode(key);
 
   @override
-  String get query => 'SELECT "invoices".*'
+  String get query =>
+      'SELECT "invoices".*'
       'FROM "invoices"';
 
   @override
@@ -111,15 +115,14 @@ class OwnerInvoiceViewQueryable extends KeyedViewQueryable<OwnerInvoiceView, Str
 
   @override
   OwnerInvoiceView decode(TypedMap map) => OwnerInvoiceView(
-      id: map.get('id'), title: map.get('title'), invoiceId: map.get('invoice_id'));
+    id: map.get('id'),
+    title: map.get('title'),
+    invoiceId: map.get('invoice_id'),
+  );
 }
 
 class OwnerInvoiceView {
-  OwnerInvoiceView({
-    required this.id,
-    required this.title,
-    required this.invoiceId,
-  });
+  OwnerInvoiceView({required this.id, required this.title, required this.invoiceId});
 
   final String id;
   final String title;

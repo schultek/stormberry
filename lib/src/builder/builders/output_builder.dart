@@ -30,7 +30,7 @@ abstract class OutputBuilder implements Builder {
         if (ext == 'dart') {
           var formatter = DartFormatter(
             pageWidth: options.lineLength,
-            languageVersion: DartFormatter.latestShortStyleLanguageVersion,
+            languageVersion: DartFormatter.latestLanguageVersion,
           );
           output = formatter.format(output);
         }

@@ -53,8 +53,10 @@ class _PartyRepository extends BaseRepository
     if (requests.isEmpty) return;
     var values = QueryValues();
     await db.execute(
-      Sql.named('INSERT INTO "parties" ( "id", "name", "sponsor_id", "date" )\n'
-          'VALUES ${requests.map((r) => '( ${values.add(r.id)}:text, ${values.add(r.name)}:text, ${values.add(r.sponsorId)}:text, ${values.add(r.date)}:int8 )').join(', ')}\n'),
+      Sql.named(
+        'INSERT INTO "parties" ( "id", "name", "sponsor_id", "date" )\n'
+        'VALUES ${requests.map((r) => '( ${values.add(r.id)}:text, ${values.add(r.name)}:text, ${values.add(r.sponsorId)}:text, ${values.add(r.date)}:int8 )').join(', ')}\n',
+      ),
       parameters: values.values,
     );
   }
@@ -64,23 +66,20 @@ class _PartyRepository extends BaseRepository
     if (requests.isEmpty) return;
     var values = QueryValues();
     await db.execute(
-      Sql.named('UPDATE "parties"\n'
-          'SET "name" = COALESCE(UPDATED."name", "parties"."name"), "sponsor_id" = COALESCE(UPDATED."sponsor_id", "parties"."sponsor_id"), "date" = COALESCE(UPDATED."date", "parties"."date")\n'
-          'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:text::text, ${values.add(r.name)}:text::text, ${values.add(r.sponsorId)}:text::text, ${values.add(r.date)}:int8::int8 )').join(', ')} )\n'
-          'AS UPDATED("id", "name", "sponsor_id", "date")\n'
-          'WHERE "parties"."id" = UPDATED."id"'),
+      Sql.named(
+        'UPDATE "parties"\n'
+        'SET "name" = COALESCE(UPDATED."name", "parties"."name"), "sponsor_id" = COALESCE(UPDATED."sponsor_id", "parties"."sponsor_id"), "date" = COALESCE(UPDATED."date", "parties"."date")\n'
+        'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:text::text, ${values.add(r.name)}:text::text, ${values.add(r.sponsorId)}:text::text, ${values.add(r.date)}:int8::int8 )').join(', ')} )\n'
+        'AS UPDATED("id", "name", "sponsor_id", "date")\n'
+        'WHERE "parties"."id" = UPDATED."id"',
+      ),
       parameters: values.values,
     );
   }
 }
 
 class PartyInsertRequest {
-  PartyInsertRequest({
-    required this.id,
-    required this.name,
-    this.sponsorId,
-    required this.date,
-  });
+  PartyInsertRequest({required this.id, required this.name, this.sponsorId, required this.date});
 
   final String id;
   final String name;
@@ -89,12 +88,7 @@ class PartyInsertRequest {
 }
 
 class PartyUpdateRequest {
-  PartyUpdateRequest({
-    required this.id,
-    this.name,
-    this.sponsorId,
-    this.date,
-  });
+  PartyUpdateRequest({required this.id, this.name, this.sponsorId, this.date});
 
   final String id;
   final String? name;
@@ -110,7 +104,8 @@ class GuestPartyViewQueryable extends KeyedViewQueryable<GuestPartyView, String>
   String encodeKey(String key) => TextEncoder.i.encode(key);
 
   @override
-  String get query => 'SELECT "parties".*, row_to_json("sponsor".*) as "sponsor"'
+  String get query =>
+      'SELECT "parties".*, row_to_json("sponsor".*) as "sponsor"'
       'FROM "parties"'
       'LEFT JOIN (${MemberCompanyViewQueryable().query}) "sponsor"'
       'ON "parties"."sponsor_id" = "sponsor"."id"';
@@ -120,19 +115,15 @@ class GuestPartyViewQueryable extends KeyedViewQueryable<GuestPartyView, String>
 
   @override
   GuestPartyView decode(TypedMap map) => GuestPartyView(
-      id: map.get('id'),
-      name: map.get('name'),
-      sponsor: map.getOpt('sponsor', MemberCompanyViewQueryable().decoder),
-      date: map.get('date'));
+    id: map.get('id'),
+    name: map.get('name'),
+    sponsor: map.getOpt('sponsor', MemberCompanyViewQueryable().decoder),
+    date: map.get('date'),
+  );
 }
 
 class GuestPartyView {
-  GuestPartyView({
-    required this.id,
-    required this.name,
-    this.sponsor,
-    required this.date,
-  });
+  GuestPartyView({required this.id, required this.name, this.sponsor, required this.date});
 
   final String id;
   final String name;
@@ -148,7 +139,8 @@ class CompanyPartyViewQueryable extends KeyedViewQueryable<CompanyPartyView, Str
   String encodeKey(String key) => TextEncoder.i.encode(key);
 
   @override
-  String get query => 'SELECT "parties".*'
+  String get query =>
+      'SELECT "parties".*'
       'FROM "parties"';
 
   @override
@@ -160,11 +152,7 @@ class CompanyPartyViewQueryable extends KeyedViewQueryable<CompanyPartyView, Str
 }
 
 class CompanyPartyView {
-  CompanyPartyView({
-    required this.id,
-    required this.name,
-    required this.date,
-  });
+  CompanyPartyView({required this.id, required this.name, required this.date});
 
   final String id;
   final String name;

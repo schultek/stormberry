@@ -34,8 +34,9 @@ class _BillingAddressRepository extends BaseRepository
     var values = QueryValues();
     await db.execute(
       Sql.named(
-          'INSERT INTO "billing_addresses" ( "city", "postcode", "name", "street", "account_id", "company_id" )\n'
-          'VALUES ${requests.map((r) => '( ${values.add(r.city)}:text, ${values.add(r.postcode)}:text, ${values.add(r.name)}:text, ${values.add(r.street)}:text, ${values.add(r.accountId)}:int8, ${values.add(r.companyId)}:text )').join(', ')}\n'),
+        'INSERT INTO "billing_addresses" ( "city", "postcode", "name", "street", "account_id", "company_id" )\n'
+        'VALUES ${requests.map((r) => '( ${values.add(r.city)}:text, ${values.add(r.postcode)}:text, ${values.add(r.name)}:text, ${values.add(r.street)}:text, ${values.add(r.accountId)}:int8, ${values.add(r.companyId)}:text )').join(', ')}\n',
+      ),
       parameters: values.values,
     );
   }
@@ -45,11 +46,13 @@ class _BillingAddressRepository extends BaseRepository
     if (requests.isEmpty) return;
     var values = QueryValues();
     await db.execute(
-      Sql.named('UPDATE "billing_addresses"\n'
-          'SET "city" = COALESCE(UPDATED."city", "billing_addresses"."city"), "postcode" = COALESCE(UPDATED."postcode", "billing_addresses"."postcode"), "name" = COALESCE(UPDATED."name", "billing_addresses"."name"), "street" = COALESCE(UPDATED."street", "billing_addresses"."street")\n'
-          'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.city)}:text::text, ${values.add(r.postcode)}:text::text, ${values.add(r.name)}:text::text, ${values.add(r.street)}:text::text, ${values.add(r.accountId)}:int8::int8, ${values.add(r.companyId)}:text::text )').join(', ')} )\n'
-          'AS UPDATED("city", "postcode", "name", "street", "account_id", "company_id")\n'
-          'WHERE "billing_addresses"."account_id" = UPDATED."account_id" AND "billing_addresses"."company_id" = UPDATED."company_id"'),
+      Sql.named(
+        'UPDATE "billing_addresses"\n'
+        'SET "city" = COALESCE(UPDATED."city", "billing_addresses"."city"), "postcode" = COALESCE(UPDATED."postcode", "billing_addresses"."postcode"), "name" = COALESCE(UPDATED."name", "billing_addresses"."name"), "street" = COALESCE(UPDATED."street", "billing_addresses"."street")\n'
+        'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.city)}:text::text, ${values.add(r.postcode)}:text::text, ${values.add(r.name)}:text::text, ${values.add(r.street)}:text::text, ${values.add(r.accountId)}:int8::int8, ${values.add(r.companyId)}:text::text )').join(', ')} )\n'
+        'AS UPDATED("city", "postcode", "name", "street", "account_id", "company_id")\n'
+        'WHERE "billing_addresses"."account_id" = UPDATED."account_id" AND "billing_addresses"."company_id" = UPDATED."company_id"',
+      ),
       parameters: values.values,
     );
   }
@@ -93,7 +96,8 @@ class BillingAddressUpdateRequest {
 
 class BillingAddressViewQueryable extends ViewQueryable<BillingAddressView> {
   @override
-  String get query => 'SELECT "billing_addresses".*'
+  String get query =>
+      'SELECT "billing_addresses".*'
       'FROM "billing_addresses"';
 
   @override
@@ -101,10 +105,11 @@ class BillingAddressViewQueryable extends ViewQueryable<BillingAddressView> {
 
   @override
   BillingAddressView decode(TypedMap map) => BillingAddressView(
-      city: map.get('city'),
-      postcode: map.get('postcode'),
-      name: map.get('name'),
-      street: map.get('street'));
+    city: map.get('city'),
+    postcode: map.get('postcode'),
+    name: map.get('name'),
+    street: map.get('street'),
+  );
 }
 
 class BillingAddressView implements BillingAddress {
