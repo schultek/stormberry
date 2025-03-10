@@ -104,7 +104,8 @@ class GuestPartyViewQueryable extends KeyedViewQueryable<GuestPartyView, String>
   String encodeKey(String key) => TextEncoder.i.encode(key);
 
   @override
-  String get query => 'SELECT "parties".*, row_to_json("sponsor".*) as "sponsor"'
+  String get query =>
+      'SELECT "parties".*, row_to_json("sponsor".*) as "sponsor"'
       'FROM "parties"'
       'LEFT JOIN (${MemberCompanyViewQueryable().query}) "sponsor"'
       'ON "parties"."sponsor_id" = "sponsor"."id"';
@@ -114,11 +115,11 @@ class GuestPartyViewQueryable extends KeyedViewQueryable<GuestPartyView, String>
 
   @override
   GuestPartyView decode(TypedMap map) => GuestPartyView(
-        id: map.get('id'),
-        name: map.get('name'),
-        sponsor: map.getOpt('sponsor', MemberCompanyViewQueryable().decoder),
-        date: map.get('date'),
-      );
+    id: map.get('id'),
+    name: map.get('name'),
+    sponsor: map.getOpt('sponsor', MemberCompanyViewQueryable().decoder),
+    date: map.get('date'),
+  );
 }
 
 class GuestPartyView {
@@ -138,7 +139,8 @@ class CompanyPartyViewQueryable extends KeyedViewQueryable<CompanyPartyView, Str
   String encodeKey(String key) => TextEncoder.i.encode(key);
 
   @override
-  String get query => 'SELECT "parties".*'
+  String get query =>
+      'SELECT "parties".*'
       'FROM "parties"';
 
   @override

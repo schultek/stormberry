@@ -96,7 +96,8 @@ class BillingAddressUpdateRequest {
 
 class BillingAddressViewQueryable extends ViewQueryable<BillingAddressView> {
   @override
-  String get query => 'SELECT "billing_addresses".*'
+  String get query =>
+      'SELECT "billing_addresses".*'
       'FROM "billing_addresses"';
 
   @override
@@ -104,11 +105,11 @@ class BillingAddressViewQueryable extends ViewQueryable<BillingAddressView> {
 
   @override
   BillingAddressView decode(TypedMap map) => BillingAddressView(
-        city: map.get('city'),
-        postcode: map.get('postcode'),
-        name: map.get('name'),
-        street: map.get('street'),
-      );
+    city: map.get('city'),
+    postcode: map.get('postcode'),
+    name: map.get('name'),
+    street: map.get('street'),
+  );
 }
 
 class BillingAddressView implements BillingAddress {

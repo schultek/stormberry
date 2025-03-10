@@ -106,7 +106,8 @@ class OwnerInvoiceViewQueryable extends KeyedViewQueryable<OwnerInvoiceView, Str
   String encodeKey(String key) => TextEncoder.i.encode(key);
 
   @override
-  String get query => 'SELECT "invoices".*'
+  String get query =>
+      'SELECT "invoices".*'
       'FROM "invoices"';
 
   @override
@@ -114,10 +115,10 @@ class OwnerInvoiceViewQueryable extends KeyedViewQueryable<OwnerInvoiceView, Str
 
   @override
   OwnerInvoiceView decode(TypedMap map) => OwnerInvoiceView(
-        id: map.get('id'),
-        title: map.get('title'),
-        invoiceId: map.get('invoice_id'),
-      );
+    id: map.get('id'),
+    title: map.get('title'),
+    invoiceId: map.get('invoice_id'),
+  );
 }
 
 class OwnerInvoiceView {

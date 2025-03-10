@@ -24,6 +24,21 @@ void main() {
             @PrimaryKey()
             String get id;
           }
+
+          mixin MyMixin {
+          }
+
+          mixin TestMixin {
+          }
+
+          abstract class AViewInterface {
+          }
+
+          class InsertBase {
+          }
+
+          class UpdateBase {
+          }
         ''');
       });
 
