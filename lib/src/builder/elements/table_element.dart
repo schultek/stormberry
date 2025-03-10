@@ -67,7 +67,8 @@ class TableElement {
       return annotation.read('tableName').stringValue;
     }
 
-    return state.options.tableCaseStyle.transform(_getRepoName(singular: singular));
+    return state.options.tableCaseStyle
+        .transform(_getRepoName(singular: singular));
   }
 
   String _getRepoName({bool singular = false}) {
@@ -95,8 +96,8 @@ class TableElement {
 
   late List<FieldElement> allFields = element.fields
       .cast<FieldElement>()
-      .followedBy(element.allSupertypes
-          .expand((t) => t.isDartCoreObject ? <FieldElement>[] : t.element.fields))
+      .followedBy(element.allSupertypes.expand(
+          (t) => t.isDartCoreObject ? <FieldElement>[] : t.element.fields))
       .where((e) => !e.hasInitializer)
       .toList();
 
@@ -107,7 +108,8 @@ class TableElement {
       }
 
       var isList = param.type.isDartCoreList;
-      var dataType = isList ? (param.type as InterfaceType).typeArguments[0] : param.type;
+      var dataType =
+          isList ? (param.type as InterfaceType).typeArguments[0] : param.type;
       if (!state.schema.tables.containsKey(dataType.element)) {
         columns.add(FieldColumnElement(param, this, state));
       } else {
@@ -118,8 +120,9 @@ class TableElement {
 
         var otherParam = otherBuilder.findMatchingParam(param);
         var selfIsList = param.type.isDartCoreList;
-        var otherIsList =
-            otherParam != null ? otherParam.type.isDartCoreList : otherHasKey && !selfIsList;
+        var otherIsList = otherParam != null
+            ? otherParam.type.isDartCoreList
+            : otherHasKey && !selfIsList;
 
         if (!selfHasKey && !otherHasKey) {
           throw 'Model ${otherBuilder.element.name} cannot have a relation to model ${element.name} because neither model'
@@ -134,8 +137,9 @@ class TableElement {
         }
 
         if (selfHasKey && otherHasKey && !selfIsList && !otherIsList) {
-          var eitherNullable = param.type.nullabilitySuffix != NullabilitySuffix.none ||
-              otherParam!.type.nullabilitySuffix != NullabilitySuffix.none;
+          var eitherNullable =
+              param.type.nullabilitySuffix != NullabilitySuffix.none ||
+                  otherParam!.type.nullabilitySuffix != NullabilitySuffix.none;
           if (!eitherNullable) {
             throw 'Model ${otherBuilder.element.name} cannot have a one-to-one relation to model ${element.name} with '
                 'both sides being non-nullable. At least one side has to be nullable, to insert one model before the other.\n'
@@ -153,11 +157,13 @@ class TableElement {
             state.asset.joinTables[joinBuilder.tableName] = joinBuilder;
           }
 
-          var selfColumn = JoinColumnElement(param, otherBuilder, joinBuilder, this, state);
+          var selfColumn =
+              JoinColumnElement(param, otherBuilder, joinBuilder, this, state);
 
           JoinColumnElement otherColumn;
           if (param != otherParam) {
-            otherColumn = JoinColumnElement(otherParam!, this, joinBuilder, otherBuilder, state);
+            otherColumn = JoinColumnElement(
+                otherParam!, this, joinBuilder, otherBuilder, state);
             otherColumn.referencedColumn = selfColumn;
             otherBuilder.columns.add(otherColumn);
           } else {
@@ -172,7 +178,8 @@ class TableElement {
           if (otherHasKey && !selfIsList) {
             selfColumn = ForeignColumnElement(param, otherBuilder, this, state);
           } else {
-            selfColumn = ReferenceColumnElement(param, otherBuilder, this, state);
+            selfColumn =
+                ReferenceColumnElement(param, otherBuilder, this, state);
           }
 
           columns.add(selfColumn);
@@ -185,9 +192,11 @@ class TableElement {
             if (selfHasKey &&
                 !otherIsList &&
                 (selfColumn is! ForeignColumnElement || this != otherBuilder)) {
-              otherColumn = ForeignColumnElement(otherParam, this, otherBuilder, state);
+              otherColumn =
+                  ForeignColumnElement(otherParam, this, otherBuilder, state);
             } else {
-              otherColumn = ReferenceColumnElement(otherParam, this, otherBuilder, state);
+              otherColumn =
+                  ReferenceColumnElement(otherParam, this, otherBuilder, state);
             }
             otherBuilder.columns.add(otherColumn);
             otherColumn.referencedColumn = selfColumn;
@@ -240,7 +249,7 @@ class TableElement {
       if (bindingParam == null) {
         throw 'A @BindTo() annotation was used with an incorrect target field. The following field '
             'was annotated:\n'
-            '  - "${param.getDisplayString(withNullability: true)}" in class "${param.enclosingElement.getDisplayString(withNullability: true)}"\n'
+            '  - "${param.getDisplayString(withNullability: true)}" in class "${param.enclosingElement3.getDisplayString(withNullability: true)}"\n'
             'The binding specified a target field of:\n'
             '  - "$binding"\n'
             'which does not exist in class "${element.getDisplayString(withNullability: false)}.';
@@ -251,16 +260,16 @@ class TableElement {
       if (bindingParamBinding == null) {
         throw 'A @BindTo() annotation was only used on one field of a relation. The following field '
             'had no binding:\n'
-            '  - "${bindingParam.getDisplayString(withNullability: true)}" in class "${bindingParam.enclosingElement.getDisplayString(withNullability: true)}"\n'
+            '  - "${bindingParam.getDisplayString(withNullability: true)}" in class "${bindingParam.enclosingElement3.getDisplayString(withNullability: true)}"\n'
             'while the following field had a binding referring to the first field:\n'
-            '  - "${param.getDisplayString(withNullability: true)}" in class ${param.enclosingElement.getDisplayString(withNullability: true)}"\n\n'
+            '  - "${param.getDisplayString(withNullability: true)}" in class ${param.enclosingElement3.getDisplayString(withNullability: true)}"\n\n'
             'Make sure that both parameters specify the @BindTo() annotation referring to each other, or neither.';
       } else if (bindingParamBinding != param.name) {
         throw 'A @BindTo() annotation contained an incorrect target field. The following field '
             'had a binding:\n'
-            '  - "${param.getDisplayString(withNullability: true)}" in class "${param.enclosingElement.getDisplayString(withNullability: true)}"\n'
+            '  - "${param.getDisplayString(withNullability: true)}" in class "${param.enclosingElement3.getDisplayString(withNullability: true)}"\n'
             'which referred to the second field:\n'
-            '  - "${bindingParam.getDisplayString(withNullability: true)}" in class ${bindingParam.enclosingElement.getDisplayString(withNullability: true)}"\n'
+            '  - "${bindingParam.getDisplayString(withNullability: true)}" in class ${bindingParam.enclosingElement3.getDisplayString(withNullability: true)}"\n'
             'which referred to some other field "$bindingParamBinding".\n\n'
             'Make sure that both fields specify the @BindTo() annotation referring to each other, or neither.';
       }
@@ -269,12 +278,12 @@ class TableElement {
           ? (bindingParam.type as InterfaceType).typeArguments[0]
           : bindingParam.type;
 
-      if (type.element != param.enclosingElement) {
+      if (type.element != param.enclosingElement3) {
         throw 'A @BindTo() annotation was used incorrectly on a type. The following field '
             'had a binding:\n'
-            '  - "${param.getDisplayString(withNullability: true)}" in class "${param.enclosingElement.getDisplayString(withNullability: true)}"\n'
+            '  - "${param.getDisplayString(withNullability: true)}" in class "${param.enclosingElement3.getDisplayString(withNullability: true)}"\n'
             'which referred to the second field:\n'
-            '  - "${bindingParam.getDisplayString(withNullability: true)}" in class ${bindingParam.enclosingElement.getDisplayString(withNullability: true)}"\n'
+            '  - "${bindingParam.getDisplayString(withNullability: true)}" in class ${bindingParam.enclosingElement3.getDisplayString(withNullability: true)}"\n'
             'which has an incorrect type "${type.element?.getDisplayString(withNullability: false)}".\n\n'
             'Make sure that the type of the second field is set to the class of the first field.';
       }
@@ -288,16 +297,18 @@ class TableElement {
     }
 
     return allFields.where((p) {
-      var type = p.type.isDartCoreList ? (p.type as InterfaceType).typeArguments[0] : p.type;
-      if (type.element != param.enclosingElement) return false;
+      var type = p.type.isDartCoreList
+          ? (p.type as InterfaceType).typeArguments[0]
+          : p.type;
+      if (type.element != param.enclosingElement3) return false;
 
       var binding = p.binding;
       if (binding == param.name) {
         throw 'A @BindTo() annotation was only used on one field of a relation. The following field'
             'had no binding:\n'
-            '  - "${param.getDisplayString(withNullability: true)}" in class "${param.enclosingElement.getDisplayString(withNullability: true)}"\n'
+            '  - "${param.getDisplayString(withNullability: true)}" in class "${param.enclosingElement3.getDisplayString(withNullability: true)}"\n'
             'while the following field had a binding referring to the first field:\n'
-            '  - "${p.getDisplayString(withNullability: true)}" in class ${p.enclosingElement.getDisplayString(withNullability: true)}"\n\n'
+            '  - "${p.getDisplayString(withNullability: true)}" in class ${p.enclosingElement3.getDisplayString(withNullability: true)}"\n\n'
             'Make sure that both fields specify the @BindTo() annotation referring to each other, or neither.';
       }
       if (binding != null) return false;
@@ -311,7 +322,8 @@ class TableElement {
     if (base != null && plural && name.endsWith('s')) {
       name = name.substring(0, base.length - (base.endsWith('es') ? 2 : 1));
     }
-    name = state.options.columnCaseStyle.transform('$name-${primaryKeyColumn!.columnName}');
+    name = state.options.columnCaseStyle
+        .transform('$name-${primaryKeyColumn!.columnName}');
     if (plural) {
       name += name.endsWith('s') ? 'es' : 's';
     }
@@ -324,8 +336,10 @@ class TableElement {
     }
     var views = meta!.read('views');
     if (!views.isNull) {
-      var view =
-          views.mapValue.entries.where((e) => name == e.key?.toSymbolValue()).firstOrNull?.value;
+      var view = views.mapValue.entries
+          .where((e) => name == e.key?.toSymbolValue())
+          .firstOrNull
+          ?.value;
       if (view != null && !view.isNull) {
         return ConstantReader(view);
       }
@@ -342,6 +356,9 @@ class TableElement {
 
 extension FieldBinding on FieldElement {
   String? get binding {
-    return bindToChecker.firstAnnotationOf(getter ?? this)?.getField('name')?.toSymbolValue();
+    return bindToChecker
+        .firstAnnotationOf(getter ?? this)
+        ?.getField('name')
+        ?.toSymbolValue();
   }
 }
