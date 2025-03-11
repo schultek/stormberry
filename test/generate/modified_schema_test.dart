@@ -30,9 +30,7 @@ void main() {
           source,
           contains(
             'class AView {\n'
-            '  AView({\n'
-            '    required this.id,\n'
-            '  });\n\n'
+            '  AView({required this.id});\n\n'
             '  final String id;\n'
             '}',
           ),
@@ -44,10 +42,7 @@ void main() {
           source,
           contains(
             'class AInsertRequest {\n'
-            '  AInsertRequest({\n'
-            '    required this.id,\n'
-            '    required this.secretId,\n'
-            '  });\n\n'
+            '  AInsertRequest({required this.id, required this.secretId});\n\n'
             '  final String id;\n'
             '  final String secretId;\n'
             '}',
@@ -60,10 +55,7 @@ void main() {
           source,
           contains(
             'class AUpdateRequest {\n'
-            '  AUpdateRequest({\n'
-            '    required this.id,\n'
-            '    this.secretId,\n'
-            '  });\n\n'
+            '  AUpdateRequest({required this.id, this.secretId});\n\n'
             '  final String id;\n'
             '  final String? secretId;\n'
             '}',
