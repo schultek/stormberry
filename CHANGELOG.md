@@ -1,3 +1,9 @@
+# 0.16.0
+
+- Update analyzer dependency to `^7.0.0`
+- Update dart_style dependency to `^3.0.0`
+- Update source_gen dependency to `^2.0.0`
+
 # 0.15.0
 
 - Update `postgres` dependency to version `^3.4.5` (by [@alexandrim0](https://github.com/alexandrim0)).
