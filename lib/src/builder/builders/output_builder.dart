@@ -27,7 +27,10 @@ abstract class OutputBuilder implements Builder {
       if (asset != null && asset.tables.isNotEmpty) {
         var output = buildTarget(buildStep, asset);
         if (ext == 'dart') {
-          var formatter = DartFormatter(pageWidth: options.lineLength);
+          var formatter = DartFormatter(
+            pageWidth: options.lineLength,
+            languageVersion: DartFormatter.latestLanguageVersion,
+          );
           output = formatter.format(output);
         }
 

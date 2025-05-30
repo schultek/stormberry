@@ -65,22 +65,27 @@ class _AccountRepository extends BaseRepository
     if (requests.isEmpty) return [];
     var values = QueryValues();
     var rows = await db.execute(
-      Sql.named('INSERT INTO "accounts" ( "first_name", "last_name", "location", "company_id" )\n'
-          'VALUES ${requests.map((r) => '( ${values.add(r.firstName)}:text, ${values.add(r.lastName)}:text, ${values.add(LatLngConverter().tryEncode(r.location))}:point, ${values.add(r.companyId)}:text )').join(', ')}\n'
-          'RETURNING "id"'),
+      Sql.named(
+        'INSERT INTO "accounts" ( "first_name", "last_name", "location", "company_id" )\n'
+        'VALUES ${requests.map((r) => '( ${values.add(r.firstName)}:text, ${values.add(r.lastName)}:text, ${values.add(LatLngConverter().tryEncode(r.location))}:point, ${values.add(r.companyId)}:text )').join(', ')}\n'
+        'RETURNING "id"',
+      ),
       parameters: values.values,
     );
     var result = rows.map<int>((r) => TextEncoder.i.decode(r.toColumnMap()['id'])).toList();
 
-    await db.billingAddresses.insertMany(requests.where((r) => r.billingAddress != null).map((r) {
-      return BillingAddressInsertRequest(
+    await db.billingAddresses.insertMany(
+      requests.where((r) => r.billingAddress != null).map((r) {
+        return BillingAddressInsertRequest(
           city: r.billingAddress!.city,
           postcode: r.billingAddress!.postcode,
           name: r.billingAddress!.name,
           street: r.billingAddress!.street,
           accountId: result[requests.indexOf(r)],
-          companyId: null);
-    }).toList());
+          companyId: null,
+        );
+      }).toList(),
+    );
 
     return result;
   }
@@ -90,21 +95,26 @@ class _AccountRepository extends BaseRepository
     if (requests.isEmpty) return;
     var values = QueryValues();
     await db.execute(
-      Sql.named('UPDATE "accounts"\n'
-          'SET "first_name" = COALESCE(UPDATED."first_name", "accounts"."first_name"), "last_name" = COALESCE(UPDATED."last_name", "accounts"."last_name"), "location" = COALESCE(UPDATED."location", "accounts"."location"), "company_id" = COALESCE(UPDATED."company_id", "accounts"."company_id")\n'
-          'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:int8::int8, ${values.add(r.firstName)}:text::text, ${values.add(r.lastName)}:text::text, ${values.add(LatLngConverter().tryEncode(r.location))}:point::point, ${values.add(r.companyId)}:text::text )').join(', ')} )\n'
-          'AS UPDATED("id", "first_name", "last_name", "location", "company_id")\n'
-          'WHERE "accounts"."id" = UPDATED."id"'),
+      Sql.named(
+        'UPDATE "accounts"\n'
+        'SET "first_name" = COALESCE(UPDATED."first_name", "accounts"."first_name"), "last_name" = COALESCE(UPDATED."last_name", "accounts"."last_name"), "location" = COALESCE(UPDATED."location", "accounts"."location"), "company_id" = COALESCE(UPDATED."company_id", "accounts"."company_id")\n'
+        'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:int8::int8, ${values.add(r.firstName)}:text::text, ${values.add(r.lastName)}:text::text, ${values.add(LatLngConverter().tryEncode(r.location))}:point::point, ${values.add(r.companyId)}:text::text )').join(', ')} )\n'
+        'AS UPDATED("id", "first_name", "last_name", "location", "company_id")\n'
+        'WHERE "accounts"."id" = UPDATED."id"',
+      ),
       parameters: values.values,
     );
-    await db.billingAddresses.updateMany(requests.where((r) => r.billingAddress != null).map((r) {
-      return BillingAddressUpdateRequest(
+    await db.billingAddresses.updateMany(
+      requests.where((r) => r.billingAddress != null).map((r) {
+        return BillingAddressUpdateRequest(
           city: r.billingAddress!.city,
           postcode: r.billingAddress!.postcode,
           name: r.billingAddress!.name,
           street: r.billingAddress!.street,
-          accountId: r.id);
-    }).toList());
+          accountId: r.id,
+        );
+      }).toList(),
+    );
   }
 }
 
@@ -179,14 +189,15 @@ class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> 
 
   @override
   FullAccountView decode(TypedMap map) => FullAccountView(
-      id: map.get('id'),
-      firstName: map.get('first_name'),
-      lastName: map.get('last_name'),
-      location: map.get('location', LatLngConverter().decode),
-      billingAddress: map.getOpt('billingAddress', BillingAddressViewQueryable().decoder),
-      invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
-      company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
-      parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const []);
+        id: map.get('id'),
+        firstName: map.get('first_name'),
+        lastName: map.get('last_name'),
+        location: map.get('location', LatLngConverter().decode),
+        billingAddress: map.getOpt('billingAddress', BillingAddressViewQueryable().decoder),
+        invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
+        company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
+        parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
+      );
 }
 
 class FullAccountView {
@@ -248,14 +259,15 @@ class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> 
 
   @override
   UserAccountView decode(TypedMap map) => UserAccountView(
-      id: map.get('id'),
-      firstName: map.get('first_name'),
-      lastName: map.get('last_name'),
-      location: map.get('location', LatLngConverter().decode),
-      billingAddress: map.getOpt('billingAddress', BillingAddressViewQueryable().decoder),
-      invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
-      company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
-      parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const []);
+        id: map.get('id'),
+        firstName: map.get('first_name'),
+        lastName: map.get('last_name'),
+        location: map.get('location', LatLngConverter().decode),
+        billingAddress: map.getOpt('billingAddress', BillingAddressViewQueryable().decoder),
+        invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
+        company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
+        parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
+      );
 }
 
 class UserAccountView {
@@ -306,11 +318,12 @@ class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView,
 
   @override
   CompanyAccountView decode(TypedMap map) => CompanyAccountView(
-      id: map.get('id'),
-      firstName: map.get('first_name'),
-      lastName: map.get('last_name'),
-      location: map.get('location', LatLngConverter().decode),
-      parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const []);
+        id: map.get('id'),
+        firstName: map.get('first_name'),
+        lastName: map.get('last_name'),
+        location: map.get('location', LatLngConverter().decode),
+        parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
+      );
 }
 
 class CompanyAccountView {

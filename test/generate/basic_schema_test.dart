@@ -32,10 +32,7 @@ void main() {
           source,
           contains(
             'class AView {\n'
-            '  AView({\n'
-            '    required this.id,\n'
-            '    required this.b,\n'
-            '  });\n\n'
+            '  AView({required this.id, required this.b});\n\n'
             '  final String id;\n'
             '  final BView b;\n'
             '}',
@@ -46,9 +43,7 @@ void main() {
           source,
           contains(
             'class BView {\n'
-            '  BView({\n'
-            '    required this.id,\n'
-            '  });\n\n'
+            '  BView({required this.id});\n\n'
             '  final String id;\n'
             '}',
           ),
@@ -60,10 +55,7 @@ void main() {
           source,
           contains(
             'class AInsertRequest {\n'
-            '  AInsertRequest({\n'
-            '    required this.id,\n'
-            '    required this.bId,\n'
-            '  });\n\n'
+            '  AInsertRequest({required this.id, required this.bId});\n\n'
             '  final String id;\n'
             '  final String bId;\n'
             '}',
@@ -74,9 +66,7 @@ void main() {
           source,
           contains(
             'class BInsertRequest {\n'
-            '  BInsertRequest({\n'
-            '    required this.id,\n'
-            '  });\n\n'
+            '  BInsertRequest({required this.id});\n\n'
             '  final String id;\n'
             '}',
           ),
@@ -88,10 +78,7 @@ void main() {
           source,
           contains(
             'class AUpdateRequest {\n'
-            '  AUpdateRequest({\n'
-            '    required this.id,\n'
-            '    this.bId,\n'
-            '  });\n\n'
+            '  AUpdateRequest({required this.id, this.bId});\n\n'
             '  final String id;\n'
             '  final String? bId;\n'
             '}',
@@ -102,9 +89,7 @@ void main() {
           source,
           contains(
             'class BUpdateRequest {\n'
-            '  BUpdateRequest({\n'
-            '    required this.id,\n'
-            '  });\n\n'
+            '  BUpdateRequest({required this.id});\n\n'
             '  final String id;\n'
             '}',
           ),
