@@ -12,7 +12,8 @@ class SchemaBuilder extends OutputBuilder {
   String buildTarget(BuildStep buildStep, AssetState asset) {
     return '''
       // ignore_for_file: annotate_overrides
-      
+      // Generated file, do not edit.
+
       part of '${path.basename(buildStep.inputId.path)}';
       
       ${RepositoryGenerator().generateRepositories(asset)}
