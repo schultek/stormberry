@@ -16,7 +16,7 @@ builders:
   runner:
     import: "package:stormberry/builder.dart"
     builder_factories: [ "buildRunner" ]
-    build_extensions: { ".dart": [ ".schema.json" ] }
+    build_extensions: { ".dart": [ ".schema.data.dart" ] }
     auto_apply: dependents
     build_to: source
 

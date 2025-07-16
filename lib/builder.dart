@@ -1,6 +1,6 @@
 import 'package:build/build.dart';
 
-import 'src/builder/builders/json_builder.dart';
+import 'src/builder/builders/dart_builder.dart';
 import 'src/builder/builders/schema_builder.dart';
 import 'src/builder/builders/analyzing_builder.dart';
 
@@ -10,4 +10,4 @@ Builder analyzeSchema(BuilderOptions options) => AnalyzingBuilder(options);
 
 Builder buildSchema(BuilderOptions options) => SchemaBuilder(options);
 
-Builder buildRunner(BuilderOptions options) => JsonBuilder(options);
+Builder buildRunner(BuilderOptions options) => DartBuilder(options);
