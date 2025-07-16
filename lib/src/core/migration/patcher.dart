@@ -1,6 +1,4 @@
 import '../../../stormberry.dart';
-import 'differentiator.dart';
-import 'schema.dart';
 
 Future<void> patchSchema(Session db, DatabaseSchemaDiff diff) async {
   for (var table in diff.tables.added) {

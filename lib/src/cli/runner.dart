@@ -5,10 +5,6 @@ import 'package:args/command_runner.dart';
 import 'package:yaml/yaml.dart';
 
 import '../../stormberry.dart';
-import 'migration/differentiator.dart';
-import 'migration/output.dart';
-import 'migration/patcher.dart';
-import 'migration/schema.dart';
 
 class MigrateCommand extends Command<void> {
   MigrateCommand() {

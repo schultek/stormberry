@@ -1,6 +1,3 @@
-import 'package:stormberry/src/cli/migration/differentiator.dart';
-import 'package:stormberry/src/cli/migration/patcher.dart';
-import 'package:stormberry/src/cli/migration/schema.dart';
 import 'package:stormberry/stormberry.dart';
 import 'package:test/test.dart';
 
