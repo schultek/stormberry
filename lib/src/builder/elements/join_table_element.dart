@@ -16,7 +16,8 @@ class JoinTableElement {
     first = sorted.first;
     second = sorted.last;
 
-    tableName = state.options.tableCaseStyle.transform('${first.tableName}-${second.tableName}');
+    tableName = state.options.tableCaseStyle
+        .transform('${first.tableName}-${second.tableName}');
   }
 
   bool get isSelf => first == second;

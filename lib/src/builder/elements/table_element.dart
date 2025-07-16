@@ -67,7 +67,8 @@ class TableElement {
       return annotation.read('tableName').stringValue;
     }
 
-    return state.options.tableCaseStyle.transform(_getRepoName(singular: singular));
+    return state.options.tableCaseStyle
+        .transform(_getRepoName(singular: singular));
   }
 
   String _getRepoName({bool singular = false}) {
@@ -95,8 +96,8 @@ class TableElement {
 
   late List<FieldElement> allFields = element.fields
       .cast<FieldElement>()
-      .followedBy(element.allSupertypes
-          .expand((t) => t.isDartCoreObject ? <FieldElement>[] : t.element.fields))
+      .followedBy(element.allSupertypes.expand(
+          (t) => t.isDartCoreObject ? <FieldElement>[] : t.element.fields))
       .where((e) => !e.hasInitializer)
       .toList();
 
@@ -107,7 +108,8 @@ class TableElement {
       }
 
       var isList = param.type.isDartCoreList;
-      var dataType = isList ? (param.type as InterfaceType).typeArguments[0] : param.type;
+      var dataType =
+          isList ? (param.type as InterfaceType).typeArguments[0] : param.type;
       if (!state.schema.tables.containsKey(dataType.element)) {
         columns.add(FieldColumnElement(param, this, state));
       } else {
@@ -118,8 +120,9 @@ class TableElement {
 
         var otherParam = otherBuilder.findMatchingParam(param);
         var selfIsList = param.type.isDartCoreList;
-        var otherIsList =
-            otherParam != null ? otherParam.type.isDartCoreList : otherHasKey && !selfIsList;
+        var otherIsList = otherParam != null
+            ? otherParam.type.isDartCoreList
+            : otherHasKey && !selfIsList;
 
         if (!selfHasKey && !otherHasKey) {
           throw 'Model ${otherBuilder.element.name} cannot have a relation to model ${element.name} because neither model'
@@ -134,8 +137,9 @@ class TableElement {
         }
 
         if (selfHasKey && otherHasKey && !selfIsList && !otherIsList) {
-          var eitherNullable = param.type.nullabilitySuffix != NullabilitySuffix.none ||
-              otherParam!.type.nullabilitySuffix != NullabilitySuffix.none;
+          var eitherNullable =
+              param.type.nullabilitySuffix != NullabilitySuffix.none ||
+                  otherParam!.type.nullabilitySuffix != NullabilitySuffix.none;
           if (!eitherNullable) {
             throw 'Model ${otherBuilder.element.name} cannot have a one-to-one relation to model ${element.name} with '
                 'both sides being non-nullable. At least one side has to be nullable, to insert one model before the other.\n'
@@ -153,11 +157,13 @@ class TableElement {
             state.asset.joinTables[joinBuilder.tableName] = joinBuilder;
           }
 
-          var selfColumn = JoinColumnElement(param, otherBuilder, joinBuilder, this, state);
+          var selfColumn =
+              JoinColumnElement(param, otherBuilder, joinBuilder, this, state);
 
           JoinColumnElement otherColumn;
           if (param != otherParam) {
-            otherColumn = JoinColumnElement(otherParam!, this, joinBuilder, otherBuilder, state);
+            otherColumn = JoinColumnElement(
+                otherParam!, this, joinBuilder, otherBuilder, state);
             otherColumn.referencedColumn = selfColumn;
             otherBuilder.columns.add(otherColumn);
           } else {
@@ -172,7 +178,8 @@ class TableElement {
           if (otherHasKey && !selfIsList) {
             selfColumn = ForeignColumnElement(param, otherBuilder, this, state);
           } else {
-            selfColumn = ReferenceColumnElement(param, otherBuilder, this, state);
+            selfColumn =
+                ReferenceColumnElement(param, otherBuilder, this, state);
           }
 
           columns.add(selfColumn);
@@ -185,9 +192,11 @@ class TableElement {
             if (selfHasKey &&
                 !otherIsList &&
                 (selfColumn is! ForeignColumnElement || this != otherBuilder)) {
-              otherColumn = ForeignColumnElement(otherParam, this, otherBuilder, state);
+              otherColumn =
+                  ForeignColumnElement(otherParam, this, otherBuilder, state);
             } else {
-              otherColumn = ReferenceColumnElement(otherParam, this, otherBuilder, state);
+              otherColumn =
+                  ReferenceColumnElement(otherParam, this, otherBuilder, state);
             }
             otherBuilder.columns.add(otherColumn);
             otherColumn.referencedColumn = selfColumn;
@@ -288,7 +297,9 @@ class TableElement {
     }
 
     return allFields.where((p) {
-      var type = p.type.isDartCoreList ? (p.type as InterfaceType).typeArguments[0] : p.type;
+      var type = p.type.isDartCoreList
+          ? (p.type as InterfaceType).typeArguments[0]
+          : p.type;
       if (type.element != param.enclosingElement3) return false;
 
       var binding = p.binding;
@@ -311,7 +322,8 @@ class TableElement {
     if (base != null && plural && name.endsWith('s')) {
       name = name.substring(0, base.length - (base.endsWith('es') ? 2 : 1));
     }
-    name = state.options.columnCaseStyle.transform('$name-${primaryKeyColumn!.columnName}');
+    name = state.options.columnCaseStyle
+        .transform('$name-${primaryKeyColumn!.columnName}');
     if (plural) {
       name += name.endsWith('s') ? 'es' : 's';
     }
@@ -324,8 +336,10 @@ class TableElement {
     }
     var views = meta!.read('views');
     if (!views.isNull) {
-      var view =
-          views.mapValue.entries.where((e) => name == e.key?.toSymbolValue()).firstOrNull?.value;
+      var view = views.mapValue.entries
+          .where((e) => name == e.key?.toSymbolValue())
+          .firstOrNull
+          ?.value;
       if (view != null && !view.isNull) {
         return ConstantReader(view);
       }
@@ -342,6 +356,9 @@ class TableElement {
 
 extension FieldBinding on FieldElement {
   String? get binding {
-    return bindToChecker.firstAnnotationOf(getter ?? this)?.getField('name')?.toSymbolValue();
+    return bindToChecker
+        .firstAnnotationOf(getter ?? this)
+        ?.getField('name')
+        ?.toSymbolValue();
   }
 }

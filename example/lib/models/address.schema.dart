@@ -3,7 +3,8 @@
 part of 'address.dart';
 
 extension AddressRepositories on Session {
-  BillingAddressRepository get billingAddresses => BillingAddressRepository._(this);
+  BillingAddressRepository get billingAddresses =>
+      BillingAddressRepository._(this);
 }
 
 abstract class BillingAddressRepository
@@ -24,7 +25,8 @@ class _BillingAddressRepository extends BaseRepository
   _BillingAddressRepository(super.db) : super(tableName: 'billing_addresses');
 
   @override
-  Future<List<BillingAddressView>> queryBillingAddresses([QueryParams? params]) {
+  Future<List<BillingAddressView>> queryBillingAddresses(
+      [QueryParams? params]) {
     return queryMany(BillingAddressViewQueryable(), params);
   }
 

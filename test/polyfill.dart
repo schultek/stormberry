@@ -15,7 +15,9 @@ Future<Map<AssetId, List<int>>> testBuilder2(
 }) async {
   writer ??= InMemoryAssetWriter();
 
-  var inputIds = {for (var descriptor in sourceAssets.keys) makeAssetId(descriptor)};
+  var inputIds = {
+    for (var descriptor in sourceAssets.keys) makeAssetId(descriptor)
+  };
   var allPackages = {for (var id in inputIds) id.package};
   if (allPackages.length == 1) rootPackage ??= allPackages.first;
 

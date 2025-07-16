@@ -98,7 +98,8 @@ class InvoiceUpdateRequest {
   final String? companyId;
 }
 
-class OwnerInvoiceViewQueryable extends KeyedViewQueryable<OwnerInvoiceView, String> {
+class OwnerInvoiceViewQueryable
+    extends KeyedViewQueryable<OwnerInvoiceView, String> {
   @override
   String get keyName => 'id';
 
@@ -121,7 +122,8 @@ class OwnerInvoiceViewQueryable extends KeyedViewQueryable<OwnerInvoiceView, Str
 }
 
 class OwnerInvoiceView {
-  OwnerInvoiceView({required this.id, required this.title, required this.invoiceId});
+  OwnerInvoiceView(
+      {required this.id, required this.title, required this.invoiceId});
 
   final String id;
   final String title;

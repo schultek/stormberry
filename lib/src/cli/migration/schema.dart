@@ -21,14 +21,15 @@ class DatabaseSchema {
       var table = map[key];
       tables[key] = TableSchema(
         key,
-        columns: (table['columns'] as Map<String, dynamic>)
-            .map((k, v) => MapEntry(k, ColumnSchema.fromMap(k, v as Map<String, dynamic>))),
+        columns: (table['columns'] as Map<String, dynamic>).map((k, v) =>
+            MapEntry(k, ColumnSchema.fromMap(k, v as Map<String, dynamic>))),
         constraints: (table['constraints'] as List?)
                 ?.map((c) => TableConstraint.fromMap(c as Map<String, dynamic>))
                 .toList() ??
             [],
         indexes: (table['indexes'] as List?)
-                ?.map((i) => TableIndexParser.fromMap(i as Map<String, dynamic>))
+                ?.map(
+                    (i) => TableIndexParser.fromMap(i as Map<String, dynamic>))
                 .toList() ??
             [],
       );
@@ -47,8 +48,10 @@ class DatabaseSchema {
     var schema = DatabaseSchema.empty();
 
     await for (var file in files) {
-      var schemaMap = jsonDecode(await File.fromUri(file.absolute.uri).readAsString());
-      var targetSchema = DatabaseSchema.fromMap(schemaMap as Map<String, dynamic>);
+      var schemaMap =
+          jsonDecode(await File.fromUri(file.absolute.uri).readAsString());
+      var targetSchema =
+          DatabaseSchema.fromMap(schemaMap as Map<String, dynamic>);
 
       schema = schema.mergeWith(targetSchema);
     }
@@ -61,7 +64,8 @@ class DatabaseSchema {
 
     for (var key in targetSchema.tables.keys) {
       if (tables.containsKey(key)) {
-        print('Database contains duplicate table $key. Make sure each table has a unique name.');
+        print(
+            'Database contains duplicate table $key. Make sure each table has a unique name.');
         exit(1);
       }
       tables[key] = targetSchema.tables[key]!;
@@ -125,8 +129,12 @@ abstract class TableConstraint {
           map['column']! as String,
           (map['target']! as String).split('.')[0],
           (map['target']! as String).split('.')[1],
-          map['on_delete'] == 'cascade' ? ForeignKeyAction.cascade : ForeignKeyAction.setNull,
-          map['on_update'] == 'cascade' ? ForeignKeyAction.cascade : ForeignKeyAction.setNull,
+          map['on_delete'] == 'cascade'
+              ? ForeignKeyAction.cascade
+              : ForeignKeyAction.setNull,
+          map['on_update'] == 'cascade'
+              ? ForeignKeyAction.cascade
+              : ForeignKeyAction.setNull,
         );
       case 'unique':
         return UniqueConstraint(null, map['column']! as String);
@@ -148,7 +156,9 @@ class PrimaryKeyConstraint extends TableConstraint {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PrimaryKeyConstraint && runtimeType == other.runtimeType && column == other.column;
+      other is PrimaryKeyConstraint &&
+          runtimeType == other.runtimeType &&
+          column == other.column;
 
   @override
   int get hashCode => name.hashCode;
@@ -163,8 +173,8 @@ class ForeignKeyConstraint extends TableConstraint {
   final ForeignKeyAction onDelete;
   final ForeignKeyAction onUpdate;
 
-  const ForeignKeyConstraint(
-      super.name, this.srcColumn, this.table, this.column, this.onDelete, this.onUpdate);
+  const ForeignKeyConstraint(super.name, this.srcColumn, this.table,
+      this.column, this.onDelete, this.onUpdate);
 
   @override
   String toString() {
@@ -194,7 +204,11 @@ class ForeignKeyConstraint extends TableConstraint {
 
   @override
   int get hashCode =>
-      name.hashCode ^ table.hashCode ^ column.hashCode ^ onDelete.hashCode ^ onUpdate.hashCode;
+      name.hashCode ^
+      table.hashCode ^
+      column.hashCode ^
+      onDelete.hashCode ^
+      onUpdate.hashCode;
 }
 
 class UniqueConstraint extends TableConstraint {
@@ -209,7 +223,9 @@ class UniqueConstraint extends TableConstraint {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is UniqueConstraint && runtimeType == other.runtimeType && column == other.column;
+      other is UniqueConstraint &&
+          runtimeType == other.runtimeType &&
+          column == other.column;
 
   @override
   int get hashCode => name.hashCode;

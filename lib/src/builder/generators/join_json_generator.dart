@@ -20,14 +20,16 @@ class JoinJsonGenerator {
         {
           'type': 'foreign_key',
           'column': join.firstName,
-          'target': '${join.first.tableName}.${join.first.primaryKeyColumn!.columnName}',
+          'target':
+              '${join.first.tableName}.${join.first.primaryKeyColumn!.columnName}',
           'on_delete': 'cascade',
           'on_update': 'cascade',
         },
         {
           'type': 'foreign_key',
           'column': join.secondName,
-          'target': '${join.second.tableName}.${join.second.primaryKeyColumn!.columnName}',
+          'target':
+              '${join.second.tableName}.${join.second.primaryKeyColumn!.columnName}',
           'on_delete': 'cascade',
           'on_update': 'cascade',
         },

@@ -112,7 +112,8 @@ class TransformedIn {
   final Transformer by;
 
   const TransformedIn(this.name, {required this.by});
-  const TransformedIn.defaultView({required this.by}) : name = Model.defaultView;
+  const TransformedIn.defaultView({required this.by})
+      : name = Model.defaultView;
 }
 
 /// Used to annotate a field as the primary key of the table.

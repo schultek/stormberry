@@ -55,11 +55,14 @@ class ViewColumnElement {
       var isList = column.isList;
       var nullSuffix = column.parameter!.type.nullabilitySuffix;
       var typeSuffix = nullSuffix == NullabilitySuffix.question ? '?' : '';
-      return isList ? 'List<${view!.className}>$typeSuffix' : '${view!.className}$typeSuffix';
+      return isList
+          ? 'List<${view!.className}>$typeSuffix'
+          : '${view!.className}$typeSuffix';
     } else {
       return column.parameter!.type.getDisplayString(withNullability: true);
     }
   }();
 
-  late bool isNullable = column.parameter!.type.nullabilitySuffix == NullabilitySuffix.question;
+  late bool isNullable =
+      column.parameter!.type.nullabilitySuffix == NullabilitySuffix.question;
 }

@@ -79,7 +79,11 @@ class _PartyRepository extends BaseRepository
 }
 
 class PartyInsertRequest {
-  PartyInsertRequest({required this.id, required this.name, this.sponsorId, required this.date});
+  PartyInsertRequest(
+      {required this.id,
+      required this.name,
+      this.sponsorId,
+      required this.date});
 
   final String id;
   final String name;
@@ -96,7 +100,8 @@ class PartyUpdateRequest {
   final int? date;
 }
 
-class GuestPartyViewQueryable extends KeyedViewQueryable<GuestPartyView, String> {
+class GuestPartyViewQueryable
+    extends KeyedViewQueryable<GuestPartyView, String> {
   @override
   String get keyName => 'id';
 
@@ -104,7 +109,8 @@ class GuestPartyViewQueryable extends KeyedViewQueryable<GuestPartyView, String>
   String encodeKey(String key) => TextEncoder.i.encode(key);
 
   @override
-  String get query => 'SELECT "parties".*, row_to_json("sponsor".*) as "sponsor"'
+  String get query =>
+      'SELECT "parties".*, row_to_json("sponsor".*) as "sponsor"'
       'FROM "parties"'
       'LEFT JOIN (${MemberCompanyViewQueryable().query}) "sponsor"'
       'ON "parties"."sponsor_id" = "sponsor"."id"';
@@ -122,7 +128,8 @@ class GuestPartyViewQueryable extends KeyedViewQueryable<GuestPartyView, String>
 }
 
 class GuestPartyView {
-  GuestPartyView({required this.id, required this.name, this.sponsor, required this.date});
+  GuestPartyView(
+      {required this.id, required this.name, this.sponsor, required this.date});
 
   final String id;
   final String name;
@@ -130,7 +137,8 @@ class GuestPartyView {
   final int date;
 }
 
-class CompanyPartyViewQueryable extends KeyedViewQueryable<CompanyPartyView, String> {
+class CompanyPartyViewQueryable
+    extends KeyedViewQueryable<CompanyPartyView, String> {
   @override
   String get keyName => 'id';
 
@@ -145,8 +153,8 @@ class CompanyPartyViewQueryable extends KeyedViewQueryable<CompanyPartyView, Str
   String get tableAlias => 'parties';
 
   @override
-  CompanyPartyView decode(TypedMap map) =>
-      CompanyPartyView(id: map.get('id'), name: map.get('name'), date: map.get('date'));
+  CompanyPartyView decode(TypedMap map) => CompanyPartyView(
+      id: map.get('id'), name: map.get('name'), date: map.get('date'));
 }
 
 class CompanyPartyView {

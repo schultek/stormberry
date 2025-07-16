@@ -28,12 +28,18 @@ abstract class Database implements Session, SessionExecutor {
     useSSL ??= (Platform.environment['DB_SSL'] != DB_SSL);
     return Database.withOneConnection(
       endpoint: Endpoint(
-        host: host ?? Platform.environment['DB_HOST_ADDRESS'] ?? DB_HOST_ADDRESS,
-        port: port ?? int.tryParse(Platform.environment['DB_PORT'] ?? '') ?? DB_PORT,
+        host:
+            host ?? Platform.environment['DB_HOST_ADDRESS'] ?? DB_HOST_ADDRESS,
+        port: port ??
+            int.tryParse(Platform.environment['DB_PORT'] ?? '') ??
+            DB_PORT,
         database: database ?? Platform.environment['DB_NAME'] ?? DB_NAME,
-        username: username ?? Platform.environment['DB_USERNAME'] ?? DB_USERNAME,
-        password: password ?? Platform.environment['DB_PASSWORD'] ?? DB_PASSWORD,
-        isUnixSocket: isUnixSocket ?? (Platform.environment['DB_SOCKET'] == DB_SOCKET),
+        username:
+            username ?? Platform.environment['DB_USERNAME'] ?? DB_USERNAME,
+        password:
+            password ?? Platform.environment['DB_PASSWORD'] ?? DB_PASSWORD,
+        isUnixSocket:
+            isUnixSocket ?? (Platform.environment['DB_SOCKET'] == DB_SOCKET),
       ),
       connectionSettings: ConnectionSettings(
         sslMode: useSSL ? SslMode.require : SslMode.disable,

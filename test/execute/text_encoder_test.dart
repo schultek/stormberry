@@ -14,7 +14,8 @@ void main() {
 
       expect(registry.encode("te@st 'abc'"), equals("'te@st ''abc'''"));
 
-      expect(registry.encode(['abc', "test's"]), equals("'{\"abc\",\"test''s\"}'"));
+      expect(registry.encode(['abc', "test's"]),
+          equals("'{\"abc\",\"test''s\"}'"));
 
       expect(registry.encode({'a': "test's"}), equals("'{\"a\":\"test''s\"}'"));
 
@@ -22,7 +23,8 @@ void main() {
         registry.encode([
           {'a': "te\nst's", 'b': 42}
         ]),
-        equals(" E'{\"{\\\\\"a\\\\\":\\\\\"te\\\\\\\\nst''s\\\\\",\\\\\"b\\\\\":42}\"}'"),
+        equals(
+            " E'{\"{\\\\\"a\\\\\":\\\\\"te\\\\\\\\nst''s\\\\\",\\\\\"b\\\\\":42}\"}'"),
       );
     });
   });

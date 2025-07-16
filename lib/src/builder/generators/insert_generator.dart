@@ -13,14 +13,19 @@ class InsertGenerator {
         .whereType<ReferenceColumnElement>()
         .where((c) => c.linkedTable.primaryKeyColumn == null)) {
       if (column.linkedTable.columns
-          .where((c) => c is ForeignColumnElement && c.linkedTable != table && !c.isNullable)
+          .where((c) =>
+              c is ForeignColumnElement &&
+              c.linkedTable != table &&
+              !c.isNullable)
           .isNotEmpty) {
         continue;
       }
 
       var isNullable = column.isNullable;
       if (!column.isList) {
-        var requestParams = column.linkedTable.columns.whereType<ParameterColumnElement>().map((c) {
+        var requestParams = column.linkedTable.columns
+            .whereType<ParameterColumnElement>()
+            .map((c) {
           if (c is ForeignColumnElement) {
             if (c.linkedTable == table) {
               if (table.primaryKeyColumn!.isAutoIncrement) {
@@ -44,7 +49,9 @@ class InsertGenerator {
 
         deepInserts.add(deepInsert);
       } else {
-        var requestParams = column.linkedTable.columns.whereType<ParameterColumnElement>().map((c) {
+        var requestParams = column.linkedTable.columns
+            .whereType<ParameterColumnElement>()
+            .map((c) {
           if (c is ForeignColumnElement) {
             if (c.linkedTable == table) {
               if (table.primaryKeyColumn!.isAutoIncrement) {
@@ -120,16 +127,22 @@ class InsertGenerator {
       if (column is FieldColumnElement) {
         if (!column.isAutoIncrement) {
           requestFields.add(MapEntry(
-              column.parameter.type.getDisplayString(withNullability: true), column.paramName));
+              column.parameter.type.getDisplayString(withNullability: true),
+              column.paramName));
         }
-      } else if (column is ReferenceColumnElement && column.linkedTable.primaryKeyColumn == null) {
+      } else if (column is ReferenceColumnElement &&
+          column.linkedTable.primaryKeyColumn == null) {
         if (column.linkedTable.columns
-            .where((c) => c is ForeignColumnElement && c.linkedTable != table && !c.isNullable)
+            .where((c) =>
+                c is ForeignColumnElement &&
+                c.linkedTable != table &&
+                !c.isNullable)
             .isNotEmpty) {
           continue;
         }
         requestFields.add(MapEntry(
-            column.parameter!.type.getDisplayString(withNullability: true), column.paramName));
+            column.parameter!.type.getDisplayString(withNullability: true),
+            column.paramName));
       } else if (column is ForeignColumnElement) {
         var fieldNullSuffix = column.isNullable ? '?' : '';
         String fieldType;
@@ -141,7 +154,8 @@ class InsertGenerator {
         } else {
           fieldType = column.linkedTable.primaryKeyColumn!.dartType;
         }
-        requestFields.add(MapEntry('$fieldType$fieldNullSuffix', column.paramName));
+        requestFields
+            .add(MapEntry('$fieldType$fieldNullSuffix', column.paramName));
       }
     }
 

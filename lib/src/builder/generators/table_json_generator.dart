@@ -26,7 +26,8 @@ class TableJsonGenerator {
               'column': column.columnName,
               'target':
                   '${column.linkedTable.tableName}.${column.linkedTable.primaryKeyColumn!.columnName}',
-              'on_delete': table.primaryKeyColumn != null ? 'set_null' : 'cascade',
+              'on_delete':
+                  table.primaryKeyColumn != null ? 'set_null' : 'cascade',
               'on_update': 'cascade',
             },
         for (var column in table.columns)

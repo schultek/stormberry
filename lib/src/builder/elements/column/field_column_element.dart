@@ -15,10 +15,12 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
 
   late final bool isAutoIncrement;
 
-  FieldColumnElement(this.parameter, TableElement parentTable, BuilderState state)
+  FieldColumnElement(
+      this.parameter, TableElement parentTable, BuilderState state)
       : super(parentTable, state) {
     isAutoIncrement = (autoIncrementChecker.firstAnnotationOf(parameter) ??
-            autoIncrementChecker.firstAnnotationOf(parameter.getter ?? parameter)) !=
+            autoIncrementChecker
+                .firstAnnotationOf(parameter.getter ?? parameter)) !=
         null;
 
     if (isAutoIncrement && !parameter.type.isDartCoreInt) {
@@ -28,7 +30,8 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
     }
 
     if (bindToChecker.hasAnnotationOf(parameter.getter ?? parameter)) {
-      var r = ConstantReader(bindToChecker.annotationsOf(parameter.getter ?? parameter).first);
+      var r = ConstantReader(
+          bindToChecker.annotationsOf(parameter.getter ?? parameter).first);
       throw 'Column field was annotated with "${r.toSource()}", which is not supported.\n'
           '  - ${parameter.getDisplayString(withNullability: true)}';
     }
@@ -102,8 +105,10 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
   String get paramName => parameter.name;
 
   @override
-  String get columnName => state.options.columnCaseStyle.transform(parameter.name);
+  String get columnName =>
+      state.options.columnCaseStyle.transform(parameter.name);
 
   @override
-  bool get isNullable => parameter.type.nullabilitySuffix != NullabilitySuffix.none;
+  bool get isNullable =>
+      parameter.type.nullabilitySuffix != NullabilitySuffix.none;
 }

@@ -53,7 +53,10 @@ Matcher isFieldColumn({
     isA<FieldColumnElement>(),
     _has<FieldColumnElement>('dartType', (c) => c.dartType, dartType),
     _isNamedColumn(
-        columnName: columnName, sqlType: sqlType, isNullable: isNullable, paramName: paramName),
+        columnName: columnName,
+        sqlType: sqlType,
+        isNullable: isNullable,
+        paramName: paramName),
     _isListColumn(isList: isList),
   );
 }
@@ -66,7 +69,8 @@ Matcher isReferenceColumn({
 }) {
   return allOf(
     isA<ReferenceColumnElement>(),
-    _isReferencingColumn(references: references, linkedTo: linkedTo, paramName: paramName),
+    _isReferencingColumn(
+        references: references, linkedTo: linkedTo, paramName: paramName),
     _isListColumn(isList: isList),
   );
 }
@@ -83,8 +87,12 @@ Matcher isForeignColumn({
   return allOf(
     isA<ForeignColumnElement>(),
     _isNamedColumn(
-        columnName: columnName, sqlType: sqlType, isNullable: isNullable, paramName: paramName),
-    _isReferencingColumn(references: references, linkedTo: linkedTo, paramName: paramName),
+        columnName: columnName,
+        sqlType: sqlType,
+        isNullable: isNullable,
+        paramName: paramName),
+    _isReferencingColumn(
+        references: references, linkedTo: linkedTo, paramName: paramName),
     _isListColumn(isList: isList),
   );
 }
@@ -97,7 +105,8 @@ Matcher isJoinColumn({
   return allOf(
     isA<JoinColumnElement>(),
     _has<JoinColumnElement>('joinedTo', (c) => c.joinTable, joinedTo),
-    _has<JoinColumnElement>('references', (c) => c.referencedColumn, references),
+    _has<JoinColumnElement>(
+        'references', (c) => c.referencedColumn, references),
     _isLinkedColumn(linkedTo: linkedTo),
     _isListColumn(isList: true),
   );
@@ -141,7 +150,8 @@ Matcher _has<T>(String name, dynamic Function(T e) getter, dynamic value) {
 }
 
 class HasProp<T> extends CustomMatcher {
-  HasProp(String name, this.getter, matcher) : super('Column with $name that is', name, matcher);
+  HasProp(String name, this.getter, matcher)
+      : super('Column with $name that is', name, matcher);
   final dynamic Function(T e) getter;
 
   @override
@@ -157,7 +167,8 @@ Matcher _isReferencingColumn({
 }) {
   return allOf(
     isA<ReferencingColumnElement>(),
-    _has<ReferencingColumnElement>('references', (c) => c.referencedColumn, references),
+    _has<ReferencingColumnElement>(
+        'references', (c) => c.referencedColumn, references),
     _isLinkedColumn(linkedTo: linkedTo),
     _isParameterColumn(paramName: paramName),
   );

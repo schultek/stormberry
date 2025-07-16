@@ -16,8 +16,8 @@ class ForeignColumnElement extends ColumnElement
   @override
   late ReferencingColumnElement referencedColumn;
 
-  ForeignColumnElement(
-      this.parameter, this.linkedTable, TableElement parentTable, BuilderState state)
+  ForeignColumnElement(this.parameter, this.linkedTable,
+      TableElement parentTable, BuilderState state)
       : super(parentTable, state);
 
   @override
@@ -33,7 +33,8 @@ class ForeignColumnElement extends ColumnElement
   bool get isList => false;
 
   @override
-  String get columnName => linkedTable.getForeignKeyName(base: parameter?.name)!;
+  String get columnName =>
+      linkedTable.getForeignKeyName(base: parameter?.name)!;
 
   bool get isUnique => !referencedColumn.isList;
 

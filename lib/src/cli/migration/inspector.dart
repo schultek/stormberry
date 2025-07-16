@@ -11,11 +11,12 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
     var tableMap = row.toColumnMap();
     var tableName = tableMap['table_name'] as String;
 
-    var tableScheme = TableSchema(tableName, columns: {}, constraints: [], indexes: []);
+    var tableScheme =
+        TableSchema(tableName, columns: {}, constraints: [], indexes: []);
     schema.tables[tableName] = tableScheme;
 
-    var columns = await db
-        .execute("SELECT * FROM information_schema.columns WHERE table_name = '$tableName'");
+    var columns = await db.execute(
+        "SELECT * FROM information_schema.columns WHERE table_name = '$tableName'");
     for (var row in columns) {
       var columnMap = row.toColumnMap();
       var columnName = columnMap['column_name'] as String;
@@ -24,7 +25,8 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
       var columnDefault = columnMap['column_default'] as String?;
       var columnIsAutoIncrement = columnDefault?.startsWith('nextval') ?? false;
 
-      if (columnIsAutoIncrement && (columnType == 'int4' || columnType == 'int8')) {
+      if (columnIsAutoIncrement &&
+          (columnType == 'int4' || columnType == 'int8')) {
         columnType = 'serial';
       }
 
@@ -99,8 +101,8 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
     var indexMap = row.toColumnMap();
     var indexName = (indexMap['indexname'] as String).substring(2);
     var tableName = indexMap['tablename'];
-    var defRegex =
-        RegExp(r'^CREATE( UNIQUE)? INDEX \w+ ON public.\w+ USING (\w+) \((\w+)\)(?: WHERE (.+))?$');
+    var defRegex = RegExp(
+        r'^CREATE( UNIQUE)? INDEX \w+ ON public.\w+ USING (\w+) \((\w+)\)(?: WHERE (.+))?$');
     var defMatch = defRegex.firstMatch(indexMap['indexdef'] as String);
     if (defMatch == null || defMatch.groupCount != 4) continue;
     var unique = defMatch.group(1) != null;
@@ -110,7 +112,8 @@ Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
     if (condition != null && RegExp(r'^\(.*\)$').hasMatch(condition)) {
       condition = condition.substring(1, condition.length - 1);
     }
-    var algorithm = IndexAlgorithm.values.firstWhere((a) => a.toString().split('.')[1] == algo);
+    var algorithm = IndexAlgorithm.values
+        .firstWhere((a) => a.toString().split('.')[1] == algo);
     schema.tables[tableName]?.indexes.add(TableIndex(
       columns: columns,
       name: indexName,

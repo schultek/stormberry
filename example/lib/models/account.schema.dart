@@ -72,7 +72,9 @@ class _AccountRepository extends BaseRepository
       ),
       parameters: values.values,
     );
-    var result = rows.map<int>((r) => TextEncoder.i.decode(r.toColumnMap()['id'])).toList();
+    var result = rows
+        .map<int>((r) => TextEncoder.i.decode(r.toColumnMap()['id']))
+        .toList();
 
     await db.billingAddresses.insertMany(
       requests.where((r) => r.billingAddress != null).map((r) {
@@ -152,7 +154,8 @@ class AccountUpdateRequest {
   final String? companyId;
 }
 
-class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> {
+class FullAccountViewQueryable
+    extends KeyedViewQueryable<FullAccountView, int> {
   @override
   String get keyName => 'id';
 
@@ -193,10 +196,14 @@ class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> 
         firstName: map.get('first_name'),
         lastName: map.get('last_name'),
         location: map.get('location', LatLngConverter().decode),
-        billingAddress: map.getOpt('billingAddress', BillingAddressViewQueryable().decoder),
-        invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
+        billingAddress:
+            map.getOpt('billingAddress', BillingAddressViewQueryable().decoder),
+        invoices:
+            map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ??
+                const [],
         company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
-        parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
+        parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ??
+            const [],
       );
 }
 
@@ -222,7 +229,8 @@ class FullAccountView {
   final List<GuestPartyView> parties;
 }
 
-class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> {
+class UserAccountViewQueryable
+    extends KeyedViewQueryable<UserAccountView, int> {
   @override
   String get keyName => 'id';
 
@@ -263,10 +271,14 @@ class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> 
         firstName: map.get('first_name'),
         lastName: map.get('last_name'),
         location: map.get('location', LatLngConverter().decode),
-        billingAddress: map.getOpt('billingAddress', BillingAddressViewQueryable().decoder),
-        invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
+        billingAddress:
+            map.getOpt('billingAddress', BillingAddressViewQueryable().decoder),
+        invoices:
+            map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ??
+                const [],
         company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
-        parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
+        parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ??
+            const [],
       );
 }
 
@@ -292,7 +304,8 @@ class UserAccountView {
   final List<GuestPartyView> parties;
 }
 
-class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView, int> {
+class CompanyAccountViewQueryable
+    extends KeyedViewQueryable<CompanyAccountView, int> {
   @override
   String get keyName => 'id';
 
@@ -322,7 +335,9 @@ class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView,
         firstName: map.get('first_name'),
         lastName: map.get('last_name'),
         location: map.get('location', LatLngConverter().decode),
-        parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
+        parties:
+            map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ??
+                const [],
       );
 }
 

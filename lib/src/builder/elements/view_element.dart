@@ -26,14 +26,14 @@ class ViewElement {
 
   bool get isDefaultView => name == defaultName;
 
-  String get className => CaseStyle.pascalCase
-      .transform('${!isDefaultView ? '${name}_' : ''}${table.element.name}_view');
+  String get className => CaseStyle.pascalCase.transform(
+      '${!isDefaultView ? '${name}_' : ''}${table.element.name}_view');
 
-  String get viewTableName =>
-      CaseStyle.snakeCase.transform('${!isDefaultView ? '${name}_' : ''}${table.tableName}_view');
+  String get viewTableName => CaseStyle.snakeCase
+      .transform('${!isDefaultView ? '${name}_' : ''}${table.tableName}_view');
 
-  String get queryName =>
-      CaseStyle.pascalCase.transform(isDefaultView ? table.element.name : '${name}_view');
+  String get queryName => CaseStyle.pascalCase
+      .transform(isDefaultView ? table.element.name : '${name}_view');
 
   late List<ViewColumnElement> columns = () {
     var columns = <ViewColumnElement>[];
@@ -43,36 +43,45 @@ class ViewElement {
         continue;
       }
 
-      var modifiers = column.modifiers
-          .where((m) => nameOf(m.read('name').objectValue).toLowerCase() == name.toLowerCase());
+      var modifiers = column.modifiers.where((m) =>
+          nameOf(m.read('name').objectValue).toLowerCase() ==
+          name.toLowerCase());
       if (modifiers.isNotEmpty) {
         var isHidden = modifiers.any((m) => m.instanceOf(hiddenInChecker));
         if (isHidden) {
           continue;
         }
 
-        var viewModifier = modifiers.where((m) => m.instanceOf(viewedInChecker)).firstOrNull;
-        var viewAs = viewModifier != null ? nameOf(viewModifier.read('as').objectValue) : null;
+        var viewModifier =
+            modifiers.where((m) => m.instanceOf(viewedInChecker)).firstOrNull;
+        var viewAs = viewModifier != null
+            ? nameOf(viewModifier.read('as').objectValue)
+            : null;
 
         if (viewAs == null && column is LinkedColumnElement) {
           if (!column.linkedTable.views.values.any((v) => v.isDefaultView)) {
-            column.linkedTable.views[defaultName] = ViewElement(column.linkedTable);
+            column.linkedTable.views[defaultName] =
+                ViewElement(column.linkedTable);
           }
         }
 
-        var transformer =
-            modifiers.where((m) => m.instanceOf(transformedInChecker)).firstOrNull?.read('by');
+        var transformer = modifiers
+            .where((m) => m.instanceOf(transformedInChecker))
+            .firstOrNull
+            ?.read('by');
 
         String? transformerCode;
         if (transformer != null && !transformer.isNull) {
           transformerCode = transformer.toSource();
         }
 
-        columns.add(ViewColumnElement(column, viewAs: viewAs, transformer: transformerCode));
+        columns.add(ViewColumnElement(column,
+            viewAs: viewAs, transformer: transformerCode));
       } else {
         if (column is LinkedColumnElement) {
           if (!column.linkedTable.views.values.any((v) => v.isDefaultView)) {
-            column.linkedTable.views[defaultName] = ViewElement(column.linkedTable);
+            column.linkedTable.views[defaultName] =
+                ViewElement(column.linkedTable);
           }
         }
 

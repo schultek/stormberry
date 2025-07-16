@@ -30,8 +30,11 @@ Future<void> main() async {
     firstName: 'Test',
     lastName: 'User',
     location: LatLng(1, 2),
-    billingAddress:
-        BillingAddress(name: 'Test User', street: 'SomeRoad 1', city: 'New York', postcode: '123'),
+    billingAddress: BillingAddress(
+        name: 'Test User',
+        street: 'SomeRoad 1',
+        city: 'New York',
+        postcode: '123'),
     companyId: 'abc',
   ));
 

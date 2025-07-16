@@ -26,13 +26,17 @@ class GlobalOptions {
   int lineLength;
 
   GlobalOptions.parse(Map<String, dynamic> options)
-      : tableCaseStyle = CaseStyle.fromString(options['tableCaseStyle'] as String? ??
-            options['table_case_style'] as String? ??
-            'snakeCase'),
-        columnCaseStyle = CaseStyle.fromString(options['columnCaseStyle'] as String? ??
-            options['column_case_style'] as String? ??
-            'snakeCase'),
-        lineLength = options['lineLength'] as int? ?? options['line_length'] as int? ?? 100;
+      : tableCaseStyle = CaseStyle.fromString(
+            options['tableCaseStyle'] as String? ??
+                options['table_case_style'] as String? ??
+                'snakeCase'),
+        columnCaseStyle = CaseStyle.fromString(
+            options['columnCaseStyle'] as String? ??
+                options['column_case_style'] as String? ??
+                'snakeCase'),
+        lineLength = options['lineLength'] as int? ??
+            options['line_length'] as int? ??
+            100;
 }
 
 extension GetNode on Element {
@@ -46,7 +50,8 @@ extension GetNode on Element {
   }
 }
 
-String? getAnnotationCode(Element annotatedElement, Type annotationType, String property) {
+String? getAnnotationCode(
+    Element annotatedElement, Type annotationType, String property) {
   var node = annotatedElement.getNode();
 
   NodeList<Annotation> annotations;
@@ -98,7 +103,8 @@ extension ReaderSource on ConstantReader {
 
     if (isType) {
       return typeValue.getDisplayString(
-          withNullability: typeValue.nullabilitySuffix != NullabilitySuffix.star);
+          withNullability:
+              typeValue.nullabilitySuffix != NullabilitySuffix.star);
     }
 
     var rev = revive();
@@ -110,7 +116,8 @@ extension ReaderSource on ConstantReader {
       if (objectValue.type is InterfaceType) {
         var args = (objectValue.type as InterfaceType).typeArguments;
         if (args.isNotEmpty) {
-          str += '<${args.map((a) => a.getDisplayString(withNullability: true)).join(', ')}>';
+          str +=
+              '<${args.map((a) => a.getDisplayString(withNullability: true)).join(', ')}>';
         }
       }
 
@@ -145,20 +152,24 @@ extension ReaderSource on ConstantReader {
   }
 }
 
-String defineClassWithMeta(String className, ConstantReader? meta, {String? mixin}) {
+String defineClassWithMeta(String className, ConstantReader? meta,
+    {String? mixin}) {
   if (meta == null || meta.isNull) {
     return 'class $className${mixin != null ? ' with $mixin' : ''} {\n';
   }
 
   String readClause(String field, String keyword, [String? additional]) {
     var items = [
-      if (!meta.read(field).isNull) meta.read(field).stringValue.replaceAll('{name}', className),
+      if (!meta.read(field).isNull)
+        meta.read(field).stringValue.replaceAll('{name}', className),
       if (additional != null) additional,
     ];
     return items.isEmpty ? '' : ' $keyword ${items.join(', ')}';
   }
 
-  var annotation = meta.read('annotation').isNull ? '' : '@${meta.read('annotation').toSource()}\n';
+  var annotation = meta.read('annotation').isNull
+      ? ''
+      : '@${meta.read('annotation').toSource()}\n';
   var extendClause = readClause('extend', 'extends');
   var withClause = readClause('mixin', 'with', mixin);
   var implementClause = readClause('implement', 'implements');

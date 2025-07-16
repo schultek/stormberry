@@ -24,7 +24,10 @@ Future<String> generateSchema(String source) async {
 
   outputs = await testBuilder2(
     SchemaBuilder(BuilderOptions({})),
-    {...inputs, ...outputs.map((id, content) => MapEntry(id.toString(), content))},
+    {
+      ...inputs,
+      ...outputs.map((id, content) => MapEntry(id.toString(), content))
+    },
     reader: await PackageAssetReader.currentIsolate(),
     resourceManager: manager,
   );

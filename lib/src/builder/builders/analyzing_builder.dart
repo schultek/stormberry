@@ -12,7 +12,8 @@ class AnalyzingBuilder implements Builder {
   /// The global options defined in the 'build.yaml' file
   late GlobalOptions options;
 
-  AnalyzingBuilder(BuilderOptions options) : options = GlobalOptions.parse(options.config);
+  AnalyzingBuilder(BuilderOptions options)
+      : options = GlobalOptions.parse(options.config);
 
   @override
   FutureOr<void> build(BuildStep buildStep) async {
@@ -34,7 +35,8 @@ class AnalyzingBuilder implements Builder {
         '.dart': ['___']
       };
 
-  Future<void> analyze(SchemaState schema, LibraryElement library, AssetId assetId) async {
+  Future<void> analyze(
+      SchemaState schema, LibraryElement library, AssetId assetId) async {
     if (schema.hasAsset(assetId)) return;
 
     var asset = schema.createForAsset(assetId);

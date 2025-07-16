@@ -16,8 +16,8 @@ class ReferenceColumnElement extends ColumnElement
   @override
   covariant late ForeignColumnElement referencedColumn;
 
-  ReferenceColumnElement(
-      this.parameter, this.linkedTable, TableElement parentTable, BuilderState state)
+  ReferenceColumnElement(this.parameter, this.linkedTable,
+      TableElement parentTable, BuilderState state)
       : super(parentTable, state);
 
   @override

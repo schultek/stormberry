@@ -9,7 +9,8 @@ import '../utils.dart';
 import 'view_query_generator.dart';
 
 class ViewGenerator {
-  String generateRepositoryMethods(TableElement table, {bool abstract = false}) {
+  String generateRepositoryMethods(TableElement table,
+      {bool abstract = false}) {
     var str = StringBuffer();
 
     for (var view in table.views.values) {
@@ -18,7 +19,8 @@ class ViewGenerator {
       if (table.primaryKeyColumn != null) {
         var paramType = table.primaryKeyColumn!.dartType;
         var paramName = table.primaryKeyColumn!.paramName;
-        var signature = 'Future<${view.className}?> query$queryName($paramType $paramName)';
+        var signature =
+            'Future<${view.className}?> query$queryName($paramType $paramName)';
         if (abstract) {
           str.writeln('$signature;');
         } else {
@@ -104,7 +106,8 @@ class ViewGenerator {
       str += ', ${c.view!.className}Queryable().decoder)';
     } else if (c.column.converter != null) {
       str += ', ${c.column.converter!.toSource()}.decode)';
-    } else if (c.column is FieldColumnElement && (c.column as FieldColumnElement).dataType.isEnum) {
+    } else if (c.column is FieldColumnElement &&
+        (c.column as FieldColumnElement).dataType.isEnum) {
       var e = (c.column as FieldColumnElement).dataType.element as EnumElement;
       str += ', EnumTypeConverter<${e.name}>(${e.name}.values).decode)';
     } else {

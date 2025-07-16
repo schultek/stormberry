@@ -13,20 +13,26 @@ class UpdateGenerator {
         .whereType<ReferenceColumnElement>()
         .where((c) => c.linkedTable.primaryKeyColumn == null)) {
       if (column.linkedTable.columns
-          .where((c) => c is ForeignColumnElement && c.linkedTable != table && !c.isNullable)
+          .where((c) =>
+              c is ForeignColumnElement &&
+              c.linkedTable != table &&
+              !c.isNullable)
           .isNotEmpty) {
         continue;
       }
 
       if (!column.isList) {
         var requestParams = <String>[];
-        for (var c in column.linkedTable.columns.whereType<ParameterColumnElement>()) {
+        for (var c
+            in column.linkedTable.columns.whereType<ParameterColumnElement>()) {
           if (c is ForeignColumnElement) {
             if (c.linkedTable == table) {
-              requestParams.add('${c.paramName}: r.${table.primaryKeyColumn!.paramName}');
+              requestParams.add(
+                  '${c.paramName}: r.${table.primaryKeyColumn!.paramName}');
             }
           } else {
-            requestParams.add('${c.paramName}: r.${column.paramName}!.${c.paramName}');
+            requestParams
+                .add('${c.paramName}: r.${column.paramName}!.${c.paramName}');
           }
         }
 
@@ -39,10 +45,12 @@ class UpdateGenerator {
         deepUpdates.add(deepUpdate);
       } else {
         var requestParams = <String>[];
-        for (var c in column.linkedTable.columns.whereType<ParameterColumnElement>()) {
+        for (var c
+            in column.linkedTable.columns.whereType<ParameterColumnElement>()) {
           if (c is ForeignColumnElement) {
             if (c.linkedTable == table) {
-              requestParams.add('${c.paramName}: r.${table.primaryKeyColumn!.paramName}');
+              requestParams.add(
+                  '${c.paramName}: r.${table.primaryKeyColumn!.paramName}');
             }
           } else {
             requestParams.add('${c.paramName}: rr.${c.paramName}');
@@ -61,11 +69,16 @@ class UpdateGenerator {
 
     var hasPrimaryKey = table.primaryKeyColumn != null;
     var setColumns = table.columns.whereType<NamedColumnElement>().where((c) =>
-        (hasPrimaryKey ? c != table.primaryKeyColumn : c is FieldColumnElement) &&
+        (hasPrimaryKey
+            ? c != table.primaryKeyColumn
+            : c is FieldColumnElement) &&
         (c is! FieldColumnElement || !c.isAutoIncrement));
 
     var updateColumns = table.columns.whereType<NamedColumnElement>().where(
-        (c) => table.primaryKeyColumn == c || c is! FieldColumnElement || !c.isAutoIncrement);
+        (c) =>
+            table.primaryKeyColumn == c ||
+            c is! FieldColumnElement ||
+            !c.isAutoIncrement);
 
     String toUpdateValue(NamedColumnElement c) {
       if (c.converter != null) {
@@ -83,7 +96,8 @@ class UpdateGenerator {
     } else {
       whereClause = table.columns
           .whereType<ForeignColumnElement>()
-          .map((c) => '"${table.tableName}"."${c.columnName}" = UPDATED."${c.columnName}"')
+          .map((c) =>
+              '"${table.tableName}"."${c.columnName}" = UPDATED."${c.columnName}"')
           .join(' AND ');
     }
 
@@ -118,9 +132,13 @@ class UpdateGenerator {
             column.paramName,
           ));
         }
-      } else if (column is ReferenceColumnElement && column.linkedTable.primaryKeyColumn == null) {
+      } else if (column is ReferenceColumnElement &&
+          column.linkedTable.primaryKeyColumn == null) {
         if (column.linkedTable.columns
-            .where((c) => c is ForeignColumnElement && c.linkedTable != table && !c.isNullable)
+            .where((c) =>
+                c is ForeignColumnElement &&
+                c.linkedTable != table &&
+                !c.isNullable)
             .isNotEmpty) {
           continue;
         }
@@ -139,7 +157,8 @@ class UpdateGenerator {
         } else {
           fieldType = column.linkedTable.primaryKeyColumn!.dartType;
         }
-        requestFields.add(MapEntry('$fieldType$fieldNullSuffix', column.paramName));
+        requestFields
+            .add(MapEntry('$fieldType$fieldNullSuffix', column.paramName));
       }
     }
 

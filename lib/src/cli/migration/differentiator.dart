@@ -4,7 +4,8 @@ import '../../../stormberry.dart';
 import 'inspector.dart';
 import 'schema.dart';
 
-Future<DatabaseSchemaDiff> getSchemaDiff(Database db, DatabaseSchema dbSchema) async {
+Future<DatabaseSchemaDiff> getSchemaDiff(
+    Database db, DatabaseSchema dbSchema) async {
   var existingSchema = await inspectDatabaseSchema(db);
   var newSchema = dbSchema.copy();
 
@@ -16,10 +17,13 @@ Future<DatabaseSchemaDiff> getSchemaDiff(Database db, DatabaseSchema dbSchema) a
       var tableDiff = TableSchemaDiff(newTable.name);
 
       for (var extColumn in extTable.columns.values) {
-        var newColumn = newTable.columns.values.where((c) => c.name == extColumn.name).firstOrNull;
+        var newColumn = newTable.columns.values
+            .where((c) => c.name == extColumn.name)
+            .firstOrNull;
         if (newColumn != null) {
           newTable.columns.removeWhere((_, c) => c == newColumn);
-          if (newColumn.type != extColumn.type || newColumn.isNullable != extColumn.isNullable) {
+          if (newColumn.type != extColumn.type ||
+              newColumn.isNullable != extColumn.isNullable) {
             tableDiff.columns.modified.add(Change(extColumn, newColumn));
           }
         } else {
@@ -32,7 +36,8 @@ Future<DatabaseSchemaDiff> getSchemaDiff(Database db, DatabaseSchema dbSchema) a
       }
 
       for (var extConstraint in extTable.constraints) {
-        var newConstraint = newTable.constraints.where((c) => c == extConstraint).firstOrNull;
+        var newConstraint =
+            newTable.constraints.where((c) => c == extConstraint).firstOrNull;
 
         if (newConstraint != null) {
           newTable.constraints.remove(newConstraint);
@@ -108,11 +113,13 @@ void printDiff(DatabaseSchemaDiff diff) {
     }
 
     for (var index in table.indexes.added) {
-      print("++ ${index.statement(table.name).replaceAll(RegExp("[\n\\s]+"), " ")}");
+      print(
+          "++ ${index.statement(table.name).replaceAll(RegExp("[\n\\s]+"), " ")}");
     }
 
     for (var index in table.indexes.removed) {
-      print("-- ${index.statement(table.name).replaceAll(RegExp("[\n\\s]+"), " ")}");
+      print(
+          "-- ${index.statement(table.name).replaceAll(RegExp("[\n\\s]+"), " ")}");
     }
   }
 
@@ -140,7 +147,8 @@ class TableSchemaDiff {
 
   TableSchemaDiff(this.name);
 
-  bool get hasChanges => columns.hasChanges() || constraints.hasChanges() || indexes.hasChanges();
+  bool get hasChanges =>
+      columns.hasChanges() || constraints.hasChanges() || indexes.hasChanges();
 }
 
 class Diff<T, U> {

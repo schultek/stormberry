@@ -31,5 +31,6 @@ mixin KeyedRepositoryInsertMixin<InsertRequest> on BaseRepository
   }
 
   @override
-  Future<List<int>> insertMany(List<InsertRequest> requests) => insert(requests);
+  Future<List<int>> insertMany(List<InsertRequest> requests) =>
+      insert(requests);
 }
