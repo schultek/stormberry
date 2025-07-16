@@ -22,7 +22,7 @@ class DartBuilder extends OutputBuilder {
     });
 
     return '''
-// ignore_for_file: prefer_single_quotes, public_member_api_docs, inference_failure_on_collection_literal
+// ignore_for_file: prefer_single_quotes, public_member_api_docs, inference_failure_on_collection_literal, lines_longer_than_80_chars, document_ignores
 // Generated file, do not edit.
 
 part of '${path.basename(buildStep.inputId.path)}';
