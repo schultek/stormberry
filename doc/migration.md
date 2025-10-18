@@ -1,6 +1,10 @@
-Stormberry comes with a database migration tool, to create or update the schema of your database.
+Stormberry comes with a database migration system, to create or update the schema of your database.
 
-To use this run the following command from the root folder of your project.
+You can either call the migration tool from your terminal, or use the programmatic migration API.
+
+## Migration CLI
+
+To use the migration CLI run the following command from the root folder of your project:
 
 ```
 dart run stormberry migrate
@@ -38,4 +42,47 @@ The tool supported the following options:
 
 ---
 
-*🎉 Congrats, you followed the tour until the end. Now you know everything about this package.*
+## Migration API
+
+To migrate your database from your own code, first enable the `database_schema` builder like this:
+
+```yaml
+// build.yaml
+targets:
+  $default:
+    builders:
+      stormberry|database_schema:
+        enabled: true
+```
+
+This will generate a `lib/database.schema.dart` file next time you run code generation, containing a global `DatabaseSchema schema` variable of your current schema.
+
+To migrate your database to this schema, do the following:
+
+```dart
+// Import the 'migrate.dart' library.
+import 'package:stormberry/migrate.dart';
+
+Future<void> migrate() async {
+  // 1. Connect to your database
+  final Database db = ...
+
+  // 2. Compute the schema diff between your live database schema and the generated target `schema`.
+  final diff = await schema.computeDiff(db);
+
+  // 3. (Optional) Print the schema diff to stdout.
+  diff.printToConsole();
+
+  try {
+    // Always use a transaction to not break your database!!
+    await db.runTx((session) async {
+
+      // 4. Apply the necessary patches to migrate to the target schema.
+      await diff.patch(session);
+    });
+    print('Migration succeeded');
+  } catch (e) {
+    print('Migration failed. All changes reverted.');
+  }
+}
+```

@@ -19,6 +19,13 @@ builders:
     build_extensions: { ".dart": [ ".schema.json" ] }
     auto_apply: dependents
     build_to: cache
+  database_schema:
+    import: "package:stormberry/builder.dart"
+    builder_factories: [ "buildDatabaseSchema" ]
+    build_extensions: { "$lib$": [ "database.schema.dart" ] }
+    required_inputs: [ ".schema.json" ]
+    auto_apply: none # Needs to be enabled manually
+    build_to: source
 
 targets:
   $default:

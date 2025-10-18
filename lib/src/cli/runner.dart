@@ -120,10 +120,10 @@ class MigrateCommand extends Command<void> {
     print('Getting schema changes of $dbName');
     print('=========================');
 
-    var diff = await getSchemaDiff(db, schema);
+    var diff = await schema.computeDiff(db);
 
     if (diff.hasChanges) {
-      printDiff(diff);
+      diff.printToConsole();
       print('=========================');
 
       if (dryRun) {
@@ -145,7 +145,7 @@ class MigrateCommand extends Command<void> {
 
             db.debugPrint = true;
             updateWasSuccessFull = await db.runTx((session) async {
-              await patchSchema(db, diff);
+              await diff.patch(db);
               return true;
             });
             db.debugPrint = false;

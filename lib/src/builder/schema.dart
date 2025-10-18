@@ -4,6 +4,8 @@ import 'package:path/path.dart' as p;
 
 import 'elements/join_table_element.dart';
 import 'elements/table_element.dart';
+import 'generators/join_json_generator.dart';
+import 'generators/table_json_generator.dart';
 import 'utils.dart';
 
 final schemaResource = Resource<SchemaState>(() => SchemaState());
@@ -55,6 +57,15 @@ class AssetState {
   Map<String, JoinTableElement> joinTables = {};
 
   AssetState(this.filename);
+
+  Map<String, dynamic> getJsonData() {
+    return <String, dynamic>{
+      for (var element in tables.values) //
+        element.tableName: TableJsonGenerator().generateJsonSchema(element),
+      for (var element in joinTables.values) //
+        element.tableName: JoinJsonGenerator().generateJsonSchema(element),
+    };
+  }
 }
 
 class BuilderState {

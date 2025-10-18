@@ -1,7 +1,7 @@
 import '../../../stormberry.dart';
 import 'schema.dart';
 
-Future<DatabaseSchema> inspectDatabaseSchema(Database db) async {
+Future<DatabaseSchema> inspectDatabaseSchema(Session db) async {
   //ignore: prefer_const_constructors
   var schema = DatabaseSchema({});
 

@@ -1,5 +1,7 @@
+import 'package:stormberry/migrate.dart';
 import 'package:stormberry/stormberry.dart';
 
+import 'database.schema.dart';
 import 'models/account.dart';
 import 'models/address.dart';
 import 'models/company.dart';
@@ -15,6 +17,8 @@ Future<void> main() async {
   );
 
   db.debugPrint = true;
+
+  await migrate(db);
 
   await db.companies.deleteOne('abc');
 
@@ -46,4 +50,19 @@ Future<void> main() async {
   print(company!.id);
 
   await db.close();
+}
+
+Future<void> migrate(Database db) async {
+  final diff = await schema.computeDiff(db);
+
+  diff.printToConsole();
+
+  try {
+    await db.runTx((session) async {
+      await diff.patch(session);
+    });
+    print('Migration succeeded');
+  } catch (e) {
+    print('Migration failed: $e');
+  }
 }

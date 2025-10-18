@@ -1,5 +1,6 @@
 import 'package:build/build.dart';
 
+import 'src/builder/builders/database_schema_builder.dart';
 import 'src/builder/builders/json_builder.dart';
 import 'src/builder/builders/schema_builder.dart';
 import 'src/builder/builders/analyzing_builder.dart';
@@ -11,3 +12,5 @@ Builder analyzeSchema(BuilderOptions options) => AnalyzingBuilder(options);
 Builder buildSchema(BuilderOptions options) => SchemaBuilder(options);
 
 Builder buildRunner(BuilderOptions options) => JsonBuilder(options);
+
+Builder buildDatabaseSchema(BuilderOptions options) => DatabaseSchemaBuilder();

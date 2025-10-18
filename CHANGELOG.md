@@ -3,6 +3,7 @@
 - Require dart sdk `>=3.7.0`.
 - Update analyzer to `^8.1.0`, build to `^4.0.0` and source_gen to `^4.0.0`.
 - Disable linting and formatting for generated files.
+- Expose the programmatic migration api through the `'package:stormberry/migrate.dart'` import.
 
 # 0.16.0
 

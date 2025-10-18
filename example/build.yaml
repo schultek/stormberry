@@ -1,0 +1,5 @@
+targets:
+  $default:
+    builders:
+      stormberry|database_schema:
+        enabled: true

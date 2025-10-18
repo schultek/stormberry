@@ -41,13 +41,13 @@ extension SchemaChanger on Database {
       '.dart_tool/build/generated/stormberry/test/$glob.schema.json',
     );
 
-    var diff = await getSchemaDiff(this, schema);
+    var diff = await schema.computeDiff(this);
     if (log) {
-      printDiff(diff);
+      diff.printToConsole();
     }
 
     await runTx((session) async {
-      await patchSchema(session, diff);
+      await diff.patch(session);
     });
 
     return diff;
