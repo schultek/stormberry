@@ -37,6 +37,10 @@ the name of a user while keeping the other fields untouched like this:
 await db.users.updateOne(UserUpdateRequest(id: 'abc', name: 'Tom'));
 ```
 
+#### Deleting Rows
+
+You can delete rows with the `deleteOne(Key id)` and `deleteMany(List<Key> ids)` methods. The `Key` type will be the type of the primary key column of your model, e.g. `String` if you define a `@PrimaryKey() String get id;`.
+
 #### QueryParams
 
 Query methods that return a list of models will accept a `QueryParams` argument 
