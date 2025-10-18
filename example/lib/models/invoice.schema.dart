@@ -1,4 +1,8 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+// ignore_for_file: type=lint
 // ignore_for_file: annotate_overrides
+// dart format off
 
 part of 'invoice.dart';
 
@@ -98,7 +102,8 @@ class InvoiceUpdateRequest {
   final String? companyId;
 }
 
-class OwnerInvoiceViewQueryable extends KeyedViewQueryable<OwnerInvoiceView, String> {
+class OwnerInvoiceViewQueryable
+    extends KeyedViewQueryable<OwnerInvoiceView, String> {
   @override
   String get keyName => 'id';
 
@@ -106,7 +111,8 @@ class OwnerInvoiceViewQueryable extends KeyedViewQueryable<OwnerInvoiceView, Str
   String encodeKey(String key) => TextEncoder.i.encode(key);
 
   @override
-  String get query => 'SELECT "invoices".*'
+  String get query =>
+      'SELECT "invoices".*'
       'FROM "invoices"';
 
   @override
@@ -114,14 +120,18 @@ class OwnerInvoiceViewQueryable extends KeyedViewQueryable<OwnerInvoiceView, Str
 
   @override
   OwnerInvoiceView decode(TypedMap map) => OwnerInvoiceView(
-        id: map.get('id'),
-        title: map.get('title'),
-        invoiceId: map.get('invoice_id'),
-      );
+    id: map.get('id'),
+    title: map.get('title'),
+    invoiceId: map.get('invoice_id'),
+  );
 }
 
 class OwnerInvoiceView {
-  OwnerInvoiceView({required this.id, required this.title, required this.invoiceId});
+  OwnerInvoiceView({
+    required this.id,
+    required this.title,
+    required this.invoiceId,
+  });
 
   final String id;
   final String title;

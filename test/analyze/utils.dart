@@ -12,20 +12,20 @@ import 'package:stormberry/src/builder/elements/table_element.dart';
 import 'package:stormberry/src/builder/schema.dart';
 import 'package:test/test.dart';
 
-import '../polyfill.dart';
-
 Future<SchemaState> analyzeSchema(String source) async {
-  var manager = ResourceManager();
+  final builder = AnalyzingBuilder(BuilderOptions({}));
+  final assetId = AssetId.parse('model|model.dart');
 
-  await testBuilder2(
-    AnalyzingBuilder(BuilderOptions({})),
+  final schema = await resolveSources(
     {'model|model.dart': source},
-    reader: await PackageAssetReader.currentIsolate(),
-    resourceManager: manager,
+    (resolver) async {
+      final schema = SchemaState();
+      await builder.analyze(schema, await resolver.libraryFor(assetId), assetId);
+      schema.finalize();
+      return schema;
+    },
+    readAllSourcesFromFilesystem: true,
   );
-
-  var schema = await manager.fetch(schemaResource);
-  schema.finalize();
 
   return schema;
 }

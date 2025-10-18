@@ -21,7 +21,7 @@ mixin RelationalColumnElement implements ColumnElement {
   void checkConverter() {
     if (converter != null) {
       throw 'Relational field was annotated with @UseConverter(...), which is not supported.\n'
-          '  - ${parameter!.getDisplayString(withNullability: true)}';
+          '  - ${parameter!.displayString()}';
     }
   }
 
@@ -32,7 +32,7 @@ mixin RelationalColumnElement implements ColumnElement {
     if (groupedModifiers.values.any((l) => l.length > 1)) {
       var duplicated = groupedModifiers.values.where((l) => l.length > 1).first;
       throw 'Column field was annotated with duplicate view modifiers, which is not supported.\n'
-          'On field "${parameter!.getDisplayString(withNullability: false)}":\n'
+          'On field "${parameter!.displayString()}":\n'
           '${duplicated.map((d) => '  - @${d.toSource()}').join('\n')}';
     }
   }
@@ -98,8 +98,8 @@ abstract class ColumnElement {
   void checkModifiers();
 }
 
-final _dateTimeChecker = TypeChecker.fromRuntime(DateTime);
-final _pointChecker = TypeChecker.fromRuntime(Point);
+final _dateTimeChecker = TypeChecker.typeNamed(DateTime);
+final _pointChecker = TypeChecker.typeNamed(Point);
 
 String? getSqlType(DartType type) {
   if (type.isDartCoreString) {

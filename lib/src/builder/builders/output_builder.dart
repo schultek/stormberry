@@ -5,10 +5,12 @@ import '../schema.dart';
 import '../utils.dart';
 
 abstract class OutputBuilder implements Builder {
-  OutputBuilder(this.ext, BuilderOptions options) : options = GlobalOptions.parse(options.config);
+  OutputBuilder(this.ext, BuilderOptions options, [this.schema])
+      : options = GlobalOptions.parse(options.config);
 
   final String ext;
   final GlobalOptions options;
+  final SchemaState? schema;
 
   String buildTarget(BuildStep buildStep, AssetState asset);
 
@@ -21,17 +23,20 @@ abstract class OutputBuilder implements Builder {
     await buildStep.inputLibrary;
 
     try {
-      var state = await buildStep.fetchResource(schemaResource);
+      SchemaState state = schema ?? await buildStep.fetchResource(schemaResource);
       var asset = state.getForAsset(buildStep.inputId);
 
       if (asset != null && asset.tables.isNotEmpty) {
         var output = buildTarget(buildStep, asset);
         if (ext == 'dart') {
           var formatter = DartFormatter(
-            pageWidth: options.lineLength,
             languageVersion: DartFormatter.latestLanguageVersion,
           );
-          output = formatter.format(output);
+          output = '// GENERATED CODE - DO NOT MODIFY BY HAND\n\n'
+              '// ignore_for_file: type=lint\n'
+              '// ignore_for_file: annotate_overrides\n'
+              '// dart format off\n\n'
+              '${formatter.format(output)}';
         }
 
         await buildStep.writeAsString(buildStep.inputId.changeExtension('.schema.$ext'), output);

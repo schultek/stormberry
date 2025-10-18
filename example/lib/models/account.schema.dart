@@ -1,4 +1,8 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+// ignore_for_file: type=lint
 // ignore_for_file: annotate_overrides
+// dart format off
 
 part of 'account.dart';
 
@@ -72,7 +76,9 @@ class _AccountRepository extends BaseRepository
       ),
       parameters: values.values,
     );
-    var result = rows.map<int>((r) => TextEncoder.i.decode(r.toColumnMap()['id'])).toList();
+    var result = rows
+        .map<int>((r) => TextEncoder.i.decode(r.toColumnMap()['id']))
+        .toList();
 
     await db.billingAddresses.insertMany(
       requests.where((r) => r.billingAddress != null).map((r) {
@@ -152,7 +158,8 @@ class AccountUpdateRequest {
   final String? companyId;
 }
 
-class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> {
+class FullAccountViewQueryable
+    extends KeyedViewQueryable<FullAccountView, int> {
   @override
   String get keyName => 'id';
 
@@ -189,15 +196,22 @@ class FullAccountViewQueryable extends KeyedViewQueryable<FullAccountView, int> 
 
   @override
   FullAccountView decode(TypedMap map) => FullAccountView(
-        id: map.get('id'),
-        firstName: map.get('first_name'),
-        lastName: map.get('last_name'),
-        location: map.get('location', LatLngConverter().decode),
-        billingAddress: map.getOpt('billingAddress', BillingAddressViewQueryable().decoder),
-        invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
-        company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
-        parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
-      );
+    id: map.get('id'),
+    firstName: map.get('first_name'),
+    lastName: map.get('last_name'),
+    location: map.get('location', LatLngConverter().decode),
+    billingAddress: map.getOpt(
+      'billingAddress',
+      BillingAddressViewQueryable().decoder,
+    ),
+    invoices:
+        map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ??
+        const [],
+    company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
+    parties:
+        map.getListOpt('parties', GuestPartyViewQueryable().decoder) ??
+        const [],
+  );
 }
 
 class FullAccountView {
@@ -222,7 +236,8 @@ class FullAccountView {
   final List<GuestPartyView> parties;
 }
 
-class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> {
+class UserAccountViewQueryable
+    extends KeyedViewQueryable<UserAccountView, int> {
   @override
   String get keyName => 'id';
 
@@ -259,15 +274,22 @@ class UserAccountViewQueryable extends KeyedViewQueryable<UserAccountView, int> 
 
   @override
   UserAccountView decode(TypedMap map) => UserAccountView(
-        id: map.get('id'),
-        firstName: map.get('first_name'),
-        lastName: map.get('last_name'),
-        location: map.get('location', LatLngConverter().decode),
-        billingAddress: map.getOpt('billingAddress', BillingAddressViewQueryable().decoder),
-        invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
-        company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
-        parties: map.getListOpt('parties', GuestPartyViewQueryable().decoder) ?? const [],
-      );
+    id: map.get('id'),
+    firstName: map.get('first_name'),
+    lastName: map.get('last_name'),
+    location: map.get('location', LatLngConverter().decode),
+    billingAddress: map.getOpt(
+      'billingAddress',
+      BillingAddressViewQueryable().decoder,
+    ),
+    invoices:
+        map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ??
+        const [],
+    company: map.getOpt('company', MemberCompanyViewQueryable().decoder),
+    parties:
+        map.getListOpt('parties', GuestPartyViewQueryable().decoder) ??
+        const [],
+  );
 }
 
 class UserAccountView {
@@ -292,7 +314,8 @@ class UserAccountView {
   final List<GuestPartyView> parties;
 }
 
-class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView, int> {
+class CompanyAccountViewQueryable
+    extends KeyedViewQueryable<CompanyAccountView, int> {
   @override
   String get keyName => 'id';
 
@@ -318,12 +341,14 @@ class CompanyAccountViewQueryable extends KeyedViewQueryable<CompanyAccountView,
 
   @override
   CompanyAccountView decode(TypedMap map) => CompanyAccountView(
-        id: map.get('id'),
-        firstName: map.get('first_name'),
-        lastName: map.get('last_name'),
-        location: map.get('location', LatLngConverter().decode),
-        parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
-      );
+    id: map.get('id'),
+    firstName: map.get('first_name'),
+    lastName: map.get('last_name'),
+    location: map.get('location', LatLngConverter().decode),
+    parties:
+        map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ??
+        const [],
+  );
 }
 
 class CompanyAccountView {

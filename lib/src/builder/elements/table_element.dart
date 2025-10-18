@@ -17,7 +17,7 @@ import 'join_table_element.dart';
 import 'view_element.dart';
 
 extension EnumType on DartType {
-  bool get isEnum => TypeChecker.fromRuntime(Enum).isAssignableFromType(this);
+  bool get isEnum => TypeChecker.typeNamed(Enum).isAssignableFromType(this);
 }
 
 class TableElement {
@@ -36,11 +36,10 @@ class TableElement {
     tableName = _getTableName();
     repoName = _getRepoName();
 
-    primaryKeyParameter = element.fields
-        .where((p) =>
-            primaryKeyChecker.hasAnnotationOf(p) ||
-            primaryKeyChecker.hasAnnotationOf(p.getter ?? p))
-        .firstOrNull;
+    primaryKeyParameter = element.fields.where((p) {
+      return primaryKeyChecker.hasAnnotationOf(p) ||
+          (p.getter != null && primaryKeyChecker.hasAnnotationOf(p.getter!));
+    }).firstOrNull;
 
     views = {};
 
@@ -71,11 +70,11 @@ class TableElement {
   }
 
   String _getRepoName({bool singular = false}) {
-    var name = element.name;
+    var name = element.name!;
     if (!singular) {
-      if (element.name.endsWith('s')) {
+      if (element.name!.endsWith('s')) {
         name += 'es';
-      } else if (element.name.endsWith('y')) {
+      } else if (element.name!.endsWith('y')) {
         name = '${name.substring(0, name.length - 1)}ies';
       } else {
         name += 's';
@@ -130,7 +129,7 @@ class TableElement {
           throw 'Model ${otherBuilder.element.name} cannot have a many-to-'
               '${selfIsList ? 'many' : 'one'} relation to model ${element.name} without specifying a primary key.\n'
               'Either define a primary key for ${otherBuilder.element.name} or change the relation by changing field '
-              '"${otherParam!.getDisplayString(withNullability: true)}" to have a non-list type.';
+              '"${otherParam!.displayString()}" to have a non-list type.';
         }
 
         if (selfHasKey && otherHasKey && !selfIsList && !otherIsList) {
@@ -240,10 +239,10 @@ class TableElement {
       if (bindingParam == null) {
         throw 'A @BindTo() annotation was used with an incorrect target field. The following field '
             'was annotated:\n'
-            '  - "${param.getDisplayString(withNullability: true)}" in class "${param.enclosingElement3.getDisplayString(withNullability: true)}"\n'
+            '  - "${param.displayString()}" in class "${param.enclosingElement.displayString()}"\n'
             'The binding specified a target field of:\n'
             '  - "$binding"\n'
-            'which does not exist in class "${element.getDisplayString(withNullability: false)}.';
+            'which does not exist in class "${element.displayString()}.';
       }
 
       var bindingParamBinding = bindingParam.binding;
@@ -251,16 +250,16 @@ class TableElement {
       if (bindingParamBinding == null) {
         throw 'A @BindTo() annotation was only used on one field of a relation. The following field '
             'had no binding:\n'
-            '  - "${bindingParam.getDisplayString(withNullability: true)}" in class "${bindingParam.enclosingElement3.getDisplayString(withNullability: true)}"\n'
+            '  - "${bindingParam.displayString()}" in class "${bindingParam.enclosingElement.displayString()}"\n'
             'while the following field had a binding referring to the first field:\n'
-            '  - "${param.getDisplayString(withNullability: true)}" in class ${param.enclosingElement3.getDisplayString(withNullability: true)}"\n\n'
+            '  - "${param.displayString()}" in class ${param.enclosingElement.displayString()}"\n\n'
             'Make sure that both parameters specify the @BindTo() annotation referring to each other, or neither.';
       } else if (bindingParamBinding != param.name) {
         throw 'A @BindTo() annotation contained an incorrect target field. The following field '
             'had a binding:\n'
-            '  - "${param.getDisplayString(withNullability: true)}" in class "${param.enclosingElement3.getDisplayString(withNullability: true)}"\n'
+            '  - "${param.displayString()}" in class "${param.enclosingElement.displayString()}"\n'
             'which referred to the second field:\n'
-            '  - "${bindingParam.getDisplayString(withNullability: true)}" in class ${bindingParam.enclosingElement3.getDisplayString(withNullability: true)}"\n'
+            '  - "${bindingParam.displayString()}" in class ${bindingParam.enclosingElement.displayString()}"\n'
             'which referred to some other field "$bindingParamBinding".\n\n'
             'Make sure that both fields specify the @BindTo() annotation referring to each other, or neither.';
       }
@@ -269,13 +268,13 @@ class TableElement {
           ? (bindingParam.type as InterfaceType).typeArguments[0]
           : bindingParam.type;
 
-      if (type.element != param.enclosingElement3) {
+      if (type.element != param.enclosingElement) {
         throw 'A @BindTo() annotation was used incorrectly on a type. The following field '
             'had a binding:\n'
-            '  - "${param.getDisplayString(withNullability: true)}" in class "${param.enclosingElement3.getDisplayString(withNullability: true)}"\n'
+            '  - "${param.displayString()}" in class "${param.enclosingElement.displayString()}"\n'
             'which referred to the second field:\n'
-            '  - "${bindingParam.getDisplayString(withNullability: true)}" in class ${bindingParam.enclosingElement3.getDisplayString(withNullability: true)}"\n'
-            'which has an incorrect type "${type.element?.getDisplayString(withNullability: false)}".\n\n'
+            '  - "${bindingParam.displayString()}" in class ${bindingParam.enclosingElement.displayString()}"\n'
+            'which has an incorrect type "${type.element?.displayString()}".\n\n'
             'Make sure that the type of the second field is set to the class of the first field.';
       }
 
@@ -289,15 +288,15 @@ class TableElement {
 
     return allFields.where((p) {
       var type = p.type.isDartCoreList ? (p.type as InterfaceType).typeArguments[0] : p.type;
-      if (type.element != param.enclosingElement3) return false;
+      if (type.element != param.enclosingElement) return false;
 
       var binding = p.binding;
       if (binding == param.name) {
         throw 'A @BindTo() annotation was only used on one field of a relation. The following field'
             'had no binding:\n'
-            '  - "${param.getDisplayString(withNullability: true)}" in class "${param.enclosingElement3.getDisplayString(withNullability: true)}"\n'
+            '  - "${param.displayString()}" in class "${param.enclosingElement.displayString()}"\n'
             'while the following field had a binding referring to the first field:\n'
-            '  - "${p.getDisplayString(withNullability: true)}" in class ${p.enclosingElement3.getDisplayString(withNullability: true)}"\n\n'
+            '  - "${p.displayString()}" in class ${p.enclosingElement.displayString()}"\n\n'
             'Make sure that both fields specify the @BindTo() annotation referring to each other, or neither.';
       }
       if (binding != null) return false;

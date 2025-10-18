@@ -48,7 +48,7 @@ class ViewColumnElement {
     return null;
   }();
 
-  late String paramName = column.parameter!.name;
+  late String paramName = column.parameter!.name!;
 
   late String dartType = () {
     if (view != null) {

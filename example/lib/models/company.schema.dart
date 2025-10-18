@@ -1,4 +1,8 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+// ignore_for_file: type=lint
 // ignore_for_file: annotate_overrides
+// dart format off
 
 part of 'company.dart';
 
@@ -107,7 +111,11 @@ class _CompanyRepository extends BaseRepository
 }
 
 class CompanyInsertRequest {
-  CompanyInsertRequest({required this.id, required this.name, required this.addresses});
+  CompanyInsertRequest({
+    required this.id,
+    required this.name,
+    required this.addresses,
+  });
 
   final String id;
   final String name;
@@ -122,7 +130,8 @@ class CompanyUpdateRequest {
   final List<BillingAddress>? addresses;
 }
 
-class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, String> {
+class FullCompanyViewQueryable
+    extends KeyedViewQueryable<FullCompanyView, String> {
   @override
   String get keyName => 'id';
 
@@ -167,13 +176,21 @@ class FullCompanyViewQueryable extends KeyedViewQueryable<FullCompanyView, Strin
 
   @override
   FullCompanyView decode(TypedMap map) => FullCompanyView(
-        id: map.get('id'),
-        name: map.get('name'),
-        addresses: map.getListOpt('addresses', BillingAddressViewQueryable().decoder) ?? const [],
-        members: map.getListOpt('members', CompanyAccountViewQueryable().decoder) ?? const [],
-        invoices: map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ?? const [],
-        parties: map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ?? const [],
-      );
+    id: map.get('id'),
+    name: map.get('name'),
+    addresses:
+        map.getListOpt('addresses', BillingAddressViewQueryable().decoder) ??
+        const [],
+    members:
+        map.getListOpt('members', CompanyAccountViewQueryable().decoder) ??
+        const [],
+    invoices:
+        map.getListOpt('invoices', OwnerInvoiceViewQueryable().decoder) ??
+        const [],
+    parties:
+        map.getListOpt('parties', CompanyPartyViewQueryable().decoder) ??
+        const [],
+  );
 }
 
 class FullCompanyView {
@@ -194,7 +211,8 @@ class FullCompanyView {
   final List<CompanyPartyView> parties;
 }
 
-class MemberCompanyViewQueryable extends KeyedViewQueryable<MemberCompanyView, String> {
+class MemberCompanyViewQueryable
+    extends KeyedViewQueryable<MemberCompanyView, String> {
   @override
   String get keyName => 'id';
 
@@ -202,7 +220,8 @@ class MemberCompanyViewQueryable extends KeyedViewQueryable<MemberCompanyView, S
   String encodeKey(String key) => TextEncoder.i.encode(key);
 
   @override
-  String get query => 'SELECT "companies".*, "addresses"."data" as "addresses"'
+  String get query =>
+      'SELECT "companies".*, "addresses"."data" as "addresses"'
       'FROM "companies"'
       'LEFT JOIN ('
       '  SELECT "billing_addresses"."company_id",'
@@ -217,14 +236,20 @@ class MemberCompanyViewQueryable extends KeyedViewQueryable<MemberCompanyView, S
 
   @override
   MemberCompanyView decode(TypedMap map) => MemberCompanyView(
-        id: map.get('id'),
-        name: map.get('name'),
-        addresses: map.getListOpt('addresses', BillingAddressViewQueryable().decoder) ?? const [],
-      );
+    id: map.get('id'),
+    name: map.get('name'),
+    addresses:
+        map.getListOpt('addresses', BillingAddressViewQueryable().decoder) ??
+        const [],
+  );
 }
 
 class MemberCompanyView {
-  MemberCompanyView({required this.id, required this.name, required this.addresses});
+  MemberCompanyView({
+    required this.id,
+    required this.name,
+    required this.addresses,
+  });
 
   final String id;
   final String name;

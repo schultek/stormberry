@@ -19,7 +19,7 @@ class JoinColumnElement extends ColumnElement with RelationalColumnElement, Link
       : super(parentBuilder, state) {
     if (converter != null) {
       print('Relational field was annotated with @UseConverter(...), which is not supported.\n'
-          '  - ${parameter.getDisplayString(withNullability: true)}');
+          '  - ${parameter.displayString()}');
     }
   }
 

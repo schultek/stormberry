@@ -51,10 +51,10 @@ class AnalyzingBuilder implements Builder {
       );
     }
 
-    var packageName = library.source.uri.pathSegments.first;
+    var packageName = library.firstFragment.source.uri.pathSegments.first;
 
-    for (var import in library.importedLibraries) {
-      var libUri = import.source.uri;
+    for (var import in library.firstFragment.importedLibraries) {
+      var libUri = import.firstFragment.source.uri;
       if (!isPackage(packageName, libUri)) {
         continue;
       }

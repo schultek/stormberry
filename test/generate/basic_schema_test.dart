@@ -1,3 +1,4 @@
+import 'package:build_test/build_test.dart';
 import 'package:test/test.dart';
 
 import 'utils.dart';
@@ -5,10 +6,10 @@ import 'utils.dart';
 void main() {
   group('schema builder', () {
     group('generates basic schema', () {
-      late String source;
+      late TestBuilderResult result;
 
       setUpAll(() async {
-        source = await generateSchema('''
+        result = await generateSchema('''
           import 'package:stormberry/stormberry.dart';
 
           @Model()
@@ -28,8 +29,8 @@ void main() {
       });
 
       test('view classes', () async {
-        expect(
-          source,
+        checkSchema(
+          result,
           contains(
             'class AView {\n'
             '  AView({required this.id, required this.b});\n\n'
@@ -39,8 +40,8 @@ void main() {
           ),
         );
 
-        expect(
-          source,
+        checkSchema(
+          result,
           contains(
             'class BView {\n'
             '  BView({required this.id});\n\n'
@@ -51,8 +52,8 @@ void main() {
       });
 
       test('insert requests', () {
-        expect(
-          source,
+        checkSchema(
+          result,
           contains(
             'class AInsertRequest {\n'
             '  AInsertRequest({required this.id, required this.bId});\n\n'
@@ -62,8 +63,8 @@ void main() {
           ),
         );
 
-        expect(
-          source,
+        checkSchema(
+          result,
           contains(
             'class BInsertRequest {\n'
             '  BInsertRequest({required this.id});\n\n'
@@ -74,8 +75,8 @@ void main() {
       });
 
       test('update requests', () {
-        expect(
-          source,
+        checkSchema(
+          result,
           contains(
             'class AUpdateRequest {\n'
             '  AUpdateRequest({required this.id, this.bId});\n\n'
@@ -85,8 +86,8 @@ void main() {
           ),
         );
 
-        expect(
-          source,
+        checkSchema(
+          result,
           contains(
             'class BUpdateRequest {\n'
             '  BUpdateRequest({required this.id});\n\n'

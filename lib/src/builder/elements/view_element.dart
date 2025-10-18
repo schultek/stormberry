@@ -33,7 +33,7 @@ class ViewElement {
       CaseStyle.snakeCase.transform('${!isDefaultView ? '${name}_' : ''}${table.tableName}_view');
 
   String get queryName =>
-      CaseStyle.pascalCase.transform(isDefaultView ? table.element.name : '${name}_view');
+      CaseStyle.pascalCase.transform(isDefaultView ? table.element.name! : '${name}_view');
 
   late List<ViewColumnElement> columns = () {
     var columns = <ViewColumnElement>[];

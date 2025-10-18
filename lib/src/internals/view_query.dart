@@ -30,13 +30,13 @@ abstract class KeyedViewQueryable<T, K> extends ViewQueryable<T> {
   String encodeKey(K key);
 }
 
-class ViewQuery<Result> implements Query<List<Result>, QueryParams> {
+class ViewQuery<R> implements Query<List<R>, QueryParams> {
   ViewQuery(this.queryable);
 
-  final ViewQueryable<Result> queryable;
+  final ViewQueryable<R> queryable;
 
   @override
-  Future<List<Result>> apply(Session db, QueryParams params) async {
+  Future<List<R>> apply(Session db, QueryParams params) async {
     var time = DateTime.now();
     var res = await db.execute(Sql.named("""
       SELECT * FROM (${queryable.query}) "${queryable.tableAlias}"

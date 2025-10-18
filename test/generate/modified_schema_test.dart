@@ -1,4 +1,5 @@
 import 'package:build/build.dart';
+import 'package:build_test/build_test.dart';
 import 'package:test/test.dart';
 
 import 'utils.dart';
@@ -8,10 +9,10 @@ final modelSchemaId = AssetId.parse('model|model.schema.dart');
 void main() {
   group('schema builder', () {
     group('generates modified schema', () {
-      late String source;
+      late TestBuilderResult result;
 
       setUpAll(() async {
-        source = await generateSchema('''
+        result = await generateSchema('''
           import 'package:stormberry/stormberry.dart';
   
           @Model()
@@ -26,8 +27,8 @@ void main() {
       });
 
       test('view classes', () async {
-        expect(
-          source,
+        checkSchema(
+          result,
           contains(
             'class AView {\n'
             '  AView({required this.id});\n\n'
@@ -38,8 +39,8 @@ void main() {
       });
 
       test('insert requests', () {
-        expect(
-          source,
+        checkSchema(
+          result,
           contains(
             'class AInsertRequest {\n'
             '  AInsertRequest({required this.id, required this.secretId});\n\n'
@@ -51,8 +52,8 @@ void main() {
       });
 
       test('update requests', () {
-        expect(
-          source,
+        checkSchema(
+          result,
           contains(
             'class AUpdateRequest {\n'
             '  AUpdateRequest({required this.id, this.secretId});\n\n'

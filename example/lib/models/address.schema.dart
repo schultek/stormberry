@@ -1,9 +1,14 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+// ignore_for_file: type=lint
 // ignore_for_file: annotate_overrides
+// dart format off
 
 part of 'address.dart';
 
 extension AddressRepositories on Session {
-  BillingAddressRepository get billingAddresses => BillingAddressRepository._(this);
+  BillingAddressRepository get billingAddresses =>
+      BillingAddressRepository._(this);
 }
 
 abstract class BillingAddressRepository
@@ -24,7 +29,9 @@ class _BillingAddressRepository extends BaseRepository
   _BillingAddressRepository(super.db) : super(tableName: 'billing_addresses');
 
   @override
-  Future<List<BillingAddressView>> queryBillingAddresses([QueryParams? params]) {
+  Future<List<BillingAddressView>> queryBillingAddresses([
+    QueryParams? params,
+  ]) {
     return queryMany(BillingAddressViewQueryable(), params);
   }
 
@@ -96,7 +103,8 @@ class BillingAddressUpdateRequest {
 
 class BillingAddressViewQueryable extends ViewQueryable<BillingAddressView> {
   @override
-  String get query => 'SELECT "billing_addresses".*'
+  String get query =>
+      'SELECT "billing_addresses".*'
       'FROM "billing_addresses"';
 
   @override
@@ -104,11 +112,11 @@ class BillingAddressViewQueryable extends ViewQueryable<BillingAddressView> {
 
   @override
   BillingAddressView decode(TypedMap map) => BillingAddressView(
-        city: map.get('city'),
-        postcode: map.get('postcode'),
-        name: map.get('name'),
-        street: map.get('street'),
-      );
+    city: map.get('city'),
+    postcode: map.get('postcode'),
+    name: map.get('name'),
+    street: map.get('street'),
+  );
 }
 
 class BillingAddressView implements BillingAddress {

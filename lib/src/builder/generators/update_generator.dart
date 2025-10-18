@@ -132,7 +132,7 @@ class UpdateGenerator {
         var fieldNullSuffix = column == table.primaryKeyColumn ? '' : '?';
         String fieldType;
         if (column.linkedTable.primaryKeyColumn == null) {
-          fieldType = column.linkedTable.element.name;
+          fieldType = column.linkedTable.element.name!;
           if (column.isList) {
             fieldType = 'List<$fieldType>';
           }

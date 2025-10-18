@@ -9,21 +9,20 @@ import 'package:source_gen/source_gen.dart';
 import '../../stormberry.dart';
 import '../core/case_style.dart';
 
-const tableChecker = TypeChecker.fromRuntime(Model);
-const typeConverterChecker = TypeChecker.fromRuntime(TypeConverter);
-const primaryKeyChecker = TypeChecker.fromRuntime(PrimaryKey);
-const autoIncrementChecker = TypeChecker.fromRuntime(AutoIncrement);
-const hiddenInChecker = TypeChecker.fromRuntime(HiddenIn);
-const viewedInChecker = TypeChecker.fromRuntime(ViewedIn);
-const transformedInChecker = TypeChecker.fromRuntime(TransformedIn);
-const useConverterChecker = TypeChecker.fromRuntime(UseConverter);
-const bindToChecker = TypeChecker.fromRuntime(BindTo);
+const tableChecker = TypeChecker.typeNamed(Model, inPackage: 'stormberry');
+const typeConverterChecker = TypeChecker.typeNamed(TypeConverter, inPackage: 'stormberry');
+const primaryKeyChecker = TypeChecker.typeNamed(PrimaryKey, inPackage: 'stormberry');
+final autoIncrementChecker = TypeChecker.typeNamed(AutoIncrement, inPackage: 'stormberry');
+final hiddenInChecker = TypeChecker.typeNamed(HiddenIn, inPackage: 'stormberry');
+final viewedInChecker = TypeChecker.typeNamed(ViewedIn, inPackage: 'stormberry');
+final transformedInChecker = TypeChecker.typeNamed(TransformedIn, inPackage: 'stormberry');
+final useConverterChecker = TypeChecker.typeNamed(UseConverter, inPackage: 'stormberry');
+final bindToChecker = TypeChecker.typeNamed(BindTo, inPackage: 'stormberry');
 
 /// The global builder options from the build.yaml file
 class GlobalOptions {
   CaseStyle? tableCaseStyle;
   CaseStyle? columnCaseStyle;
-  int lineLength;
 
   GlobalOptions.parse(Map<String, dynamic> options)
       : tableCaseStyle = CaseStyle.fromString(options['tableCaseStyle'] as String? ??
@@ -31,15 +30,14 @@ class GlobalOptions {
             'snakeCase'),
         columnCaseStyle = CaseStyle.fromString(options['columnCaseStyle'] as String? ??
             options['column_case_style'] as String? ??
-            'snakeCase'),
-        lineLength = options['lineLength'] as int? ?? options['line_length'] as int? ?? 100;
+            'snakeCase');
 }
 
 extension GetNode on Element {
   AstNode? getNode() {
     var result = session?.getParsedLibraryByElement(library!);
     if (result is ParsedLibraryResult) {
-      return result.getElementDeclaration(this)?.node;
+      return result.getFragmentDeclaration(firstFragment)?.node;
     } else {
       return null;
     }

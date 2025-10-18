@@ -23,14 +23,15 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
 
     if (isAutoIncrement && !parameter.type.isDartCoreInt) {
       throw 'The following field is annotated with @AutoIncrement() but has an unallowed type:\n'
-          '  - "${parameter.getDisplayString(withNullability: true)}" in class "${parentTable.element.getDisplayString(withNullability: true)}"\n'
+          '  - "${parameter.displayString()}" in class "${parentTable.element.displayString()}"\n'
           'A field annotated with @AutoIncrement() must be of type int.';
     }
 
-    if (bindToChecker.hasAnnotationOf(parameter.getter ?? parameter)) {
+    final Element? getter = parameter.getter;
+    if (bindToChecker.hasAnnotationOf(getter ?? parameter)) {
       var r = ConstantReader(bindToChecker.annotationsOf(parameter.getter ?? parameter).first);
       throw 'Column field was annotated with "${r.toSource()}", which is not supported.\n'
-          '  - ${parameter.getDisplayString(withNullability: true)}';
+          '  - ${parameter.displayString()}';
     }
   }
 
@@ -43,7 +44,7 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
       if (dataType.element != converterType.element) {
         throw 'The following field is annotated with @UseConverter(...) with a custom converter '
             'that has a different type than the field:\n'
-            '  - Field "${parameter.getDisplayString(withNullability: true)}" in class "${parentTable.element.getDisplayString(withNullability: true)}"\n'
+            '  - Field "${parameter.displayString()}" in class "${parentTable.element.displayString()}"\n'
             '  - Converter "${converter!.toSource()}" with type "$converterType"';
       }
     }
@@ -54,7 +55,7 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
     var viewModifiers = modifiers.where((m) => m.instanceOf(viewedInChecker));
     if (viewModifiers.isNotEmpty) {
       throw 'Column field was annotated with "${viewModifiers.first.toSource()}", which is not supported.\n'
-          '  - ${parameter.getDisplayString(withNullability: true)}';
+          '  - ${parameter.displayString()}';
     }
   }
 
@@ -91,7 +92,7 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
         type += t;
       } else {
         throw 'The following field has an unsupported type:\n'
-            '  - Field "${parameter.getDisplayString(withNullability: true)}" in class "${parentTable.element.getDisplayString(withNullability: true)}"\n'
+            '  - Field "${parameter.displayString()}" in class "${parentTable.element.displayString()}"\n'
             'Either change the type to a supported column type, make the class a [Model] or use a custom [TypeConverter] with [@UseConverter].';
       }
     }
@@ -99,10 +100,10 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
   }
 
   @override
-  String get paramName => parameter.name;
+  String get paramName => parameter.name!;
 
   @override
-  String get columnName => state.options.columnCaseStyle.transform(parameter.name);
+  String get columnName => state.options.columnCaseStyle.transform(parameter.name!);
 
   @override
   bool get isNullable => parameter.type.nullabilitySuffix != NullabilitySuffix.none;

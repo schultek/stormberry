@@ -1,34 +1,27 @@
-import 'dart:convert';
-
 import 'package:build/build.dart';
 import 'package:build_test/build_test.dart';
-import 'package:stormberry/src/builder/builders/analyzing_builder.dart';
 import 'package:stormberry/src/builder/builders/schema_builder.dart';
 import 'package:test/test.dart';
 
-import '../polyfill.dart';
+import '../analyze/utils.dart';
 
 final modelSchemaId = AssetId.parse('model|model.schema.dart');
 
-Future<String> generateSchema(String source) async {
-  var manager = ResourceManager();
-
+Future<TestBuilderResult> generateSchema(String source) async {
+  var schema = await analyzeSchema(source);
   var inputs = {'model|model.dart': source};
 
-  var outputs = await testBuilder2(
-    AnalyzingBuilder(BuilderOptions({})),
-    inputs,
-    reader: await PackageAssetReader.currentIsolate(),
-    resourceManager: manager,
+  final result = await testBuilder(
+    SchemaBuilder(BuilderOptions({}), schema),
+    {...inputs},
   );
 
-  outputs = await testBuilder2(
-    SchemaBuilder(BuilderOptions({})),
-    {...inputs, ...outputs.map((id, content) => MapEntry(id.toString(), content))},
-    reader: await PackageAssetReader.currentIsolate(),
-    resourceManager: manager,
-  );
+  expect(result.buildResult.outputs.single, equals(modelSchemaId));
+  return result;
+}
 
-  expect(outputs.keys.single, equals(modelSchemaId));
-  return utf8.decode(outputs[modelSchemaId]!);
+void checkSchema(TestBuilderResult result, Object matcher) {
+  checkOutputs({
+    'model|model.schema.dart': decodedMatches(matcher),
+  }, result.buildResult.outputs, result.readerWriter);
 }
