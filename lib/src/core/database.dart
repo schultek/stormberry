@@ -12,9 +12,7 @@ import 'default_values.dart';
 abstract class Database implements Session, SessionExecutor {
   bool debugPrint;
 
-  Database._({
-    required this.debugPrint,
-  });
+  Database._({required this.debugPrint});
 
   factory Database({
     String? host,
@@ -35,9 +33,7 @@ abstract class Database implements Session, SessionExecutor {
         password: password ?? Platform.environment['DB_PASSWORD'] ?? DB_PASSWORD,
         isUnixSocket: isUnixSocket ?? (Platform.environment['DB_SOCKET'] == DB_SOCKET),
       ),
-      connectionSettings: ConnectionSettings(
-        sslMode: useSSL ? SslMode.require : SslMode.disable,
-      ),
+      connectionSettings: ConnectionSettings(sslMode: useSSL ? SslMode.require : SslMode.disable),
     );
   }
 
@@ -47,10 +43,7 @@ abstract class Database implements Session, SessionExecutor {
     ConnectionSettings? connectionSettings,
   }) = _DatabaseWithOneConnection;
 
-  factory Database.withPool({
-    bool debugPrint,
-    required Pool pool,
-  }) = _DatabaseWithPool;
+  factory Database.withPool({bool debugPrint, required Pool pool}) = _DatabaseWithPool;
 
   Future<void> open();
 
@@ -63,10 +56,10 @@ abstract class Database implements Session, SessionExecutor {
         .where((l) => l.isNotEmpty)
         .map((l) => l.replaceAll(RegExp(r'\s+'), ' '))
         .reduce((v, s) {
-      if (s.startsWith('SELECT')) offset += 2;
-      if (s.startsWith(')')) offset -= 2;
-      return "$v\n${" " * offset}$s";
-    });
+          if (s.startsWith('SELECT')) offset += 2;
+          if (s.startsWith(')')) offset -= 2;
+          return "$v\n${" " * offset}$s";
+        });
     print('---\n$q');
   }
 }
@@ -94,9 +87,7 @@ class _DatabaseWithOneConnection extends Database {
   }
 
   @override
-  Future<void> close({
-    bool force = false,
-  }) async {
+  Future<void> close({bool force = false}) async {
     final connection = await _connection;
     connection?.close(force: force);
     _connection = null;
@@ -129,10 +120,7 @@ class _DatabaseWithOneConnection extends Database {
   }
 
   @override
-  Future<R> run<R>(
-    Future<R> Function(Session session) fn, {
-    SessionSettings? settings,
-  }) async {
+  Future<R> run<R>(Future<R> Function(Session session) fn, {SessionSettings? settings}) async {
     final connection = await open();
     return await connection.run(fn, settings: settings);
   }
@@ -147,10 +135,7 @@ class _DatabaseWithOneConnection extends Database {
   }
 
   Future<Connection> _tryOpen() async {
-    final connection = await Connection.open(
-      endpoint,
-      settings: connectionSettings,
-    );
+    final connection = await Connection.open(endpoint, settings: connectionSettings);
     _connection = null;
     return connection;
   }
@@ -159,10 +144,7 @@ class _DatabaseWithOneConnection extends Database {
 class _DatabaseWithPool extends Database {
   final Pool pool;
 
-  _DatabaseWithPool({
-    super.debugPrint = false,
-    required this.pool,
-  }) : super._();
+  _DatabaseWithPool({super.debugPrint = false, required this.pool}) : super._();
 
   @override
   bool get isOpen => pool.isOpen;
@@ -195,26 +177,17 @@ class _DatabaseWithPool extends Database {
   }
 
   @override
-  Future<R> run<R>(
-    Future<R> Function(Session session) fn, {
-    SessionSettings? settings,
-  }) {
+  Future<R> run<R>(Future<R> Function(Session session) fn, {SessionSettings? settings}) {
     return pool.run(fn, settings: settings);
   }
 
   @override
-  Future<R> runTx<R>(
-    Future<R> Function(TxSession session) fn, {
-    TransactionSettings? settings,
-  }) {
+  Future<R> runTx<R>(Future<R> Function(TxSession session) fn, {TransactionSettings? settings}) {
     return pool.runTx(fn, settings: settings);
   }
 
   @override
-  Future<void> close({
-    bool force = false,
-  }) async =>
-      await pool.close(force: force);
+  Future<void> close({bool force = false}) async => await pool.close(force: force);
 
   @override
   Future<void> open() async {}

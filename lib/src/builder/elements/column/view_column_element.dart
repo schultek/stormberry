@@ -39,8 +39,9 @@ class ViewColumnElement {
     var c = column;
     if (c is LinkedColumnElement) {
       if (viewAs != null) {
-        return c.linkedTable.views.values
-            .firstWhere((v) => v.name.toLowerCase() == viewAs!.toLowerCase());
+        return c.linkedTable.views.values.firstWhere(
+          (v) => v.name.toLowerCase() == viewAs!.toLowerCase(),
+        );
       } else {
         return c.linkedTable.views.values.firstWhere((v) => v.isDefaultView);
       }

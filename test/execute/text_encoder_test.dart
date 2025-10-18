@@ -20,7 +20,7 @@ void main() {
 
       expect(
         registry.encode([
-          {'a': "te\nst's", 'b': 42}
+          {'a': "te\nst's", 'b': 42},
         ]),
         equals(" E'{\"{\\\\\"a\\\\\":\\\\\"te\\\\\\\\nst''s\\\\\",\\\\\"b\\\\\":42}\"}'"),
       );

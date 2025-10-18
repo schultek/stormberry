@@ -19,12 +19,7 @@ class Model {
   /// Metadata for the generated classes in order to use serialization for these classes.
   final ModelMeta? meta;
 
-  const Model({
-    this.views = const [],
-    this.indexes = const [],
-    this.tableName,
-    this.meta,
-  });
+  const Model({this.views = const [], this.indexes = const [], this.tableName, this.meta});
 
   /// The default view of a model.
   static const Symbol defaultView = #$default$;
@@ -48,11 +43,7 @@ class ModelMeta {
 
   const ModelMeta({this.insert, this.update, this.view, this.views});
 
-  const ModelMeta.all(ClassMeta meta)
-      : insert = meta,
-        update = meta,
-        view = meta,
-        views = null;
+  const ModelMeta.all(ClassMeta meta) : insert = meta, update = meta, view = meta, views = null;
 }
 
 /// Metadata for a generated class.

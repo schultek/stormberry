@@ -39,23 +39,13 @@ void usePostgresDocker() {
     // Setup the database to support all kind of tests
     // see _setupDatabaseStatements definition for details
     for (var stmt in _setupDatabaseStatements) {
-      final args = [
-        'psql',
-        '-c',
-        stmt,
-        '-U',
-        'postgres',
-      ];
+      final args = ['psql', '-c', stmt, '-U', 'postgres'];
       final res = await dp.exec(args);
       if (res.exitCode != 0) {
-        final message = 'Failed to setup PostgreSQL database due to the following error:\n'
+        final message =
+            'Failed to setup PostgreSQL database due to the following error:\n'
             '${res.stderr}';
-        throw ProcessException(
-          'docker exec $_kContainerName',
-          args,
-          message,
-          res.exitCode,
-        );
+        throw ProcessException('docker exec $_kContainerName', args, message, res.exitCode);
       }
     }
   });
@@ -66,10 +56,7 @@ void usePostgresDocker() {
 }
 
 Future<bool> _isPostgresContainerRunning() async {
-  final pr = await Process.run(
-    'docker',
-    ['ps', '--format', '{{.Names}}'],
-  );
+  final pr = await Process.run('docker', ['ps', '--format', '{{.Names}}']);
   return pr.stdout.toString().split('\n').map((s) => s.trim()).contains(_kContainerName);
 }
 

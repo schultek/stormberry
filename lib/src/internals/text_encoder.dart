@@ -12,8 +12,9 @@ final _baseConverters = <Type, TypeConverter>{
   typeOf<int>(): _PrimitiveTypeConverter<int>((dynamic v) => num.parse(v.toString()).round()),
   typeOf<double>(): _PrimitiveTypeConverter<double>((dynamic v) => double.parse(v.toString())),
   typeOf<num>(): _PrimitiveTypeConverter<num>((dynamic v) => num.parse(v.toString())),
-  typeOf<bool>():
-      _PrimitiveTypeConverter<bool>((dynamic v) => v is num ? v != 0 : v.toString() == 'true'),
+  typeOf<bool>(): _PrimitiveTypeConverter<bool>(
+    (dynamic v) => v is num ? v != 0 : v.toString() == 'true',
+  ),
   typeOf<DateTime>(): _DateTimeConverter(),
 };
 
@@ -49,7 +50,8 @@ class _DateTimeConverter extends TypeConverter<DateTime> {
       return DateTime.fromMillisecondsSinceEpoch(d.round());
     } else {
       throw ConverterException(
-          'Cannot decode value of type ${d.runtimeType} to type DateTime, because a value of type String or num is expected.');
+        'Cannot decode value of type ${d.runtimeType} to type DateTime, because a value of type String or num is expected.',
+      );
     }
   }
 
@@ -264,17 +266,19 @@ class _TextEncoder {
 
   String _encodePoint(Point value, QuoteStyle quotes) {
     return _encodeString(
-        '(${_encodeNumber(value.latitude)},${_encodeNumber(value.longitude)})', quotes);
+      '(${_encodeNumber(value.latitude)},${_encodeNumber(value.longitude)})',
+      quotes,
+    );
   }
 
   String _sharedType(List values) {
     List<String> types(dynamic value) => [
-          if (value is String) 'string',
-          if (value is int) 'int',
-          if (value is double) 'double',
-          if (value is num) 'num',
-          'json',
-        ];
+      if (value is String) 'string',
+      if (value is int) 'int',
+      if (value is double) 'double',
+      if (value is num) 'num',
+      'json',
+    ];
 
     return values.fold<Iterable<String>>(types(values.first), (t, value) {
       var vt = types(value);

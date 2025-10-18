@@ -27,10 +27,12 @@ void main() {
 
       expect(
         analyze,
-        throwsA(allOf(
-          startsWith('View configuration contains a circular reference'),
-          contains('A -(.b)-> B -(.a)-> A'),
-        )),
+        throwsA(
+          allOf(
+            startsWith('View configuration contains a circular reference'),
+            contains('A -(.b)-> B -(.a)-> A'),
+          ),
+        ),
       );
     });
   });

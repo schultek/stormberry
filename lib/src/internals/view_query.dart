@@ -38,13 +38,16 @@ class ViewQuery<R> implements Query<List<R>, QueryParams> {
   @override
   Future<List<R>> apply(Session db, QueryParams params) async {
     var time = DateTime.now();
-    var res = await db.execute(Sql.named("""
+    var res = await db.execute(
+      Sql.named("""
       SELECT * FROM (${queryable.query}) "${queryable.tableAlias}"
       ${params.where != null ? "WHERE ${params.where}" : ""}
       ${params.orderBy != null ? "ORDER BY ${params.orderBy}" : ""}
       ${params.limit != null ? "LIMIT ${params.limit}" : ""}
       ${params.offset != null ? "OFFSET ${params.offset}" : ""}
-    """), parameters: params.values);
+    """),
+      parameters: params.values,
+    );
 
     var results = res.map((row) => queryable.decode(TypedMap(row.toColumnMap()))).toList();
     print('Queried ${results.length} rows in ${DateTime.now().difference(time)}');

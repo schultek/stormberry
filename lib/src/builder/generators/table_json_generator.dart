@@ -8,17 +8,11 @@ class TableJsonGenerator {
       'columns': {
         for (var column in table.columns)
           if (column is NamedColumnElement)
-            column.columnName: {
-              'type': column.sqlType,
-              if (column.isNullable) 'isNullable': true,
-            },
+            column.columnName: {'type': column.sqlType, if (column.isNullable) 'isNullable': true},
       },
       'constraints': [
         if (table.primaryKeyColumn != null)
-          {
-            'type': 'primary_key',
-            'column': table.primaryKeyColumn!.columnName,
-          },
+          {'type': 'primary_key', 'column': table.primaryKeyColumn!.columnName},
         for (var column in table.columns)
           if (column is ForeignColumnElement)
             {
@@ -31,14 +25,9 @@ class TableJsonGenerator {
             },
         for (var column in table.columns)
           if (column is ForeignColumnElement && column.isUnique)
-            {
-              'type': 'unique',
-              'column': column.columnName,
-            },
+            {'type': 'unique', 'column': column.columnName},
       ],
-      'indexes': [
-        for (var index in table.indexes) index.toMap(),
-      ],
+      'indexes': [for (var index in table.indexes) index.toMap()],
     };
   }
 }

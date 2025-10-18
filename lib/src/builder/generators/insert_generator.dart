@@ -9,9 +9,9 @@ class InsertGenerator {
   String generateInsertMethod(TableElement table) {
     var deepInserts = <String>[];
 
-    for (var column in table.columns
-        .whereType<ReferenceColumnElement>()
-        .where((c) => c.linkedTable.primaryKeyColumn == null)) {
+    for (var column in table.columns.whereType<ReferenceColumnElement>().where(
+      (c) => c.linkedTable.primaryKeyColumn == null,
+    )) {
       if (column.linkedTable.columns
           .where((c) => c is ForeignColumnElement && c.linkedTable != table && !c.isNullable)
           .isNotEmpty) {
@@ -81,9 +81,9 @@ class InsertGenerator {
       keyReturnStatement = 'return result;';
     }
 
-    var insertColumns = table.columns
-        .whereType<NamedColumnElement>()
-        .where((c) => c is! FieldColumnElement || !c.isAutoIncrement);
+    var insertColumns = table.columns.whereType<NamedColumnElement>().where(
+      (c) => c is! FieldColumnElement || !c.isAutoIncrement,
+    );
 
     String toInsertValue(NamedColumnElement e) {
       final converter = e.converter;
@@ -119,8 +119,12 @@ class InsertGenerator {
     for (var column in table.columns) {
       if (column is FieldColumnElement) {
         if (!column.isAutoIncrement) {
-          requestFields.add(MapEntry(
-              column.parameter.type.getDisplayString(withNullability: true), column.paramName));
+          requestFields.add(
+            MapEntry(
+              column.parameter.type.getDisplayString(withNullability: true),
+              column.paramName,
+            ),
+          );
         }
       } else if (column is ReferenceColumnElement && column.linkedTable.primaryKeyColumn == null) {
         if (column.linkedTable.columns
@@ -128,8 +132,12 @@ class InsertGenerator {
             .isNotEmpty) {
           continue;
         }
-        requestFields.add(MapEntry(
-            column.parameter!.type.getDisplayString(withNullability: true), column.paramName));
+        requestFields.add(
+          MapEntry(
+            column.parameter!.type.getDisplayString(withNullability: true),
+            column.paramName,
+          ),
+        );
       } else if (column is ForeignColumnElement) {
         var fieldNullSuffix = column.isNullable ? '?' : '';
         String fieldType;

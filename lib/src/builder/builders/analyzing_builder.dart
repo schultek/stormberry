@@ -31,8 +31,8 @@ class AnalyzingBuilder implements Builder {
 
   @override
   Map<String, List<String>> get buildExtensions => const {
-        '.dart': ['___']
-      };
+    '.dart': ['___'],
+  };
 
   Future<void> analyze(SchemaState schema, LibraryElement library, AssetId assetId) async {
     if (schema.hasAsset(assetId)) return;

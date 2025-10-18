@@ -15,7 +15,8 @@ class MigrateCommand extends Command<void> {
     argParser.addFlag(
       'dry-run',
       negatable: false,
-      help: 'Returns exit code 1 if there are any pending migrations. '
+      help:
+          'Returns exit code 1 if there are any pending migrations. '
           'Does not apply any changes to the database.',
     );
 
@@ -42,14 +43,16 @@ class MigrateCommand extends Command<void> {
     argParser.addFlag(
       'defaults',
       negatable: false,
-      help: 'Whether to use default values for the not-provided connection props. If this is false '
+      help:
+          'Whether to use default values for the not-provided connection props. If this is false '
           'the cli will ask for all missing props.',
     );
 
     argParser.addOption(
       'output',
       abbr: 'o',
-      help: 'Specify an output directory. This will write all migrations into .sql '
+      help:
+          'Specify an output directory. This will write all migrations into .sql '
           'files instead of writing to the database.',
     );
 
@@ -81,27 +84,41 @@ class MigrateCommand extends Command<void> {
 
     var packageName = loadYaml(await pubspecYaml.readAsString())['name'] as String;
 
-    var schema =
-        await DatabaseSchema.load('.dart_tool/build/generated/$packageName/lib/**.schema.json');
+    var schema = await DatabaseSchema.load(
+      '.dart_tool/build/generated/$packageName/lib/**.schema.json',
+    );
 
     if (schema.tables.isEmpty) {
       print('Could not run migration, because there are no models found. Did you run the build?');
       exit(1);
     }
 
-    var dbName =
-        resolveProperty<String>(arg: 'db', env: 'DB_NAME', prompt: 'Select a database to update: ');
+    var dbName = resolveProperty<String>(
+      arg: 'db',
+      env: 'DB_NAME',
+      prompt: 'Select a database to update: ',
+    );
     var dbHost = resolveProperty<String>(
-        arg: 'host', env: 'DB_HOST_ADDRESS', prompt: 'Enter the database host address: ');
-    var dbPort =
-        resolveProperty<int>(arg: 'port', env: 'DB_PORT', prompt: 'Enter the database port: ');
+      arg: 'host',
+      env: 'DB_HOST_ADDRESS',
+      prompt: 'Enter the database host address: ',
+    );
+    var dbPort = resolveProperty<int>(
+      arg: 'port',
+      env: 'DB_PORT',
+      prompt: 'Enter the database port: ',
+    );
     var dbUsername = resolveProperty<String>(
-        arg: 'username', env: 'DB_USERNAME', prompt: 'Enter the database username: ');
+      arg: 'username',
+      env: 'DB_USERNAME',
+      prompt: 'Enter the database username: ',
+    );
     var dbPassword = resolveProperty<String>(
-        arg: 'password',
-        env: 'DB_PASSWORD',
-        prompt: 'Enter the database password: ',
-        obscureInput: true);
+      arg: 'password',
+      env: 'DB_PASSWORD',
+      prompt: 'Enter the database password: ',
+      obscureInput: true,
+    );
     var useSSL = resolveProperty<bool>(arg: 'ssl', env: 'DB_SSL');
     var isUnixSocket = resolveProperty<bool>(arg: 'unix-socket', env: 'DB_SOCKET');
 
@@ -227,8 +244,8 @@ class MigrateCommand extends Command<void> {
           return input == 'yes'
               ? true as T
               : input == 'no'
-                  ? false as T
-                  : null;
+              ? false as T
+              : null;
         }
       }
     }

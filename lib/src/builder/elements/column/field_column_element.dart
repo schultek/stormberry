@@ -16,8 +16,9 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
   late final bool isAutoIncrement;
 
   FieldColumnElement(this.parameter, TableElement parentTable, BuilderState state)
-      : super(parentTable, state) {
-    isAutoIncrement = (autoIncrementChecker.firstAnnotationOf(parameter) ??
+    : super(parentTable, state) {
+    isAutoIncrement =
+        (autoIncrementChecker.firstAnnotationOf(parameter) ??
             autoIncrementChecker.firstAnnotationOf(parameter.getter ?? parameter)) !=
         null;
 

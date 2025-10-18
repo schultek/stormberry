@@ -24,7 +24,7 @@ jobs:
           dart pub global activate coverage
           
       - name: Check formatting
-        run: dart format . --set-exit-if-changed --line-length=100
+        run: dart format . --set-exit-if-changed
 
       - name: Run Code Gen
         run: dart run build_runner build --delete-conflicting-outputs

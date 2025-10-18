@@ -11,9 +11,7 @@ class DatabaseSchema {
 
   const DatabaseSchema(this.tables);
 
-  DatabaseSchema copy() => DatabaseSchema(
-        {for (var t in tables.entries) t.key: t.value.copy()},
-      );
+  DatabaseSchema copy() => DatabaseSchema({for (var t in tables.entries) t.key: t.value.copy()});
 
   factory DatabaseSchema.fromMap(Map<String, dynamic> map) {
     var tables = <String, TableSchema>{};
@@ -21,13 +19,16 @@ class DatabaseSchema {
       var table = map[key];
       tables[key] = TableSchema(
         key,
-        columns: (table['columns'] as Map<String, dynamic>)
-            .map((k, v) => MapEntry(k, ColumnSchema.fromMap(k, v as Map<String, dynamic>))),
-        constraints: (table['constraints'] as List?)
+        columns: (table['columns'] as Map<String, dynamic>).map(
+          (k, v) => MapEntry(k, ColumnSchema.fromMap(k, v as Map<String, dynamic>)),
+        ),
+        constraints:
+            (table['constraints'] as List?)
                 ?.map((c) => TableConstraint.fromMap(c as Map<String, dynamic>))
                 .toList() ??
             [],
-        indexes: (table['indexes'] as List?)
+        indexes:
+            (table['indexes'] as List?)
                 ?.map((i) => TableIndexParser.fromMap(i as Map<String, dynamic>))
                 .toList() ??
             [],
@@ -85,11 +86,11 @@ class TableSchema {
   });
 
   TableSchema copy() => TableSchema(
-        name,
-        columns: {...columns},
-        constraints: [...constraints],
-        indexes: [...indexes],
-      );
+    name,
+    columns: {...columns},
+    constraints: [...constraints],
+    indexes: [...indexes],
+  );
 }
 
 class ColumnSchema {
@@ -98,9 +99,12 @@ class ColumnSchema {
   final bool isNullable;
   final bool isAutoIncrement;
 
-  const ColumnSchema(this.name,
-      {required this.type, this.isNullable = false, bool? isAutoIncrement})
-      : isAutoIncrement = isAutoIncrement ?? (type == 'serial');
+  const ColumnSchema(
+    this.name, {
+    required this.type,
+    this.isNullable = false,
+    bool? isAutoIncrement,
+  }) : isAutoIncrement = isAutoIncrement ?? (type == 'serial');
 
   factory ColumnSchema.fromMap(String name, Map<String, dynamic> map) {
     return ColumnSchema(
@@ -164,7 +168,13 @@ class ForeignKeyConstraint extends TableConstraint {
   final ForeignKeyAction onUpdate;
 
   const ForeignKeyConstraint(
-      super.name, this.srcColumn, this.table, this.column, this.onDelete, this.onUpdate);
+    super.name,
+    this.srcColumn,
+    this.table,
+    this.column,
+    this.onDelete,
+    this.onUpdate,
+  );
 
   @override
   String toString() {

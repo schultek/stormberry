@@ -10,9 +10,11 @@ abstract class Author {
   String get name;
 }
 
-@Model(indexes: [
-  TableIndex(name: 'rating_index', columns: ['rating'])
-])
+@Model(
+  indexes: [
+    TableIndex(name: 'rating_index', columns: ['rating']),
+  ],
+)
 abstract class Book {
   @AutoIncrement()
   @PrimaryKey()

@@ -26,8 +26,9 @@ class ViewElement {
 
   bool get isDefaultView => name == defaultName;
 
-  String get className => CaseStyle.pascalCase
-      .transform('${!isDefaultView ? '${name}_' : ''}${table.element.name}_view');
+  String get className => CaseStyle.pascalCase.transform(
+    '${!isDefaultView ? '${name}_' : ''}${table.element.name}_view',
+  );
 
   String get viewTableName =>
       CaseStyle.snakeCase.transform('${!isDefaultView ? '${name}_' : ''}${table.tableName}_view');
@@ -43,8 +44,9 @@ class ViewElement {
         continue;
       }
 
-      var modifiers = column.modifiers
-          .where((m) => nameOf(m.read('name').objectValue).toLowerCase() == name.toLowerCase());
+      var modifiers = column.modifiers.where(
+        (m) => nameOf(m.read('name').objectValue).toLowerCase() == name.toLowerCase(),
+      );
       if (modifiers.isNotEmpty) {
         var isHidden = modifiers.any((m) => m.instanceOf(hiddenInChecker));
         if (isHidden) {
@@ -60,8 +62,10 @@ class ViewElement {
           }
         }
 
-        var transformer =
-            modifiers.where((m) => m.instanceOf(transformedInChecker)).firstOrNull?.read('by');
+        var transformer = modifiers
+            .where((m) => m.instanceOf(transformedInChecker))
+            .firstOrNull
+            ?.read('by');
 
         String? transformerCode;
         if (transformer != null && !transformer.isNull) {

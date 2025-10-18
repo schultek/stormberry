@@ -43,31 +43,19 @@ void main() {
 
       expect(
         tableA.columns[1],
-        isJoinColumn(
-          linkedTo: tableB,
-          references: tableB.columns[1],
-          joinedTo: join,
-        ),
+        isJoinColumn(linkedTo: tableB, references: tableB.columns[1], joinedTo: join),
       );
 
       expect(
         tableA.columns[1],
-        isJoinColumn(
-          linkedTo: tableB,
-          references: tableB.columns[1],
-          joinedTo: join,
-        ),
+        isJoinColumn(linkedTo: tableB, references: tableB.columns[1], joinedTo: join),
       );
 
       expect(tableB.columns[0], isIdColumn());
 
       expect(
         tableB.columns[1],
-        isJoinColumn(
-          linkedTo: tableA,
-          references: tableA.columns[1],
-          joinedTo: join,
-        ),
+        isJoinColumn(linkedTo: tableA, references: tableA.columns[1], joinedTo: join),
       );
     });
 
@@ -94,8 +82,9 @@ void main() {
       expect(
         caller,
         throwsA(
-            'Model B cannot have a many-to-many relation to model A without specifying a primary key.\n'
-            'Either define a primary key for B or change the relation by changing field "List<A> a" to have a non-list type.'),
+          'Model B cannot have a many-to-many relation to model A without specifying a primary key.\n'
+          'Either define a primary key for B or change the relation by changing field "List<A> a" to have a non-list type.',
+        ),
       );
     });
   });

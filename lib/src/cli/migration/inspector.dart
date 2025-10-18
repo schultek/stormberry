@@ -6,7 +6,8 @@ Future<DatabaseSchema> inspectDatabaseSchema(Session db) async {
   var schema = DatabaseSchema({});
 
   var tables = await db.execute(
-      "SELECT * FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'");
+    "SELECT * FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'",
+  );
   for (var row in tables) {
     var tableMap = row.toColumnMap();
     var tableName = tableMap['table_name'] as String;
@@ -14,8 +15,9 @@ Future<DatabaseSchema> inspectDatabaseSchema(Session db) async {
     var tableScheme = TableSchema(tableName, columns: {}, constraints: [], indexes: []);
     schema.tables[tableName] = tableScheme;
 
-    var columns = await db
-        .execute("SELECT * FROM information_schema.columns WHERE table_name = '$tableName'");
+    var columns = await db.execute(
+      "SELECT * FROM information_schema.columns WHERE table_name = '$tableName'",
+    );
     for (var row in columns) {
       var columnMap = row.toColumnMap();
       var columnName = columnMap['column_name'] as String;
@@ -99,8 +101,9 @@ Future<DatabaseSchema> inspectDatabaseSchema(Session db) async {
     var indexMap = row.toColumnMap();
     var indexName = (indexMap['indexname'] as String).substring(2);
     var tableName = indexMap['tablename'];
-    var defRegex =
-        RegExp(r'^CREATE( UNIQUE)? INDEX \w+ ON public.\w+ USING (\w+) \((\w+)\)(?: WHERE (.+))?$');
+    var defRegex = RegExp(
+      r'^CREATE( UNIQUE)? INDEX \w+ ON public.\w+ USING (\w+) \((\w+)\)(?: WHERE (.+))?$',
+    );
     var defMatch = defRegex.firstMatch(indexMap['indexdef'] as String);
     if (defMatch == null || defMatch.groupCount != 4) continue;
     var unique = defMatch.group(1) != null;
@@ -111,13 +114,15 @@ Future<DatabaseSchema> inspectDatabaseSchema(Session db) async {
       condition = condition.substring(1, condition.length - 1);
     }
     var algorithm = IndexAlgorithm.values.firstWhere((a) => a.toString().split('.')[1] == algo);
-    schema.tables[tableName]?.indexes.add(TableIndex(
-      columns: columns,
-      name: indexName,
-      algorithm: algorithm,
-      unique: unique,
-      condition: condition,
-    ));
+    schema.tables[tableName]?.indexes.add(
+      TableIndex(
+        columns: columns,
+        name: indexName,
+        algorithm: algorithm,
+        unique: unique,
+        condition: condition,
+      ),
+    );
   }
 
   return schema;

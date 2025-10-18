@@ -13,10 +13,13 @@ mixin RepositoryDeleteMixin<DeleteRequest> on BaseRepository
   Future<void> delete(List<DeleteRequest> keys) async {
     if (keys.isEmpty) return;
     var values = QueryValues();
-    await db.execute(Sql.named('''
+    await db.execute(
+      Sql.named('''
       DELETE FROM "$tableName"
       WHERE "$tableName"."$keyName" IN ( ${keys.map((k) => values.add(k)).join(', ')} )
-    '''), parameters: values.values);
+    '''),
+      parameters: values.values,
+    );
   }
 
   @override

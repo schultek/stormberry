@@ -36,10 +36,11 @@ class TableElement {
     tableName = _getTableName();
     repoName = _getRepoName();
 
-    primaryKeyParameter = element.fields.where((p) {
-      return primaryKeyChecker.hasAnnotationOf(p) ||
-          (p.getter != null && primaryKeyChecker.hasAnnotationOf(p.getter!));
-    }).firstOrNull;
+    primaryKeyParameter =
+        element.fields.where((p) {
+          return primaryKeyChecker.hasAnnotationOf(p) ||
+              (p.getter != null && primaryKeyChecker.hasAnnotationOf(p.getter!));
+        }).firstOrNull;
 
     views = {};
 
@@ -52,9 +53,10 @@ class TableElement {
       views[ViewElement.defaultName] = ViewElement(this);
     }
 
-    indexes = annotation.read('indexes').listValue.map((o) {
-      return IndexElement(this, o);
-    }).toList();
+    indexes =
+        annotation.read('indexes').listValue.map((o) {
+          return IndexElement(this, o);
+        }).toList();
 
     if (!annotation.read('meta').isNull) {
       meta = annotation.read('meta');
@@ -85,19 +87,24 @@ class TableElement {
 
   List<ColumnElement> columns = [];
 
-  FieldColumnElement? get primaryKeyColumn => primaryKeyParameter != null
-      ? columns
-          .whereType<FieldColumnElement>()
-          .where((c) => c.parameter == primaryKeyParameter)
-          .firstOrNull
-      : null;
+  FieldColumnElement? get primaryKeyColumn =>
+      primaryKeyParameter != null
+          ? columns
+              .whereType<FieldColumnElement>()
+              .where((c) => c.parameter == primaryKeyParameter)
+              .firstOrNull
+          : null;
 
-  late List<FieldElement> allFields = element.fields
-      .cast<FieldElement>()
-      .followedBy(element.allSupertypes
-          .expand((t) => t.isDartCoreObject ? <FieldElement>[] : t.element.fields))
-      .where((e) => !e.hasInitializer)
-      .toList();
+  late List<FieldElement> allFields =
+      element.fields
+          .cast<FieldElement>()
+          .followedBy(
+            element.allSupertypes.expand(
+              (t) => t.isDartCoreObject ? <FieldElement>[] : t.element.fields,
+            ),
+          )
+          .where((e) => !e.hasInitializer)
+          .toList();
 
   void prepareColumns() {
     for (var param in allFields) {
@@ -133,7 +140,8 @@ class TableElement {
         }
 
         if (selfHasKey && otherHasKey && !selfIsList && !otherIsList) {
-          var eitherNullable = param.type.nullabilitySuffix != NullabilitySuffix.none ||
+          var eitherNullable =
+              param.type.nullabilitySuffix != NullabilitySuffix.none ||
               otherParam!.type.nullabilitySuffix != NullabilitySuffix.none;
           if (!eitherNullable) {
             throw 'Model ${otherBuilder.element.name} cannot have a one-to-one relation to model ${element.name} with '
@@ -264,9 +272,10 @@ class TableElement {
             'Make sure that both fields specify the @BindTo() annotation referring to each other, or neither.';
       }
 
-      var type = bindingParam.type.isDartCoreList
-          ? (bindingParam.type as InterfaceType).typeArguments[0]
-          : bindingParam.type;
+      var type =
+          bindingParam.type.isDartCoreList
+              ? (bindingParam.type as InterfaceType).typeArguments[0]
+              : bindingParam.type;
 
       if (type.element != param.enclosingElement) {
         throw 'A @BindTo() annotation was used incorrectly on a type. The following field '

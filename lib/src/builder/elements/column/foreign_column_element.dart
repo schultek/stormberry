@@ -17,8 +17,11 @@ class ForeignColumnElement extends ColumnElement
   late ReferencingColumnElement referencedColumn;
 
   ForeignColumnElement(
-      this.parameter, this.linkedTable, TableElement parentTable, BuilderState state)
-      : super(parentTable, state);
+    this.parameter,
+    this.linkedTable,
+    TableElement parentTable,
+    BuilderState state,
+  ) : super(parentTable, state);
 
   @override
   String get sqlType => rawSqlType;

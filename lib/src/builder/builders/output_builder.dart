@@ -6,7 +6,7 @@ import '../utils.dart';
 
 abstract class OutputBuilder implements Builder {
   OutputBuilder(this.ext, BuilderOptions options, [this.schema])
-      : options = GlobalOptions.parse(options.config);
+    : options = GlobalOptions.parse(options.config);
 
   final String ext;
   final GlobalOptions options;
@@ -29,10 +29,9 @@ abstract class OutputBuilder implements Builder {
       if (asset != null && asset.tables.isNotEmpty) {
         var output = buildTarget(buildStep, asset);
         if (ext == 'dart') {
-          var formatter = DartFormatter(
-            languageVersion: DartFormatter.latestLanguageVersion,
-          );
-          output = '// GENERATED CODE - DO NOT MODIFY BY HAND\n\n'
+          var formatter = DartFormatter(languageVersion: DartFormatter.latestLanguageVersion);
+          output =
+              '// GENERATED CODE - DO NOT MODIFY BY HAND\n\n'
               '// ignore_for_file: type=lint\n'
               '// ignore_for_file: annotate_overrides\n'
               '// dart format off\n\n'
@@ -49,6 +48,6 @@ abstract class OutputBuilder implements Builder {
 
   @override
   Map<String, List<String>> get buildExtensions => {
-        '.dart': ['.schema.$ext']
-      };
+    '.dart': ['.schema.$ext'],
+  };
 }

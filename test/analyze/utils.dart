@@ -16,16 +16,12 @@ Future<SchemaState> analyzeSchema(String source) async {
   final builder = AnalyzingBuilder(BuilderOptions({}));
   final assetId = AssetId.parse('model|model.dart');
 
-  final schema = await resolveSources(
-    {'model|model.dart': source},
-    (resolver) async {
-      final schema = SchemaState();
-      await builder.analyze(schema, await resolver.libraryFor(assetId), assetId);
-      schema.finalize();
-      return schema;
-    },
-    readAllSourcesFromFilesystem: true,
-  );
+  final schema = await resolveSources({'model|model.dart': source}, (resolver) async {
+    final schema = SchemaState();
+    await builder.analyze(schema, await resolver.libraryFor(assetId), assetId);
+    schema.finalize();
+    return schema;
+  }, readAllSourcesFromFilesystem: true);
 
   return schema;
 }
@@ -53,7 +49,11 @@ Matcher isFieldColumn({
     isA<FieldColumnElement>(),
     _has<FieldColumnElement>('dartType', (c) => c.dartType, dartType),
     _isNamedColumn(
-        columnName: columnName, sqlType: sqlType, isNullable: isNullable, paramName: paramName),
+      columnName: columnName,
+      sqlType: sqlType,
+      isNullable: isNullable,
+      paramName: paramName,
+    ),
     _isListColumn(isList: isList),
   );
 }
@@ -83,7 +83,11 @@ Matcher isForeignColumn({
   return allOf(
     isA<ForeignColumnElement>(),
     _isNamedColumn(
-        columnName: columnName, sqlType: sqlType, isNullable: isNullable, paramName: paramName),
+      columnName: columnName,
+      sqlType: sqlType,
+      isNullable: isNullable,
+      paramName: paramName,
+    ),
     _isReferencingColumn(references: references, linkedTo: linkedTo, paramName: paramName),
     _isListColumn(isList: isList),
   );

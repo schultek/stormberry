@@ -20,7 +20,8 @@ Future<void> outputSchema(Directory dir, DatabaseSchemaDiff diff) async {
       if (createTables.isNotEmpty) {
         createTables += '\n\n';
       }
-      createTables += ''
+      createTables +=
+          ''
           'CREATE TABLE IF NOT EXISTS "${table.name}" (\n'
           '${table.columns.values.map((c) => '  "${c.name}" ${c.type} ${c.isNullable ? 'NULL' : 'NOT NULL'}').join(",\n")}\n'
           ');';
@@ -43,9 +44,11 @@ Future<void> outputSchema(Directory dir, DatabaseSchemaDiff diff) async {
     }
 
     if (table.constraints.removed.isNotEmpty) {
-      appendStatement(''
-          'ALTER TABLE "${table.name}"\n'
-          '  ${table.constraints.removed.map((c) => 'DROP CONSTRAINT IF EXISTS "${c.name}" CASCADE').join(",\n  ")};');
+      appendStatement(
+        ''
+        'ALTER TABLE "${table.name}"\n'
+        '  ${table.constraints.removed.map((c) => 'DROP CONSTRAINT IF EXISTS "${c.name}" CASCADE').join(",\n  ")};',
+      );
     }
   }
 
@@ -60,32 +63,41 @@ Future<void> outputSchema(Directory dir, DatabaseSchemaDiff diff) async {
             yield 'ALTER COLUMN "${c.prev.name}" SET DATA TYPE int8 USING ${c.newly.name}::int8';
             yield "ALTER COLUMN \"${c.prev.name}\" SET DEFAULT nextval('${table.name}_${c.newly.name}_seq')";
           } else {
-            var update = c.prev.type != c.newly.type
-                ? 'SET DATA TYPE ${c.newly.type} USING ${c.newly.name}::${c.newly.type}'
-                : '${c.newly.isNullable ? 'DROP' : 'SET'} NOT NULL';
+            var update =
+                c.prev.type != c.newly.type
+                    ? 'SET DATA TYPE ${c.newly.type} USING ${c.newly.name}::${c.newly.type}'
+                    : '${c.newly.isNullable ? 'DROP' : 'SET'} NOT NULL';
             yield 'ALTER COLUMN "${c.prev.name}" $update';
           }
         }),
       ];
 
-      for (var c in table.columns.modified
-          .where((c) => c.prev.type != 'serial' && c.newly.type == 'serial')) {
-        appendStatement('CREATE SEQUENCE IF NOT EXISTS ${table.name}_${c.newly.name}_seq '
-            'OWNED BY "public"."${table.name}"."${c.newly.name}";');
+      for (var c in table.columns.modified.where(
+        (c) => c.prev.type != 'serial' && c.newly.type == 'serial',
+      )) {
+        appendStatement(
+          'CREATE SEQUENCE IF NOT EXISTS ${table.name}_${c.newly.name}_seq '
+          'OWNED BY "public"."${table.name}"."${c.newly.name}";',
+        );
       }
 
-      appendStatement('ALTER TABLE "${table.name}"\n'
-          '  ${updatedColumns.join(",\n  ")};');
+      appendStatement(
+        'ALTER TABLE "${table.name}"\n'
+        '  ${updatedColumns.join(",\n  ")};',
+      );
     }
   }
 
   for (var table in diff.tables.modified) {
-    var uniqueConstraints = table.constraints.added
-        .where((c) => c is PrimaryKeyConstraint || c is UniqueConstraint)
-        .toList();
+    var uniqueConstraints =
+        table.constraints.added
+            .where((c) => c is PrimaryKeyConstraint || c is UniqueConstraint)
+            .toList();
     if (uniqueConstraints.isNotEmpty) {
-      appendStatement('ALTER TABLE "${table.name}"\n'
-          '  ${uniqueConstraints.map((c) => 'ADD ${c.toString()}').join(",\n  ")};');
+      appendStatement(
+        'ALTER TABLE "${table.name}"\n'
+        '  ${uniqueConstraints.map((c) => 'ADD ${c.toString()}').join(",\n  ")};',
+      );
     }
   }
 
@@ -93,24 +105,30 @@ Future<void> outputSchema(Directory dir, DatabaseSchemaDiff diff) async {
     var uniqueConstraints =
         table.constraints.where((c) => c is PrimaryKeyConstraint || c is UniqueConstraint).toList();
     if (uniqueConstraints.isNotEmpty) {
-      appendStatement('ALTER TABLE "${table.name}"\n'
-          '  ${uniqueConstraints.map((c) => 'ADD ${c.toString()}').join(",\n  ")};');
+      appendStatement(
+        'ALTER TABLE "${table.name}"\n'
+        '  ${uniqueConstraints.map((c) => 'ADD ${c.toString()}').join(",\n  ")};',
+      );
     }
   }
 
   for (var table in diff.tables.modified) {
     var foreignKeyConstraints = table.constraints.added.whereType<ForeignKeyConstraint>().toList();
     if (foreignKeyConstraints.isNotEmpty) {
-      appendStatement('ALTER TABLE "${table.name}"\n'
-          '  ${foreignKeyConstraints.map((c) => 'ADD ${c.toString()}').join(",\n  ")};');
+      appendStatement(
+        'ALTER TABLE "${table.name}"\n'
+        '  ${foreignKeyConstraints.map((c) => 'ADD ${c.toString()}').join(",\n  ")};',
+      );
     }
   }
 
   for (var table in diff.tables.added) {
     var foreignKeyConstraints = table.constraints.whereType<ForeignKeyConstraint>().toList();
     if (foreignKeyConstraints.isNotEmpty) {
-      appendStatement('ALTER TABLE "${table.name}"\n'
-          '  ${foreignKeyConstraints.map((c) => 'ADD ${c.toString()}').join(",\n  ")};');
+      appendStatement(
+        'ALTER TABLE "${table.name}"\n'
+        '  ${foreignKeyConstraints.map((c) => 'ADD ${c.toString()}').join(",\n  ")};',
+      );
     }
   }
 

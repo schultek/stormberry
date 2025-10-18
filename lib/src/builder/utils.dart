@@ -25,12 +25,16 @@ class GlobalOptions {
   CaseStyle? columnCaseStyle;
 
   GlobalOptions.parse(Map<String, dynamic> options)
-      : tableCaseStyle = CaseStyle.fromString(options['tableCaseStyle'] as String? ??
+    : tableCaseStyle = CaseStyle.fromString(
+        options['tableCaseStyle'] as String? ??
             options['table_case_style'] as String? ??
-            'snakeCase'),
-        columnCaseStyle = CaseStyle.fromString(options['columnCaseStyle'] as String? ??
+            'snakeCase',
+      ),
+      columnCaseStyle = CaseStyle.fromString(
+        options['columnCaseStyle'] as String? ??
             options['column_case_style'] as String? ??
-            'snakeCase');
+            'snakeCase',
+      );
 }
 
 extension GetNode on Element {
@@ -64,9 +68,9 @@ String? getAnnotationCode(Element annotatedElement, Type annotationType, String 
 
   for (var annotation in annotations) {
     if (annotation.name.name == annotationType.toString()) {
-      var props = annotation.arguments!.arguments
-          .whereType<NamedExpression>()
-          .where((e) => e.name.label.name == property);
+      var props = annotation.arguments!.arguments.whereType<NamedExpression>().where(
+        (e) => e.name.label.name == property,
+      );
 
       if (props.isNotEmpty) {
         return props.first.expression.toSource();
@@ -96,7 +100,8 @@ extension ReaderSource on ConstantReader {
 
     if (isType) {
       return typeValue.getDisplayString(
-          withNullability: typeValue.nullabilitySuffix != NullabilitySuffix.star);
+        withNullability: typeValue.nullabilitySuffix != NullabilitySuffix.star,
+      );
     }
 
     var rev = revive();

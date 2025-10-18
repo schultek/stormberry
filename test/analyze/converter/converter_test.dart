@@ -103,9 +103,11 @@ void main() {
 
       expect(
         () => (column as NamedColumnElement).sqlType,
-        throwsA('The following field has an unsupported type:\n'
-            '  - Field "B? b" in class "abstract class A"\n'
-            'Either change the type to a supported column type, make the class a [Model] or use a custom [TypeConverter] with [@UseConverter].'),
+        throwsA(
+          'The following field has an unsupported type:\n'
+          '  - Field "B? b" in class "abstract class A"\n'
+          'Either change the type to a supported column type, make the class a [Model] or use a custom [TypeConverter] with [@UseConverter].',
+        ),
       );
     });
   });

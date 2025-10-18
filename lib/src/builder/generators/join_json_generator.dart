@@ -5,18 +5,11 @@ class JoinJsonGenerator {
   Map<String, dynamic> generateJsonSchema(JoinTableElement join) {
     return {
       'columns': {
-        join.firstName: {
-          'type': getSqlType(join.first.primaryKeyParameter!.type),
-        },
-        join.secondName: {
-          'type': getSqlType(join.second.primaryKeyParameter!.type),
-        },
+        join.firstName: {'type': getSqlType(join.first.primaryKeyParameter!.type)},
+        join.secondName: {'type': getSqlType(join.second.primaryKeyParameter!.type)},
       },
       'constraints': [
-        {
-          'type': 'primary_key',
-          'column': '${join.firstName}", "${join.secondName}',
-        },
+        {'type': 'primary_key', 'column': '${join.firstName}", "${join.secondName}'},
         {
           'type': 'foreign_key',
           'column': join.firstName,

@@ -34,7 +34,8 @@ class ViewGenerator {
         str.writeln('$signature;');
       } else {
         str.writeln(
-            '@override $signature {\nreturn queryMany(${view.className}Queryable(), params);\n}');
+          '@override $signature {\nreturn queryMany(${view.className}Queryable(), params);\n}',
+        );
       }
     }
 
