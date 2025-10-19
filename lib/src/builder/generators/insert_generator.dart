@@ -87,10 +87,14 @@ class InsertGenerator {
 
     String toInsertValue(NamedColumnElement e) {
       final converter = e.converter;
-      if (converter != null) {
-        return '\${values.add(${converter.toSource()}.tryEncode(r.${e.paramName}))}:${e.rawSqlType}';
+      final value =
+          converter != null
+              ? '\${values.add(${converter.toSource()}.tryEncode(r.${e.paramName}))}:${e.rawSqlType}'
+              : '\${values.add(r.${e.paramName})}:${e.rawSqlType}';
+      if (e.defaultValue != null) {
+        return '\${r.${e.paramName} != null ? \'$value\' : \'DEFAULT\'}';
       } else {
-        return '\${values.add(r.${e.paramName})}:${e.rawSqlType}';
+        return value;
       }
     }
 
@@ -121,7 +125,8 @@ class InsertGenerator {
         if (!column.isAutoIncrement) {
           requestFields.add(
             MapEntry(
-              column.parameter.type.getDisplayString(withNullability: true),
+              column.parameter.type.getDisplayString(withNullability: false) +
+                  (column.isNullable || column.defaultValue != null ? '?' : ''),
               column.paramName,
             ),
           );

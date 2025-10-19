@@ -41,6 +41,41 @@ abstract class Book {
 }
 ```
 
+## Default Values
+
+You can specify a SQL default value for a model field using the `@Default()` annotation.
+The annotation takes a raw SQL expression string which will be emitted verbatim into the generated `CREATE TABLE` statement.
+
+```dart
+@Model()
+abstract class Book {
+  @PrimaryKey()
+  String get id;
+
+  // string default (note the single quotes are part of the value)
+  @Default("'untitled'")
+  String get title;
+
+  // numeric default (no quotes)
+  @Default('0')
+  int get pageCount;
+
+  // datetime default using the provided convenience constructor
+  @Default.currentTimestamp()
+  DateTime get createdAt;
+}
+```
+
+When inserting a new value, any property that is not provided will be set to the default value.
+
+```dart
+db.books.insertOne(BookInsertRequest(
+  id: 'book0' 
+  // title, pageCount and createdAt are optional and 
+  // will be set to their default values if not provided
+));
+```
+
 ## Relations
 
 When using relational database systems, you model your data using relations, namely one-to-one,

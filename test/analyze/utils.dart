@@ -44,6 +44,7 @@ Matcher isFieldColumn({
   required bool isNullable,
   required String paramName,
   required bool isList,
+  String? defaultValue,
 }) {
   return allOf(
     isA<FieldColumnElement>(),
@@ -53,6 +54,7 @@ Matcher isFieldColumn({
       sqlType: sqlType,
       isNullable: isNullable,
       paramName: paramName,
+      defaultValue: defaultValue,
     ),
     _isListColumn(isList: isList),
   );
@@ -116,12 +118,16 @@ Matcher _isNamedColumn({
   required String sqlType,
   required bool isNullable,
   required String paramName,
+  String? defaultValue,
 }) {
   return allOf(
     isA<NamedColumnElement>(),
     _has<NamedColumnElement>('columnName', (c) => c.columnName, columnName),
     _has<NamedColumnElement>('sqlType', (c) => c.sqlType, sqlType),
     _has<NamedColumnElement>('isNullable', (c) => c.isNullable, isNullable),
+    defaultValue != null
+        ? _has<NamedColumnElement>('defaultValue', (c) => c.defaultValue, defaultValue)
+        : null,
     _isParameterColumn(paramName: paramName),
   );
 }

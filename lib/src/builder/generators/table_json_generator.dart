@@ -8,7 +8,11 @@ class TableJsonGenerator {
       'columns': {
         for (var column in table.columns)
           if (column is NamedColumnElement)
-            column.columnName: {'type': column.sqlType, if (column.isNullable) 'isNullable': true},
+            column.columnName: {
+              'type': column.sqlType,
+              if (column.isNullable) 'isNullable': true,
+              if (column.defaultValue case String v) 'default': v,
+            },
       },
       'constraints': [
         if (table.primaryKeyColumn != null)

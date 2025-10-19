@@ -1,3 +1,7 @@
+# Unreleased
+
+- Added support for default column values via the `@Default` annotation.
+
 # 0.17.0
 
 - Require dart sdk `>=3.7.0`.

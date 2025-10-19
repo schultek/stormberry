@@ -24,7 +24,11 @@ Future<DatabaseSchema> inspectDatabaseSchema(Session db) async {
       var columnType = columnMap['udt_name'] as String;
       var columnIsNullable = columnMap['is_nullable'];
       var columnDefault = columnMap['column_default'] as String?;
-      var columnIsAutoIncrement = columnDefault?.startsWith('nextval') ?? false;
+      var columnIsAutoIncrement = false;
+      if (columnDefault?.startsWith('nextval(\'${tableName}_${columnName}_seq\'') ?? false) {
+        columnIsAutoIncrement = true;
+        columnDefault = null;
+      }
 
       if (columnIsAutoIncrement && (columnType == 'int4' || columnType == 'int8')) {
         columnType = 'serial';
@@ -39,6 +43,7 @@ Future<DatabaseSchema> inspectDatabaseSchema(Session db) async {
         type: columnType,
         isNullable: columnIsNullable == 'YES',
         isAutoIncrement: columnIsAutoIncrement,
+        defaultValue: columnDefault,
       );
     }
   }

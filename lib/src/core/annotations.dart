@@ -121,6 +121,17 @@ class AutoIncrement {
   const AutoIncrement();
 }
 
+/// Used to annotate a field with a default value.
+///
+/// {@category Models}
+class Default {
+  final String value;
+
+  const Default(this.value);
+
+  const Default.currentTimestamp() : value = 'CURRENT_TIMESTAMP';
+}
+
 /// Used to annotate a relational field and specify a binding target.
 ///
 /// The binding target must be a field of the referenced model that

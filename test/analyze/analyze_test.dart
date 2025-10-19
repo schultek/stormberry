@@ -41,7 +41,9 @@ void main() {
           String get myString;
           List<int> get someNumbers;
           double? get randomFloat;
+          @Default('false')
           bool get isEnabled;
+          @Default.currentTimestamp()
           DateTime get howLate;
           Point get whereTo;
         }
@@ -98,6 +100,7 @@ void main() {
           paramName: 'isEnabled',
           isList: false,
           isNullable: false,
+          defaultValue: 'false',
         ),
       );
 
@@ -110,6 +113,7 @@ void main() {
           paramName: 'howLate',
           isList: false,
           isNullable: false,
+          defaultValue: 'CURRENT_TIMESTAMP',
         ),
       );
 

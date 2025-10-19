@@ -161,10 +161,15 @@ class MigrateCommand extends Command<void> {
             print('Database schema changed, applying updates now:');
 
             db.debugPrint = true;
-            updateWasSuccessFull = await db.runTx((session) async {
-              await diff.patch(db);
-              return true;
-            });
+            try {
+              await db.runTx((session) async {
+                await diff.patch(db);
+              });
+              updateWasSuccessFull = true;
+            } catch (e) {
+              print('---\nFAILED TO UPDATE: $e');
+              updateWasSuccessFull = false;
+            }
             db.debugPrint = false;
           }
 

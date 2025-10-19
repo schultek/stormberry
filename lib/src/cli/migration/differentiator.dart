@@ -27,7 +27,9 @@ extension SchemaDiff on DatabaseSchema {
               newTable.columns.values.where((c) => c.name == extColumn.name).firstOrNull;
           if (newColumn != null) {
             newTable.columns.removeWhere((_, c) => c == newColumn);
-            if (newColumn.type != extColumn.type || newColumn.isNullable != extColumn.isNullable) {
+            if (newColumn.type != extColumn.type ||
+                newColumn.isNullable != extColumn.isNullable ||
+                newColumn.defaultValue != extColumn.defaultValue) {
               tableDiff.columns.modified.add(Change(extColumn, newColumn));
             }
           } else {
@@ -111,10 +113,10 @@ class DatabaseSchemaDiff {
         var prev = column.prev;
         var newly = column.newly;
         print(
-          "-  COLUMN ${table.name}.${prev.name} ${prev.type} ${prev.isNullable ? 'NULL' : 'NOT NULL'}",
+          "-  COLUMN ${table.name}.${prev.name} ${prev.type} ${prev.isNullable ? 'NULL' : 'NOT NULL'}${prev.defaultValue != null ? ' DEFAULT ${prev.defaultValue}' : ''}",
         );
         print(
-          "+  COLUMN ${table.name}.${newly.name} ${newly.type} ${newly.isNullable ? 'NULL' : 'NOT NULL'}",
+          "+  COLUMN ${table.name}.${newly.name} ${newly.type} ${newly.isNullable ? 'NULL' : 'NOT NULL'}${newly.defaultValue != null ? ' DEFAULT ${newly.defaultValue}' : ''}",
         );
       }
 

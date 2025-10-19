@@ -18,6 +18,7 @@ final viewedInChecker = TypeChecker.typeNamed(ViewedIn, inPackage: 'stormberry')
 final transformedInChecker = TypeChecker.typeNamed(TransformedIn, inPackage: 'stormberry');
 final useConverterChecker = TypeChecker.typeNamed(UseConverter, inPackage: 'stormberry');
 final bindToChecker = TypeChecker.typeNamed(BindTo, inPackage: 'stormberry');
+final defaultChecker = TypeChecker.typeNamed(Default, inPackage: 'stormberry');
 
 /// The global builder options from the build.yaml file
 class GlobalOptions {

@@ -14,6 +14,7 @@ abstract mixin class NamedColumnElement implements ParameterColumnElement {
   bool get isNullable;
   String get sqlType;
   String get rawSqlType;
+  String? get defaultValue;
 }
 
 mixin RelationalColumnElement implements ColumnElement {

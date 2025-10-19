@@ -41,11 +41,19 @@ extension DiffPatch on DatabaseSchemaDiff {
               yield 'ALTER COLUMN "${c.prev.name}" SET DATA TYPE int4 USING ${c.newly.name}::int4';
               yield "ALTER COLUMN \"${c.prev.name}\" SET DEFAULT nextval('${table.name}_${c.newly.name}_seq')";
             } else {
-              var update =
-                  c.prev.type != c.newly.type
-                      ? 'SET DATA TYPE ${c.newly.type} USING ${c.newly.name}::${c.newly.type}'
-                      : '${c.newly.isNullable ? 'DROP' : 'SET'} NOT NULL';
-              yield 'ALTER COLUMN "${c.prev.name}" $update';
+              if (c.prev.type != c.newly.type) {
+                yield 'ALTER COLUMN "${c.prev.name}" SET DATA TYPE ${c.newly.type} USING ${c.newly.name}::${c.newly.type}';
+              }
+              if (c.prev.isNullable != c.newly.isNullable) {
+                yield 'ALTER COLUMN "${c.prev.name}" ${c.newly.isNullable ? 'DROP' : 'SET'} NOT NULL';
+              }
+              if (c.prev.defaultValue != c.newly.defaultValue) {
+                if (c.newly.defaultValue != null) {
+                  yield 'ALTER COLUMN "${c.prev.name}" SET DEFAULT ${c.newly.defaultValue}';
+                } else {
+                  yield 'ALTER COLUMN "${c.prev.name}" DROP DEFAULT';
+                }
+              }
             }
           }),
         ];

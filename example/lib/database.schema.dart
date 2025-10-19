@@ -17,6 +17,10 @@ final DatabaseSchema schema = DatabaseSchema.fromMap({
       "invoice_id": {
         "type": "text"
       },
+      "created_at": {
+        "type": "timestamp",
+        "default": "CURRENT_TIMESTAMP"
+      },
       "account_id": {
         "type": "int8",
         "isNullable": true

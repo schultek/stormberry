@@ -8,7 +8,7 @@ final modelSchemaId = AssetId.parse('model|model.schema.dart');
 
 void main() {
   group('schema builder', () {
-    group('generates modified schema', () {
+    group('generates meta schema', () {
       late TestBuilderResult result;
 
       setUpAll(() async {

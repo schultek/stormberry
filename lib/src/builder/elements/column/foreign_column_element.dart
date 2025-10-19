@@ -50,4 +50,7 @@ class ForeignColumnElement extends ColumnElement
       return true;
     }
   }
+
+  @override
+  String? get defaultValue => null;
 }

@@ -98,12 +98,14 @@ class ColumnSchema {
   final String type;
   final bool isNullable;
   final bool isAutoIncrement;
+  final String? defaultValue;
 
   const ColumnSchema(
     this.name, {
     required this.type,
     this.isNullable = false,
     bool? isAutoIncrement,
+    this.defaultValue,
   }) : isAutoIncrement = isAutoIncrement ?? (type == 'serial');
 
   factory ColumnSchema.fromMap(String name, Map<String, dynamic> map) {
@@ -111,6 +113,7 @@ class ColumnSchema {
       name,
       type: map['type']! as String,
       isNullable: (map['isNullable'] as bool?) ?? false,
+      defaultValue: map['default'] as String?,
     );
   }
 }

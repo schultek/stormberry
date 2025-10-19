@@ -15,6 +15,9 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
 
   late final bool isAutoIncrement;
 
+  @override
+  late final String? defaultValue;
+
   FieldColumnElement(this.parameter, TableElement parentTable, BuilderState state)
     : super(parentTable, state) {
     isAutoIncrement =
@@ -33,6 +36,16 @@ class FieldColumnElement extends ColumnElement with NamedColumnElement {
       var r = ConstantReader(bindToChecker.annotationsOf(parameter.getter ?? parameter).first);
       throw 'Column field was annotated with "${r.toSource()}", which is not supported.\n'
           '  - ${parameter.displayString()}';
+    }
+
+    final defaultAnnotation =
+        defaultChecker.firstAnnotationOf(parameter) ??
+        defaultChecker.firstAnnotationOf(getter ?? parameter);
+    if (defaultAnnotation != null) {
+      var r = ConstantReader(defaultAnnotation);
+      defaultValue = r.read('value').stringValue;
+    } else {
+      defaultValue = null;
     }
   }
 

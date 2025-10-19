@@ -12,6 +12,9 @@ abstract class Invoice {
   String get title;
   String get invoiceId;
 
+  @Default.currentTimestamp()
+  DateTime get createdAt;
+
   @HiddenIn(#Owner)
   Account? get account;
 
