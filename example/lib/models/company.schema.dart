@@ -64,10 +64,10 @@ class _CompanyRepository extends BaseRepository
       parameters: values.values,
     );
 
-    await db.billingAddresses.insertMany(
-      requests.expand((r) {
-        return r.addresses.map(
-          (rr) => BillingAddressInsertRequest(
+    await db.billingAddresses.insertMany([
+      for (final r in requests)
+        for (final rr in r.addresses)
+          BillingAddressInsertRequest(
             city: rr.city,
             postcode: rr.postcode,
             name: rr.name,
@@ -75,38 +75,43 @@ class _CompanyRepository extends BaseRepository
             accountId: null,
             companyId: r.id,
           ),
-        );
-      }).toList(),
-    );
+    ]);
   }
 
   @override
   Future<void> update(List<CompanyUpdateRequest> requests) async {
     if (requests.isEmpty) return;
-    var values = QueryValues();
-    await db.execute(
-      Sql.named(
-        'UPDATE "companies"\n'
-        'SET "name" = COALESCE(UPDATED."name", "companies"."name")\n'
-        'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:text::text, ${values.add(r.name)}:text::text )').join(', ')} )\n'
-        'AS UPDATED("id", "name")\n'
-        'WHERE "companies"."id" = UPDATED."id"',
-      ),
-      parameters: values.values,
-    );
-    await db.billingAddresses.updateMany(
-      requests.where((r) => r.addresses != null).expand((r) {
-        return r.addresses!.map(
-          (rr) => BillingAddressUpdateRequest(
-            city: rr.city,
-            postcode: rr.postcode,
-            name: rr.name,
-            street: rr.street,
-            companyId: r.id,
-          ),
-        );
-      }).toList(),
-    );
+
+    final updateRequests = [
+      for (final r in requests)
+        if (r.name != null) r,
+    ];
+
+    if (updateRequests.isNotEmpty) {
+      var values = QueryValues();
+      await db.execute(
+        Sql.named(
+          'UPDATE "companies"\n'
+          'SET "name" = COALESCE(UPDATED."name", "companies"."name")\n'
+          'FROM ( VALUES ${updateRequests.map((r) => '( ${values.add(r.id)}:text::text, ${values.add(r.name)}:text::text )').join(', ')} )\n'
+          'AS UPDATED("id", "name")\n'
+          'WHERE "companies"."id" = UPDATED."id"',
+        ),
+        parameters: values.values,
+      );
+    }
+    await db.billingAddresses.updateMany([
+      for (final r in requests)
+        if (r.addresses case final addresses?)
+          for (final rr in addresses)
+            BillingAddressUpdateRequest(
+              city: rr.city,
+              postcode: rr.postcode,
+              name: rr.name,
+              street: rr.street,
+              companyId: r.id,
+            ),
+    ]);
   }
 }
 

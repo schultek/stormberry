@@ -52,6 +52,8 @@ class RepositoryGenerator {
         ${InsertGenerator().generateInsertMethod(table)}
         
         ${UpdateGenerator().generateUpdateMethod(table)}
+
+        ${InsertGenerator().generateJoinMethods(table)}
       }
     ''';
   }

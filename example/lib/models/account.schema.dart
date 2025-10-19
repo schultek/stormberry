@@ -80,18 +80,23 @@ class _AccountRepository extends BaseRepository
         .map<int>((r) => TextEncoder.i.decode(r.toColumnMap()['id']))
         .toList();
 
-    await db.billingAddresses.insertMany(
-      requests.where((r) => r.billingAddress != null).map((r) {
-        return BillingAddressInsertRequest(
-          city: r.billingAddress!.city,
-          postcode: r.billingAddress!.postcode,
-          name: r.billingAddress!.name,
-          street: r.billingAddress!.street,
-          accountId: result[requests.indexOf(r)],
-          companyId: null,
-        );
-      }).toList(),
-    );
+    await db.billingAddresses.insertMany([
+      for (final r in requests)
+        if (r.billingAddress case final billingAddress?)
+          BillingAddressInsertRequest(
+            city: billingAddress.city,
+            postcode: billingAddress.postcode,
+            name: billingAddress.name,
+            street: billingAddress.street,
+            accountId: result[requests.indexOf(r)],
+            companyId: null,
+          ),
+    ]);
+    await _updateParties([
+      for (final r in requests)
+        if (r.partiesIds case final partiesIds?)
+          (result[requests.indexOf(r)], UpdateValues.set(partiesIds)),
+    ]);
 
     return result;
   }
@@ -99,28 +104,93 @@ class _AccountRepository extends BaseRepository
   @override
   Future<void> update(List<AccountUpdateRequest> requests) async {
     if (requests.isEmpty) return;
-    var values = QueryValues();
-    await db.execute(
-      Sql.named(
-        'UPDATE "accounts"\n'
-        'SET "first_name" = COALESCE(UPDATED."first_name", "accounts"."first_name"), "last_name" = COALESCE(UPDATED."last_name", "accounts"."last_name"), "location" = COALESCE(UPDATED."location", "accounts"."location"), "company_id" = COALESCE(UPDATED."company_id", "accounts"."company_id")\n'
-        'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:int8::int8, ${values.add(r.firstName)}:text::text, ${values.add(r.lastName)}:text::text, ${values.add(LatLngConverter().tryEncode(r.location))}:point::point, ${values.add(r.companyId)}:text::text )').join(', ')} )\n'
-        'AS UPDATED("id", "first_name", "last_name", "location", "company_id")\n'
-        'WHERE "accounts"."id" = UPDATED."id"',
-      ),
-      parameters: values.values,
-    );
-    await db.billingAddresses.updateMany(
-      requests.where((r) => r.billingAddress != null).map((r) {
-        return BillingAddressUpdateRequest(
-          city: r.billingAddress!.city,
-          postcode: r.billingAddress!.postcode,
-          name: r.billingAddress!.name,
-          street: r.billingAddress!.street,
-          accountId: r.id,
-        );
-      }).toList(),
-    );
+
+    final updateRequests = [
+      for (final r in requests)
+        if (r.firstName != null ||
+            r.lastName != null ||
+            r.location != null ||
+            r.companyId != null)
+          r,
+    ];
+
+    if (updateRequests.isNotEmpty) {
+      var values = QueryValues();
+      await db.execute(
+        Sql.named(
+          'UPDATE "accounts"\n'
+          'SET "first_name" = COALESCE(UPDATED."first_name", "accounts"."first_name"), "last_name" = COALESCE(UPDATED."last_name", "accounts"."last_name"), "location" = COALESCE(UPDATED."location", "accounts"."location"), "company_id" = COALESCE(UPDATED."company_id", "accounts"."company_id")\n'
+          'FROM ( VALUES ${updateRequests.map((r) => '( ${values.add(r.id)}:int8::int8, ${values.add(r.firstName)}:text::text, ${values.add(r.lastName)}:text::text, ${values.add(LatLngConverter().tryEncode(r.location))}:point::point, ${values.add(r.companyId)}:text::text )').join(', ')} )\n'
+          'AS UPDATED("id", "first_name", "last_name", "location", "company_id")\n'
+          'WHERE "accounts"."id" = UPDATED."id"',
+        ),
+        parameters: values.values,
+      );
+    }
+    await db.billingAddresses.updateMany([
+      for (final r in requests)
+        if (r.billingAddress case final billingAddress?)
+          BillingAddressUpdateRequest(
+            city: billingAddress.city,
+            postcode: billingAddress.postcode,
+            name: billingAddress.name,
+            street: billingAddress.street,
+            accountId: r.id,
+          ),
+    ]);
+    await _updateParties([
+      for (final r in requests)
+        if (r.parties case final parties?) (r.id, parties),
+    ]);
+  }
+
+  Future<void> _updateParties(List<(int, UpdateValues<String>)> updates) async {
+    if (updates.isEmpty) return;
+
+    final removeAllValues = [
+      for (final u in updates)
+        if (u.$2.mode == ValueMode.set) u.$1,
+    ];
+    final removeValues = [
+      for (final u in updates)
+        if (u.$2.mode == ValueMode.remove)
+          for (final v in u.$2.values) (u.$1, v),
+    ];
+    final addValues = [
+      for (final u in updates)
+        if (u.$2.mode == ValueMode.add || u.$2.mode == ValueMode.set)
+          for (final v in u.$2.values) (u.$1, v),
+    ];
+
+    if (removeAllValues.isNotEmpty) {
+      final queryValues = QueryValues();
+      await db.execute(
+        Sql.named(
+          'DELETE FROM "accounts_parties" WHERE "account_id" IN ( ${removeAllValues.map((v) => queryValues.add(v)).join(', ')} )',
+        ),
+        parameters: queryValues.values,
+      );
+    }
+
+    if (removeValues.isNotEmpty) {
+      final queryValues = QueryValues();
+      await db.execute(
+        Sql.named(
+          'DELETE FROM "accounts_parties" WHERE ( "account_id", "party_id" ) IN ( ${removeValues.map((v) => '( ${queryValues.add(v.$1)}, ${queryValues.add(v.$2)} )').join(', ')} )',
+        ),
+        parameters: queryValues.values,
+      );
+    }
+
+    if (addValues.isNotEmpty) {
+      final queryValues = QueryValues();
+      await db.execute(
+        Sql.named(
+          'INSERT INTO "accounts_parties" ( "account_id", "party_id" ) VALUES ${addValues.map((v) => '( ${queryValues.add(v.$1)}, ${queryValues.add(v.$2)} )').join(', ')}',
+        ),
+        parameters: queryValues.values,
+      );
+    }
   }
 }
 
@@ -131,6 +201,7 @@ class AccountInsertRequest {
     required this.location,
     this.billingAddress,
     this.companyId,
+    this.partiesIds,
   });
 
   final String firstName;
@@ -138,6 +209,7 @@ class AccountInsertRequest {
   final LatLng location;
   final BillingAddress? billingAddress;
   final String? companyId;
+  final List<String>? partiesIds;
 }
 
 class AccountUpdateRequest {
@@ -148,6 +220,7 @@ class AccountUpdateRequest {
     this.location,
     this.billingAddress,
     this.companyId,
+    this.parties,
   });
 
   final int id;
@@ -156,6 +229,7 @@ class AccountUpdateRequest {
   final LatLng? location;
   final BillingAddress? billingAddress;
   final String? companyId;
+  final UpdateValues<String>? parties;
 }
 
 class FullAccountViewQueryable

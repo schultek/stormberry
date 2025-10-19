@@ -14,3 +14,14 @@ mixin RepositoryUpdateMixin<UpdateRequest> on BaseRepository
 
   Future<void> update(List<UpdateRequest> requests);
 }
+
+class UpdateValues<T> {
+  final ValueMode mode;
+  final List<T> values;
+
+  UpdateValues.set(this.values) : mode = ValueMode.set;
+  UpdateValues.add(this.values) : mode = ValueMode.add;
+  UpdateValues.remove(this.values) : mode = ValueMode.remove;
+}
+
+enum ValueMode { set, add, remove }

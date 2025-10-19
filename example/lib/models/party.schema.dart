@@ -63,22 +63,89 @@ class _PartyRepository extends BaseRepository
       ),
       parameters: values.values,
     );
+
+    await _updateGuests([
+      for (final r in requests)
+        if (r.guestsIds case final guestsIds?)
+          (r.id, UpdateValues.set(guestsIds)),
+    ]);
   }
 
   @override
   Future<void> update(List<PartyUpdateRequest> requests) async {
     if (requests.isEmpty) return;
-    var values = QueryValues();
-    await db.execute(
-      Sql.named(
-        'UPDATE "parties"\n'
-        'SET "name" = COALESCE(UPDATED."name", "parties"."name"), "sponsor_id" = COALESCE(UPDATED."sponsor_id", "parties"."sponsor_id"), "date" = COALESCE(UPDATED."date", "parties"."date")\n'
-        'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:text::text, ${values.add(r.name)}:text::text, ${values.add(r.sponsorId)}:text::text, ${values.add(r.date)}:int8::int8 )').join(', ')} )\n'
-        'AS UPDATED("id", "name", "sponsor_id", "date")\n'
-        'WHERE "parties"."id" = UPDATED."id"',
-      ),
-      parameters: values.values,
-    );
+
+    final updateRequests = [
+      for (final r in requests)
+        if (r.name != null || r.sponsorId != null || r.date != null) r,
+    ];
+
+    if (updateRequests.isNotEmpty) {
+      var values = QueryValues();
+      await db.execute(
+        Sql.named(
+          'UPDATE "parties"\n'
+          'SET "name" = COALESCE(UPDATED."name", "parties"."name"), "sponsor_id" = COALESCE(UPDATED."sponsor_id", "parties"."sponsor_id"), "date" = COALESCE(UPDATED."date", "parties"."date")\n'
+          'FROM ( VALUES ${updateRequests.map((r) => '( ${values.add(r.id)}:text::text, ${values.add(r.name)}:text::text, ${values.add(r.sponsorId)}:text::text, ${values.add(r.date)}:int8::int8 )').join(', ')} )\n'
+          'AS UPDATED("id", "name", "sponsor_id", "date")\n'
+          'WHERE "parties"."id" = UPDATED."id"',
+        ),
+        parameters: values.values,
+      );
+    }
+    await _updateGuests([
+      for (final r in requests)
+        if (r.guests case final guests?) (r.id, guests),
+    ]);
+  }
+
+  Future<void> _updateGuests(List<(String, UpdateValues<int>)> updates) async {
+    if (updates.isEmpty) return;
+
+    final removeAllValues = [
+      for (final u in updates)
+        if (u.$2.mode == ValueMode.set) u.$1,
+    ];
+    final removeValues = [
+      for (final u in updates)
+        if (u.$2.mode == ValueMode.remove)
+          for (final v in u.$2.values) (u.$1, v),
+    ];
+    final addValues = [
+      for (final u in updates)
+        if (u.$2.mode == ValueMode.add || u.$2.mode == ValueMode.set)
+          for (final v in u.$2.values) (u.$1, v),
+    ];
+
+    if (removeAllValues.isNotEmpty) {
+      final queryValues = QueryValues();
+      await db.execute(
+        Sql.named(
+          'DELETE FROM "accounts_parties" WHERE "party_id" IN ( ${removeAllValues.map((v) => queryValues.add(v)).join(', ')} )',
+        ),
+        parameters: queryValues.values,
+      );
+    }
+
+    if (removeValues.isNotEmpty) {
+      final queryValues = QueryValues();
+      await db.execute(
+        Sql.named(
+          'DELETE FROM "accounts_parties" WHERE ( "party_id", "account_id" ) IN ( ${removeValues.map((v) => '( ${queryValues.add(v.$1)}, ${queryValues.add(v.$2)} )').join(', ')} )',
+        ),
+        parameters: queryValues.values,
+      );
+    }
+
+    if (addValues.isNotEmpty) {
+      final queryValues = QueryValues();
+      await db.execute(
+        Sql.named(
+          'INSERT INTO "accounts_parties" ( "party_id", "account_id" ) VALUES ${addValues.map((v) => '( ${queryValues.add(v.$1)}, ${queryValues.add(v.$2)} )').join(', ')}',
+        ),
+        parameters: queryValues.values,
+      );
+    }
   }
 }
 
@@ -86,21 +153,30 @@ class PartyInsertRequest {
   PartyInsertRequest({
     required this.id,
     required this.name,
+    this.guestsIds,
     this.sponsorId,
     required this.date,
   });
 
   final String id;
   final String name;
+  final List<int>? guestsIds;
   final String? sponsorId;
   final int date;
 }
 
 class PartyUpdateRequest {
-  PartyUpdateRequest({required this.id, this.name, this.sponsorId, this.date});
+  PartyUpdateRequest({
+    required this.id,
+    this.name,
+    this.guests,
+    this.sponsorId,
+    this.date,
+  });
 
   final String id;
   final String? name;
+  final UpdateValues<int>? guests;
   final String? sponsorId;
   final int? date;
 }

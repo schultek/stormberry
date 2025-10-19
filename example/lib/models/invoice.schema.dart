@@ -56,17 +56,30 @@ class _InvoiceRepository extends BaseRepository
   @override
   Future<void> update(List<InvoiceUpdateRequest> requests) async {
     if (requests.isEmpty) return;
-    var values = QueryValues();
-    await db.execute(
-      Sql.named(
-        'UPDATE "invoices"\n'
-        'SET "title" = COALESCE(UPDATED."title", "invoices"."title"), "invoice_id" = COALESCE(UPDATED."invoice_id", "invoices"."invoice_id"), "created_at" = COALESCE(UPDATED."created_at", "invoices"."created_at"), "account_id" = COALESCE(UPDATED."account_id", "invoices"."account_id"), "company_id" = COALESCE(UPDATED."company_id", "invoices"."company_id")\n'
-        'FROM ( VALUES ${requests.map((r) => '( ${values.add(r.id)}:text::text, ${values.add(r.title)}:text::text, ${values.add(r.invoiceId)}:text::text, ${values.add(r.createdAt)}:timestamp::timestamp, ${values.add(r.accountId)}:int8::int8, ${values.add(r.companyId)}:text::text )').join(', ')} )\n'
-        'AS UPDATED("id", "title", "invoice_id", "created_at", "account_id", "company_id")\n'
-        'WHERE "invoices"."id" = UPDATED."id"',
-      ),
-      parameters: values.values,
-    );
+
+    final updateRequests = [
+      for (final r in requests)
+        if (r.title != null ||
+            r.invoiceId != null ||
+            r.createdAt != null ||
+            r.accountId != null ||
+            r.companyId != null)
+          r,
+    ];
+
+    if (updateRequests.isNotEmpty) {
+      var values = QueryValues();
+      await db.execute(
+        Sql.named(
+          'UPDATE "invoices"\n'
+          'SET "title" = COALESCE(UPDATED."title", "invoices"."title"), "invoice_id" = COALESCE(UPDATED."invoice_id", "invoices"."invoice_id"), "created_at" = COALESCE(UPDATED."created_at", "invoices"."created_at"), "account_id" = COALESCE(UPDATED."account_id", "invoices"."account_id"), "company_id" = COALESCE(UPDATED."company_id", "invoices"."company_id")\n'
+          'FROM ( VALUES ${updateRequests.map((r) => '( ${values.add(r.id)}:text::text, ${values.add(r.title)}:text::text, ${values.add(r.invoiceId)}:text::text, ${values.add(r.createdAt)}:timestamp::timestamp, ${values.add(r.accountId)}:int8::int8, ${values.add(r.companyId)}:text::text )').join(', ')} )\n'
+          'AS UPDATED("id", "title", "invoice_id", "created_at", "account_id", "company_id")\n'
+          'WHERE "invoices"."id" = UPDATED."id"',
+        ),
+        parameters: values.values,
+      );
+    }
   }
 }
 

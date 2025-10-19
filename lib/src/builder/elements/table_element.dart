@@ -317,7 +317,7 @@ class TableElement {
     if (primaryKeyColumn == null) return null;
     var name = base ?? _getTableName(singular: true);
     if (base != null && plural && name.endsWith('s')) {
-      name = name.substring(0, base.length - (base.endsWith('es') ? 2 : 1));
+      name = name.substring(0, name.length - (name.endsWith('es') ? 2 : 1));
     }
     name = state.options.columnCaseStyle.transform('$name-${primaryKeyColumn!.columnName}');
     if (plural) {

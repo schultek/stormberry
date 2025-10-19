@@ -1,5 +1,6 @@
 import 'package:analyzer/dart/element/element.dart';
 
+import '../../../core/case_style.dart';
 import '../../schema.dart';
 import '../join_table_element.dart';
 import '../table_element.dart';
@@ -31,6 +32,13 @@ class JoinColumnElement extends ColumnElement with RelationalColumnElement, Link
 
   String get columnName =>
       parentTable.getForeignKeyName()! + (referencedColumn.parentTable == parentTable ? '_a' : '');
+
+  String get paramName => CaseStyle.camelCase.transform(
+    linkedTable.getForeignKeyName(
+      plural: true,
+      base: '${parameter.name ?? parentTable.tableName}es',
+    )!,
+  );
 
   @override
   bool get isList => true;

@@ -1,6 +1,8 @@
+import '../../core/case_style.dart';
 import '../elements/column/column_element.dart';
 import '../elements/column/field_column_element.dart';
 import '../elements/column/foreign_column_element.dart';
+import '../elements/column/join_column_element.dart';
 import '../elements/column/reference_column_element.dart';
 import '../elements/table_element.dart';
 import '../utils.dart';
@@ -9,53 +11,66 @@ class UpdateGenerator {
   String generateUpdateMethod(TableElement table) {
     var deepUpdates = <String>[];
 
-    for (var column in table.columns.whereType<ReferenceColumnElement>().where(
-      (c) => c.linkedTable.primaryKeyColumn == null,
-    )) {
-      if (column.linkedTable.columns
-          .where((c) => c is ForeignColumnElement && c.linkedTable != table && !c.isNullable)
-          .isNotEmpty) {
-        continue;
+    for (var column in table.columns) {
+      if (column is ReferenceColumnElement && column.linkedTable.primaryKeyColumn == null) {
+        // Skip if there is a non-nullable foreign key to some other table.
+        if (column.linkedTable.columns
+            .where((c) => c is ForeignColumnElement && c.linkedTable != table && !c.isNullable)
+            .isNotEmpty) {
+          continue;
+        }
+
+        if (!column.isList) {
+          var requestParams = <String>[];
+          for (var c in column.linkedTable.columns.whereType<ParameterColumnElement>()) {
+            if (c is ForeignColumnElement) {
+              if (c.linkedTable == table) {
+                requestParams.add('${c.paramName}: r.${table.primaryKeyColumn!.paramName}');
+              }
+            } else {
+              requestParams.add('${c.paramName}: ${column.paramName}.${c.paramName}');
+            }
+          }
+
+          var deepUpdate = '''
+            await db.${column.linkedTable.repoName}.updateMany([
+              for (final r in requests) if (r.${column.paramName} case final ${column.paramName}?)
+                ${column.linkedTable.element.name}UpdateRequest(${requestParams.join(', ')}),
+            ]);
+          ''';
+
+          deepUpdates.add(deepUpdate);
+        } else {
+          var requestParams = <String>[];
+          for (var c in column.linkedTable.columns.whereType<ParameterColumnElement>()) {
+            if (c is ForeignColumnElement) {
+              if (c.linkedTable == table) {
+                requestParams.add('${c.paramName}: r.${table.primaryKeyColumn!.paramName}');
+              }
+            } else {
+              requestParams.add('${c.paramName}: rr.${c.paramName}');
+            }
+          }
+
+          var deepUpdate = '''
+            await db.${column.linkedTable.repoName}.updateMany([
+              for (final r in requests) if (r.${column.paramName} case final ${column.paramName}?)
+                for (final rr in ${column.paramName})
+                  ${column.linkedTable.element.name}UpdateRequest(${requestParams.join(', ')}),
+            ]);
+          ''';
+
+          deepUpdates.add(deepUpdate);
+        }
       }
-
-      if (!column.isList) {
-        var requestParams = <String>[];
-        for (var c in column.linkedTable.columns.whereType<ParameterColumnElement>()) {
-          if (c is ForeignColumnElement) {
-            if (c.linkedTable == table) {
-              requestParams.add('${c.paramName}: r.${table.primaryKeyColumn!.paramName}');
-            }
-          } else {
-            requestParams.add('${c.paramName}: r.${column.paramName}!.${c.paramName}');
-          }
-        }
-
-        var deepUpdate = '''
-          await db.${column.linkedTable.repoName}.updateMany(requests.where((r) => r.${column.paramName} != null).map((r) {
-            return ${column.linkedTable.element.name}UpdateRequest(${requestParams.join(', ')});
-          }).toList());
-        ''';
-
-        deepUpdates.add(deepUpdate);
-      } else {
-        var requestParams = <String>[];
-        for (var c in column.linkedTable.columns.whereType<ParameterColumnElement>()) {
-          if (c is ForeignColumnElement) {
-            if (c.linkedTable == table) {
-              requestParams.add('${c.paramName}: r.${table.primaryKeyColumn!.paramName}');
-            }
-          } else {
-            requestParams.add('${c.paramName}: rr.${c.paramName}');
-          }
-        }
-
-        var deepUpdate = '''
-          await db.${column.linkedTable.repoName}.updateMany(requests.where((r) => r.${column.paramName} != null).expand((r) {
-            return r.${column.paramName}!.map((rr) => ${column.linkedTable.element.name}UpdateRequest(${requestParams.join(', ')}));
-          }).toList());
-        ''';
-
-        deepUpdates.add(deepUpdate);
+      if (column is JoinColumnElement) {
+        deepUpdates.add('''
+          await _update${CaseStyle.pascalCase.transform(column.parameter.name ?? '')}([
+            for (final r in requests) 
+              if (r.${column.parameter.name} case final ${column.parameter.name}?) 
+                (r.${table.primaryKeyColumn!.paramName}, ${column.parameter.name}),
+          ]);
+        ''');
       }
     }
 
@@ -94,15 +109,24 @@ class UpdateGenerator {
         @override
         Future<void> update(List<${table.element.name}UpdateRequest> requests) async {
           if (requests.isEmpty) return;
-          var values = QueryValues();
-          await db.execute(
-            Sql.named('UPDATE "${table.tableName}"\\n'
-            'SET ${setColumns.map((c) => '"${c.columnName}" = COALESCE(UPDATED."${c.columnName}", "${table.tableName}"."${c.columnName}")').join(', ')}\\n'
-            'FROM ( VALUES \${requests.map((r) => '( ${updateColumns.map(toUpdateValue).join(', ')} )').join(', ')} )\\n'
-            'AS UPDATED(${updateColumns.map((c) => '"${c.columnName}"').join(', ')})\\n'
-            'WHERE $whereClause'),
-            parameters: values.values,
-          );
+
+          final updateRequests = [
+            for (final r in requests)
+              if (${updateColumns.where((c) => c != table.primaryKeyColumn).map((c) => 'r.${c.paramName} != null').join(' || ')})
+                r
+          ];
+
+          if (updateRequests.isNotEmpty) {
+            var values = QueryValues();
+            await db.execute(
+              Sql.named('UPDATE "${table.tableName}"\\n'
+              'SET ${setColumns.map((c) => '"${c.columnName}" = COALESCE(UPDATED."${c.columnName}", "${table.tableName}"."${c.columnName}")').join(', ')}\\n'
+              'FROM ( VALUES \${updateRequests.map((r) => '( ${updateColumns.map(toUpdateValue).join(', ')} )').join(', ')} )\\n'
+              'AS UPDATED(${updateColumns.map((c) => '"${c.columnName}"').join(', ')})\\n'
+              'WHERE $whereClause'),
+              parameters: values.values,
+            );
+          }
           ${deepUpdates.isNotEmpty ? deepUpdates.join() : ''}
         }
       ''';
@@ -115,6 +139,7 @@ class UpdateGenerator {
     for (var column in table.columns) {
       if (column is FieldColumnElement) {
         if (column == table.primaryKeyColumn || !column.isAutoIncrement) {
+          // Regular field column.
           requestFields.add(
             MapEntry(
               column.parameter.type.getDisplayString(withNullability: false) +
@@ -124,11 +149,13 @@ class UpdateGenerator {
           );
         }
       } else if (column is ReferenceColumnElement && column.linkedTable.primaryKeyColumn == null) {
-        if (column.linkedTable.columns
-            .where((c) => c is ForeignColumnElement && c.linkedTable != table && !c.isNullable)
-            .isNotEmpty) {
+        // Skip if there is a non-nullable foreign key to some other table.
+        if (column.linkedTable.columns.any(
+          (c) => c is ForeignColumnElement && c.linkedTable != table && !c.isNullable,
+        )) {
           continue;
         }
+        // Virtual one-to-one or one-to-many relation column.
         requestFields.add(
           MapEntry(
             column.parameter!.type.getDisplayString(withNullability: false) +
@@ -137,6 +164,7 @@ class UpdateGenerator {
           ),
         );
       } else if (column is ForeignColumnElement) {
+        // Foreign key column.
         var fieldNullSuffix = column == table.primaryKeyColumn ? '' : '?';
         String fieldType;
         if (column.linkedTable.primaryKeyColumn == null) {
@@ -148,6 +176,10 @@ class UpdateGenerator {
           fieldType = column.linkedTable.primaryKeyColumn!.dartType;
         }
         requestFields.add(MapEntry('$fieldType$fieldNullSuffix', column.paramName));
+      } else if (column is JoinColumnElement) {
+        // Virtual many-to-many relation column.
+        var fieldType = 'UpdateValues<${column.linkedTable.primaryKeyColumn!.dartType}>?';
+        requestFields.add(MapEntry(fieldType, column.parameter.name ?? ''));
       }
     }
 
