@@ -22,6 +22,7 @@ abstract class BaseRepository implements ModelRepository {
 
   BaseRepository(this.db, {required this.tableName, this.keyName});
 
+  /// Queries a single row by its key.
   Future<T?> queryOne<T, K>(K key, KeyedViewQueryable<T, K> q) async {
     var params = QueryParams(
       where: '"${q.tableAlias}"."${q.keyName}" = ${q.encodeKey(key)}',
@@ -30,15 +31,20 @@ abstract class BaseRepository implements ModelRepository {
     return (await queryMany(q, params)).firstOrNull;
   }
 
+  /// Queries multiple rows.
+  ///
+  /// The [params] can be used to filter, order, limit and offset the results.
   Future<List<T>> queryMany<T>(ViewQueryable<T> q, [QueryParams? params]) {
     return query(ViewQuery<T>(q), params ?? const QueryParams());
   }
 
+  /// Runs a query on the database.
   @override
   Future<T> query<T, U>(Query<T, U> query, U params) {
     return query.apply(db, params);
   }
 
+  /// Runs an action on the database.
   @override
   Future<void> run<T>(Action<T> action, T request) {
     return action.apply(db, request);

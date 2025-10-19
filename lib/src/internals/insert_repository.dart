@@ -1,12 +1,18 @@
 import 'base_repository.dart';
 
 abstract class ModelRepositoryInsert<InsertRequest> {
+  /// Inserts a single row.
   Future<void> insertOne(InsertRequest request);
+
+  /// Inserts multiple rows.
   Future<void> insertMany(List<InsertRequest> requests);
 }
 
 abstract class KeyedModelRepositoryInsert<InsertRequest> {
+  /// Inserts a single row and returns its generated key.
   Future<int> insertOne(InsertRequest request);
+
+  /// Inserts multiple rows and returns their generated keys.
   Future<List<int>> insertMany(List<InsertRequest> requests);
 }
 

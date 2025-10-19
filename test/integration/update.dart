@@ -40,5 +40,36 @@ void testUpdate() {
       expect(as.first, predicate<AView>((a) => a.id == 'abc' && a.a == 'test'));
       expect(as.last, predicate<AView>((a) => a.id == 'def' && a.a == 'world'));
     });
+
+    test('with many-to-many relation', () async {
+      await tester.db.cs.insertOne(CInsertRequest(id: 'c1'));
+      await tester.db.ds.insertOne(DInsertRequest(id: 'd1', csIds: ['c1']));
+      await tester.db.ds.insertOne(DInsertRequest(id: 'd2'));
+
+      var cs = await tester.db.cs.queryFullViews();
+
+      expect(cs, hasLength(1));
+      expect(cs.first.ds, hasLength(1));
+
+      await tester.db.cs.updateOne(CUpdateRequest(id: 'c1', ds: UpdateValues.set(['d1'])));
+
+      cs = await tester.db.cs.queryFullViews();
+      expect(cs, hasLength(1));
+      expect(cs.first.ds, hasLength(1));
+      expect(cs.first.ds.first.id, 'd1');
+
+      await tester.db.cs.updateOne(CUpdateRequest(id: 'c1', ds: UpdateValues.add(['d2'])));
+
+      cs = await tester.db.cs.queryFullViews();
+      expect(cs, hasLength(1));
+      expect(cs.first.ds, hasLength(2));
+
+      await tester.db.cs.updateOne(CUpdateRequest(id: 'c1', ds: UpdateValues.remove(['d1'])));
+
+      cs = await tester.db.cs.queryFullViews();
+      expect(cs, hasLength(1));
+      expect(cs.first.ds, hasLength(1));
+      expect(cs.first.ds.first.id, 'd2');
+    });
   });
 }

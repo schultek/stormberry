@@ -55,5 +55,22 @@ void testInsert() {
       expect(as.first, predicate<AView>((a) => a.id == 'abc' && a.a == 'hello'));
       expect(as.last, predicate<AView>((a) => a.id == 'def' && a.a == 'world'));
     });
+
+    test('with many-to-many relation', () async {
+      await tester.db.cs.insertOne(CInsertRequest(id: 'c1'));
+      await tester.db.ds.insertOne(DInsertRequest(id: 'd1', csIds: ['c1']));
+      await tester.db.ds.insertOne(DInsertRequest(id: 'd2', csIds: ['c1']));
+
+      var cs = await tester.db.cs.queryFullViews();
+
+      expect(cs, hasLength(1));
+      expect(cs.first.ds, hasLength(2));
+
+      var ds = await tester.db.ds.queryFullViews();
+
+      expect(ds, hasLength(2));
+      expect(ds.firstWhere((d) => d.id == 'd1').cs, hasLength(1));
+      expect(ds.firstWhere((d) => d.id == 'd2').cs, hasLength(1));
+    });
   });
 }

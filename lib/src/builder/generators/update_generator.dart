@@ -105,28 +105,36 @@ class UpdateGenerator {
           .join(' AND ');
     }
 
+    String modelUpdates = '';
+
+    if (updateColumns.where((c) => c != table.primaryKeyColumn).isNotEmpty) {
+      modelUpdates = '''
+        final updateRequests = [
+          for (final r in requests)
+            if (${updateColumns.where((c) => c != table.primaryKeyColumn).map((c) => 'r.${c.paramName} != null').join(' || ')})
+              r
+        ];
+
+        if (updateRequests.isNotEmpty) {
+          var values = QueryValues();
+          await db.execute(
+            Sql.named('UPDATE "${table.tableName}"\\n'
+            'SET ${setColumns.map((c) => '"${c.columnName}" = COALESCE(UPDATED."${c.columnName}", "${table.tableName}"."${c.columnName}")').join(', ')}\\n'
+            'FROM ( VALUES \${updateRequests.map((r) => '( ${updateColumns.map(toUpdateValue).join(', ')} )').join(', ')} )\\n'
+            'AS UPDATED(${updateColumns.map((c) => '"${c.columnName}"').join(', ')})\\n'
+            'WHERE $whereClause'),
+            parameters: values.values,
+          );
+        }
+      ''';
+    }
+
     return '''
         @override
         Future<void> update(List<${table.element.name}UpdateRequest> requests) async {
           if (requests.isEmpty) return;
 
-          final updateRequests = [
-            for (final r in requests)
-              if (${updateColumns.where((c) => c != table.primaryKeyColumn).map((c) => 'r.${c.paramName} != null').join(' || ')})
-                r
-          ];
-
-          if (updateRequests.isNotEmpty) {
-            var values = QueryValues();
-            await db.execute(
-              Sql.named('UPDATE "${table.tableName}"\\n'
-              'SET ${setColumns.map((c) => '"${c.columnName}" = COALESCE(UPDATED."${c.columnName}", "${table.tableName}"."${c.columnName}")').join(', ')}\\n'
-              'FROM ( VALUES \${updateRequests.map((r) => '( ${updateColumns.map(toUpdateValue).join(', ')} )').join(', ')} )\\n'
-              'AS UPDATED(${updateColumns.map((c) => '"${c.columnName}"').join(', ')})\\n'
-              'WHERE $whereClause'),
-              parameters: values.values,
-            );
-          }
+          $modelUpdates
           ${deepUpdates.isNotEmpty ? deepUpdates.join() : ''}
         }
       ''';

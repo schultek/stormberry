@@ -28,3 +28,23 @@ abstract class B {
   double get d;
   bool get e;
 }
+
+@Model(views: [#Full, #Part])
+abstract class C {
+  @PrimaryKey()
+  String get id;
+
+  @ViewedIn(#Full, as: #Part)
+  @HiddenIn(#Part)
+  List<D> get ds;
+}
+
+@Model(views: [#Full, #Part])
+abstract class D {
+  @PrimaryKey()
+  String get id;
+
+  @ViewedIn(#Full, as: #Part)
+  @HiddenIn(#Part)
+  List<C> get cs;
+}
