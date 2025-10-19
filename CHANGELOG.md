@@ -1,4 +1,4 @@
-# Unreleased
+# 0.18.0
 
 - Added support for default column values via the `@Default` annotation.
 - Added support for creating and updating many-to-many relations through the normal `insert` and `update` methods.
